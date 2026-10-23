@@ -65,7 +65,11 @@ button:active,button.on{background:var(--w);color:var(--k)}
 @keyframes blink{50%{opacity:0}}
 @keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
 #idin{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;text-align:center;caret-color:transparent}
-#oerr{min-height:1.4em;color:var(--g)}
+#oerr{min-height:1.4em;color:var(--g);font-size:16px}
+#obtn{display:flex;gap:18px}
+.o.pri{background:var(--w);color:var(--k)}
+#last{border:0;color:var(--g);font-size:20px;letter-spacing:.3em;padding:8px 12px}
+#last:active{background:none;color:var(--w)}
 
 /* top */
 #top{position:fixed;top:0;left:0;right:0;z-index:700;background:var(--k);border-bottom:1px solid var(--w);
@@ -138,7 +142,13 @@ textarea::placeholder{color:var(--g)}
 
 <section id="open">
   <div id="boxes"><i></i><i></i><i></i><i></i><input id="idin" type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" aria-label="ID"></div>
-  <button id="dice" class="o" type="button" aria-label="Random ID">⟳</button>
+  <div id="obtn">
+    <button id="bin" class="o" type="button" aria-label="Sign in">→</button>
+    <button id="bnew" class="o" type="button" aria-label="New agent">+</button>
+    <button id="dice" class="o" type="button" aria-label="Random new ID">⟳</button>
+  </div>
+  <button id="ack" class="o xl" type="button" aria-label="Stored" hidden>✓</button>
+  <button id="last" type="button" aria-label="Last ID" hidden></button>
   <p id="oerr" role="alert"></p>
 </section>
 
@@ -171,7 +181,7 @@ textarea::placeholder{color:var(--g)}
   <section id="pad" hidden>
     <div id="tbar"><i></i></div>
     <div class="info"><span id="pinfo"></span><span id="psrc" class="g"></span></div>
-    <div class="int">evolution of mankind</div>
+    <div class="int">benefit of mankind</div>
     <canvas id="cv" width="256" height="256"></canvas>
     <textarea id="btxt" rows="2" maxlength="1000" placeholder="…" spellcheck="false" autocapitalize="off"></textarea>
     <div class="row">
@@ -198,7 +208,8 @@ textarea::placeholder{color:var(--g)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile }
+import { initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence, inMemoryPersistence,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc, setDoc, updateDoc, deleteDoc,
   collection, query, where, limit, onSnapshot, getDocs, serverTimestamp }
@@ -224,7 +235,8 @@ const pad4 = n => String(n).padStart(4, "0");
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
 
-const INTENT = "evolution of mankind";
+const BUILD = "v4";
+const INTENT = "benefit of mankind";
 const R = 1000, N = 500, G = 12, ARR = 30;
 const TG = { attractor:"◉", void:"◌", anomaly:"◈" };
 const LINES = ["go.","report.","spin.","hold it.","see first.","walk.","the machine is ready.","no maps. no names.","trust the pull.",
@@ -257,7 +269,7 @@ setDots(store.get("tm.dots") === "1");
 
 /* ---------- firebase ---------- */
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+const auth = initializeAuth(app, { persistence: [indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence, inMemoryPersistence] });
 let db;
 try { db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
 catch { db = initializeFirestore(app, {}); }
@@ -273,56 +285,81 @@ const setDigits = s => {
   boxes.forEach((b, i) => { b.textContent = s[i] || ""; b.classList.toggle("cur", i === s.length && s.length < 4); });
 };
 setDigits("");
-idin.addEventListener("input", () => {
-  const s = idin.value.replace(/\D/g, "").slice(0, 4); idin.value = s; setDigits(s); sfx.key();
-  $("oerr").textContent = "";
-  if (s.length === 4) submit(s);
-});
-$("open").addEventListener("pointerdown", e => { if (e.target.id !== "dice") setTimeout(() => idin.focus(), 0); });
+const known = new Map();                       // id -> agent exists
+async function exists(id) {
+  if (known.has(id)) return known.get(id);
+  try { const e = (await getDoc(doc(db, "agents", id))).exists(); known.set(id, e); return e; } catch { return null; }
+}
+let hseq = 0;
+async function hint(s) {                         // highlight the button that fits this ID
+  const my = ++hseq; $("bin").classList.remove("pri"); $("bnew").classList.remove("pri");
+  if (s.length !== 4) return;
+  const e = await exists(s); if (my !== hseq || e == null) return;
+  $(e ? "bin" : "bnew").classList.add("pri");
+}
+const typed = () => idin.value.replace(/\D/g, "").slice(0, 4);
+const fillId = s => { idin.value = s; setDigits(s); $("oerr").textContent = ""; hint(s); };
+idin.addEventListener("input", () => { const s = typed(); fillId(s); sfx.key(); });
+idin.addEventListener("keydown", e => { if (e.key === "Enter") ($("bnew").classList.contains("pri") ? doNew : doIn)(); });
+$("open").addEventListener("pointerdown", e => { if (!e.target.closest("button")) setTimeout(() => idin.focus(), 0); });
+{ const l = store.get("tm.last"); if (/^\d{4}$/.test(l || "")) { $("last").textContent = l; $("last").hidden = false; $("last").addEventListener("click", () => { fillId(l); sfx.key(); }); } }
 
-const errText = e => {
+const reason = e => {
   const c = (e && e.code) || "";
-  if (c === "auth/network-request-failed") return "no net";
-  if (c === "auth/too-many-requests") return "wait";
-  return "✕";
+  const m = { taken: "taken", "auth/email-already-in-use": "taken", "auth/network-request-failed": "no net", "auth/too-many-requests": "wait",
+    "auth/invalid-credential": "no agent", "auth/user-not-found": "no agent", "auth/invalid-login-credentials": "no agent",
+    "auth/operation-not-allowed": "blocked", "auth/web-storage-unsupported": "storage", "auth/internal-error": "retry" };
+  return m[c] || (c.replace("auth/", "") || "error");
 };
-async function enter(id) {
-  const { email, password } = await creds(id);
-  pendingId = id;
-  try { await signInWithEmailAndPassword(auth, email, password); }
-  catch (e) {
-    if (!["auth/invalid-credential", "auth/user-not-found", "auth/invalid-login-credentials"].includes(e.code)) throw e;
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      updateProfile(auth.currentUser, { displayName: id }).catch(() => {});
-      setDoc(doc(db, "agents", id), { uid: auth.currentUser.uid, at: serverTimestamp() }).catch(() => {});
-    } catch (e2) {
-      if (e2.code === "auth/email-already-in-use") await signInWithEmailAndPassword(auth, email, password);
-      else throw e2;
-    }
-  }
+const busyOn = on => { $("boxes").classList.toggle("busy", on); };
+function fail(e) {
+  busy = false; busyOn(false); const r = reason(e); $("oerr").textContent = r;
+  if (r === "no agent") { $("bin").classList.remove("pri"); $("bnew").classList.add("pri"); }
+  if (r === "taken") { $("bnew").classList.remove("pri"); $("bin").classList.add("pri"); }
+  const b = $("boxes"); b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake"); sfx.no();
 }
-async function submit(id) {
-  if (busy) return; busy = true; $("boxes").classList.add("busy"); idin.blur();
-  try { await enter(id); $("boxes").classList.remove("busy"); $("boxes").classList.add("inv"); sfx.lock(); }
-  catch (e) {
-    busy = false; $("boxes").classList.remove("busy"); $("oerr").textContent = errText(e);
-    const b = $("boxes"); b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake"); sfx.no();
-    idin.value = ""; setDigits("");
-  }
+const need4 = () => { const s = typed(); if (s.length === 4) return s; fail({ code: "4 digits" }); return null; };
+const done = id => { store.set("tm.last", id); busy = false; busyOn(false); $("boxes").classList.add("inv"); sfx.lock(); };
+async function heal(id) {                        // make sure the account carries its ID and the public agent doc exists
+  const u = auth.currentUser; if (!u) return;
+  if (u.displayName !== id) { try { await updateProfile(u, { displayName: id }); } catch {} }
+  try { const r = doc(db, "agents", id); if (!(await getDoc(r)).exists()) await setDoc(r, { uid: u.uid, at: serverTimestamp() }); } catch {}
+  known.set(id, true);
 }
+async function doIn() {
+  if (busy) return; const id = need4(); if (!id) return;
+  busy = true; busyOn(true); idin.blur(); pendingId = id;
+  try { const { email, password } = await creds(id); await signInWithEmailAndPassword(auth, email, password); await heal(id); done(id); }
+  catch (e) { fail(e); }
+}
+let hold = false;
+async function createAgent(id) {
+  if (await exists(id) === true) throw { code: "taken" };
+  const { email, password } = await creds(id); pendingId = id;
+  await createUserWithEmailAndPassword(auth, email, password);
+  await heal(id);
+}
+async function doNew() {
+  if (busy) return; const id = need4(); if (!id) return;
+  busy = true; busyOn(true); idin.blur();
+  try { await createAgent(id); done(id); } catch (e) { fail(e); }
+}
+$("bin").addEventListener("click", doIn);
+$("bnew").addEventListener("click", doNew);
 $("dice").addEventListener("click", async () => {
   if (busy) return; busy = true; $("oerr").textContent = ""; idin.blur();
   let id = pad4(rnd(10000));
   for (let t = 0; t < 8; t++) {
     id = pad4(rnd(10000));
-    try { if (!(await getDoc(doc(db, "agents", id))).exists()) break; } catch { break; }
+    const e = await exists(id); if (e !== true) break;
   }
   const t0 = performance.now();
   while (performance.now() - t0 < 600) { setDigits(pad4(rnd(10000))); sfx.key(); await sleep(60); }
-  setDigits(id); idin.value = id; sfx.lock(); await sleep(900);
-  busy = false; submit(id);
+  fillId(id); sfx.lock(); busyOn(true); hold = true;
+  try { await createAgent(id); busy = false; busyOn(false); store.set("tm.last", id); $("boxes").classList.add("inv"); $("obtn").hidden = true; $("last").hidden = true; $("ack").hidden = false; }
+  catch (e) { hold = false; fail(e); }
 });
+$("ack").addEventListener("click", () => { hold = false; sfx.lock(); boot(auth.currentUser); });
 
 /* ---------- geometry ---------- */
 const rad = d => d * Math.PI / 180;
@@ -673,7 +710,8 @@ $("bset").addEventListener("click", () => {
   const on = document.documentElement.dataset.dots === "1";
   openSheet('<div class="st"><span>dots</span><button id="sdots" class="o' + (on ? " on" : "") + '" type="button">' + (on ? "●" : "○") + '</button></div>' +
     '<div class="st"><span>♪</span><button id="smute" class="o' + (!muted ? " on" : "") + '" type="button">' + (!muted ? "●" : "○") + '</button></div>' +
-    '<div class="st"><span>⏻</span><button id="sout" class="o" type="button">⏻</button></div>');
+    '<div class="st"><span>⏻</span><button id="sout" class="o" type="button">⏻</button></div>' +
+    '<div class="st g"><span>' + BUILD + "</span></div>");
   sbody.dataset.k = "set";
   $("sdots").addEventListener("click", e => { const v = document.documentElement.dataset.dots !== "1"; setDots(v); e.currentTarget.classList.toggle("on", v); e.currentTarget.textContent = v ? "●" : "○"; });
   $("smute").addEventListener("click", e => { muted = !muted; store.set("tm.mute", muted ? "1" : "0"); e.currentTarget.classList.toggle("on", !muted); e.currentTarget.textContent = !muted ? "●" : "○"; sfx.key(); });
@@ -683,7 +721,7 @@ $("bset").addEventListener("click", () => {
 /* ---------- help ---------- */
 const HELP = [["⌖", "location on · allow"], ["◎", "spin → a point"], ["✎", "blind view first · draw + write"], ["▶", "go"],
   ["➤", "follow the arrow"], ["✓ ✕", "there: write what is · matched / not"], ["◎", "again · trail grows"],
-  ["⊕", "all agents · ▲ ▼ rate"], ["≡", "your reports"], ["⚙", "dots · sound · exit"], ["◉", "evolution of mankind"]];
+  ["⊕", "all agents · ▲ ▼ rate"], ["≡", "your reports"], ["⚙", "dots · sound · exit"], ["◉", "benefit of mankind"]];
 function openHelp() {
   if (sheet.classList.contains("open") && sbody.dataset.k === "help") { closeSheet(); return; }
   openSheet(HELP.map(h => '<div class="st hp"><span style="font-size:20px;min-width:3.2em">' + esc(h[0]) + "</span><span>" + esc(h[1]) + "</span></div>").join(""));
@@ -705,6 +743,10 @@ function daily() {
 /* ---------- session ---------- */
 onAuthStateChanged(auth, user => {
   if (!user) { $("app").hidden = true; $("open").hidden = false; busy = false; return; }
+  if (hold) return;                              // new random ID: wait until it has been acknowledged
+  boot(user);
+});
+function boot(user) {
   uid = user.uid; agent = user.displayName || pendingId || store.get("tm.id") || "";
   if (!/^\d{4}$/.test(agent)) { signOut(auth); return; }
   store.set("tm.id", agent);
@@ -713,7 +755,7 @@ onAuthStateChanged(auth, user => {
     initMap(); map.invalidateSize(); startGeo(); subMine(); daily(); route();
     if (!store.get("tm.help")) { store.set("tm.help", "1"); setTimeout(openHelp, 400); }
   }, $("boxes").classList.contains("inv") ? 260 : 0);
-});
+}
 
 if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(console.error));
 </script>
