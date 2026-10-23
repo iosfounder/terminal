@@ -90,6 +90,8 @@ body[data-st="intent"] #dim{opacity:1}
 .me i,.tgm i{position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-radius:50%;background:var(--w);box-shadow:0 0 10px rgba(255,255,255,.8)}
 .me b,.tgm b{position:absolute;left:-14px;top:-14px;width:28px;height:28px;border:1px solid var(--c);border-radius:50%;animation:pulse 2.4s ease-out infinite}
 .tgm i{background:none;border:1.5px solid var(--c);width:16px;height:16px;left:-8px;top:-8px;box-shadow:0 0 12px var(--c)}
+.tgm.born i{animation:born 1.2s var(--ease) both}                    /* the spin's lock ring shrinks down into the target */
+@keyframes born{from{transform:scale(9);opacity:0;border-width:.4px}30%{opacity:1}to{transform:none;opacity:1}}
 @keyframes pulse{from{transform:scale(.4);opacity:1}to{transform:scale(1.8);opacity:0}}
 .me em.sw{position:absolute;left:-110px;top:-110px;width:220px;height:220px;border:1px solid var(--c);border-radius:50%;opacity:0;animation:sweep 6s ease-out infinite 2s}
 @keyframes sweep{0%{transform:scale(.05);opacity:.5}75%{opacity:0}100%{transform:scale(1);opacity:0}}
@@ -181,12 +183,18 @@ body:not([data-st="travel"]) #hud,body:not([data-st="travel"]) #tfoot{display:no
 /* intention: type, with our own keyboard */
 #int{position:fixed;left:0;right:0;bottom:0;z-index:760;padding:20px 12px calc(var(--sab) + 12px);background:linear-gradient(to bottom,rgba(0,0,0,0),#000 22%);transform:translateY(105%);transition:transform .55s var(--ease)}
 body[data-st="intent"] #int{transform:none}
+body[data-st="intent"] #itx{animation:grow .7s var(--ease) both}        /* the line opens out of the ◎ below it */
+body[data-st="intent"] .kr{animation:arrive .55s var(--ease) both}
+body[data-st="intent"] .kr:nth-child(2){animation-delay:.04s}body[data-st="intent"] .kr:nth-child(3){animation-delay:.08s}body[data-st="intent"] .kr:nth-child(4){animation-delay:.12s}body[data-st="intent"] .kr:nth-child(5){animation-delay:.16s}body[data-st="intent"] .kr:nth-child(n+6){animation-delay:.2s}
+@keyframes grow{from{clip-path:inset(0 50% 0 50%);opacity:0}to{clip-path:inset(0 0 0 0);opacity:1}}
 #icancel{position:absolute;right:14px;top:-4px;background:rgba(0,0,0,.6)}
 #itx{min-height:3.2em;padding:8px 52px 14px 6px;font-size:26px;line-height:1.25;word-break:break-word;border-bottom:1px solid #333;margin-bottom:12px}
 html[data-dots="1"] #itx{font-size:44px}
 #itx::after{content:"";display:inline-block;width:.5em;height:1px;border-bottom:2px solid var(--c);margin-left:2px;animation:blink 1.1s ease-in-out infinite}
 .kr{display:flex;gap:6px;justify-content:center;margin-bottom:7px}
-.kk{flex:1 1 0;max-width:42px;min-width:0;height:46px;border-radius:11px;font-size:20px;border-color:#555}
+.kk{flex:1 1 0;max-width:42px;min-width:0;height:46px;border-radius:11px;font-size:20px;border:1px solid rgba(255,255,255,.22);
+  background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.02) 60%,rgba(0,0,0,.2));box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 6px 14px rgba(0,0,0,.5)}
+.kk:active{background:radial-gradient(circle at 50% 40%,rgba(79,243,255,.42),rgba(79,243,255,.06) 70%);color:#fff;border-color:var(--c);box-shadow:0 0 18px rgba(79,243,255,.45)}
 .kk.wide{max-width:none;flex:4 1 0}
 .kk.go{max-width:none;flex:2 1 0;border-color:var(--c);color:var(--c);font-size:24px}
 .kk.go:active{background:var(--c);color:var(--k)}
@@ -207,6 +215,12 @@ html[data-dots="1"] .kk.go,html[data-dots="1"] .kk.sp{font-size:20px}
 #lv.chosen .lvb.sel{opacity:1;transform:scale(1.18)}
 .lvb.sel i{background:var(--lc);box-shadow:0 0 34px var(--lc)}
 .lvb span{transition:transform .4s var(--ease)}
+#rep:not([hidden]) .lvb{animation:condense .9s var(--ease) backwards}          /* the target ring breaks into the three dots */
+#rep:not([hidden]) .lvb[data-l="0"]{animation-delay:.1s}#rep:not([hidden]) .lvb[data-l="2"]{animation-delay:.2s}
+@keyframes condense{from{opacity:0;transform:scale(2.4);filter:blur(6px)}}
+#rep.seal #vr{opacity:0;transition:opacity .3s}
+#rep.seal .lvb:not(.sel){opacity:0!important;transition:opacity .3s}
+#rep.seal .lvb.sel{transform:translateY(-140px) scale(.12)!important;opacity:0!important;transition:transform .7s cubic-bezier(.6,0,.4,1),opacity .7s ease-in}
 .lvb.sel span{transform:translateY(12px)}
 #vr{display:flex;gap:26px;align-items:center;justify-content:center;opacity:0;transform:translateY(12px);pointer-events:none;transition:opacity .6s var(--ease),transform .6s var(--ease)}   /* one decision at a time: the verdict appears once you have felt it */
 #vr.ready{opacity:1;transform:none;pointer-events:auto}
@@ -370,7 +384,7 @@ const pad4 = n => String(n).padStart(4, "0");
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
 
-const BUILD = "v7.6";
+const BUILD = "v7.7";
 const R = 1000, N = 500, G = 12, ARR = 30, HOME_PITCH = 50;
 const TG = { attractor:"◉", void:"◌", anomaly:"◈" };
 const LV = ["calm", "strange", "uncanny"];
@@ -542,7 +556,7 @@ const fmtT = r => { const t = r.at && r.at.toMillis ? r.at.toMillis() : Date.now
 let uid = null, agent = "", map = null, pos = null, follow = true, heading = 0, hasCompass = false, compassOn = false;
 let mine = new Map(), active = null, spinning = false, typing = false, arriving = null, choose = null;
 let showAll = false, allDocs = new Map(), unsubMine = null, unsubAll = null, newRid = null;
-let meMk = null, tgMk = null;
+let meMk = null, tgMk = null, bornRid = null;
 let heat = null, crumbs = [], crumbLast = null, walk = [], walkLast = null;     // density heat, breadcrumb tail, remembered walking (fog of war)
 let rt = null, routing = false, lastFetch = 0, routeMode = store.get("tm.mode") === "car" ? "car" : "foot";
 let near100 = null, nearSince = 0, wake = null, tickT = null, spd = 0, shownD = null, targetD = 0, dtw = false;
@@ -581,7 +595,7 @@ function drawCompass() {
   if (rel != null && hasCompass && Math.abs(nrm(rel)) < 12 && Date.now() - lastAlign > 3500) { lastAlign = Date.now(); buzz(25); }
   repaint();                                     // the heading beam follows the compass
 }
-setInterval(() => { const d = document.body.dataset; if (mapReady && (heat || (d.st === "travel" && d.lite !== "1"))) paintRoute(); }, 60);   // heat fade + ring pulse
+setInterval(() => { const d = document.body.dataset; if (mapReady && (heat || (beamA > 0 && beamA < .98) || (d.st === "travel" && d.lite !== "1"))) paintRoute(); }, 60);   // heat fade + ring pulse
 function oe(e) {
   let h = null;
   if (e.webkitCompassHeading != null) h = e.webkitCompassHeading;
@@ -744,7 +758,8 @@ function drawAll() {
 function setTarget() {
   if (!mapReady) return;
   if (tgMk) { tgMk.remove(); tgMk = null; }
-  if (active && active.status !== "done") tgMk = mkAdd(mkEl('<div class="tgm"><i></i><b></b></div>'), active.lng, active.lat);
+  if (active && active.status !== "done") tgMk = mkAdd(mkEl('<div class="tgm' + (active.rid === bornRid ? " born" : "") + '"><i></i><b></b></div>'), active.lng, active.lat);
+  bornRid = null;
 }
 function ensureMe() {
   if (!mapReady || !pos || meMk) return;
@@ -762,7 +777,8 @@ function camTick() {                             // the chase camera: tilts and 
   if (document.body.dataset.st !== "travel" || !follow) return;
   const cur = map.getBearing(), gh = hasCompass ? heading : (spd > 1 ? heading : cur);
   let d = nrm(gh - cur); if (Math.abs(d) < 4) d = 0; d = Math.max(-14, Math.min(14, d));
-  map.easeTo({ center: [pos.lng, pos.lat], bearing: cur + d, pitch: 58, zoom: 17, padding: PADT, duration: 700, easing: t => t });
+  const near = document.body.dataset.near === "1";                // the last 100 m: the camera comes down closer and slower
+  map.easeTo({ center: [pos.lng, pos.lat], bearing: cur + d * (near ? .6 : 1), pitch: near ? 64 : 58, zoom: near ? 17.7 : 17, padding: PADT, duration: near ? 1100 : 700, easing: t => t });
 }
 setInterval(camTick, 650);
 
@@ -772,25 +788,33 @@ function sizeRcv() { const c = $("rcv"), d = Math.min(devicePixelRatio || 1, 2);
 sizeRcv(); addEventListener("resize", () => { sizeRcv(); paintRoute(); });
 const gp = (c, dx, dy) => [c.lng + dx / (111320 * Math.cos(rad(c.lat))), c.lat + dy / 111320];   // metres east/north of a point -> [lng,lat]
 const ringPts = (c, r, n = 56) => { const o = []; for (let i = 0; i <= n; i++) { const a = i / n * 2 * Math.PI; o.push(gp(c, r * Math.sin(a), r * Math.cos(a))); } return o; };
-let pq = false;
+let pq = false, beamA = 0;
 const repaint = () => { if (pq) return; pq = true; requestAnimationFrame(() => { pq = false; paintRoute(); }); };
 function paintRoute() {
   if (!mapReady) return;
   const c = $("rcv"), x = c.getContext("2d"), b = document.body.dataset, st = b.st, lite = b.lite === "1", now = Date.now();
   const trav = active && active.status === "pending" && pos && st === "travel";
-  const beam = hasCompass && pos && (st === "home" || st === "travel") && b.hide !== "1" && !flying;
+  const want = hasCompass && pos && (st === "home" || st === "travel") && b.hide !== "1" && !flying && !spinning;
+  beamA += ((want ? 1 : 0) - beamA) * .12; if (beamA < .02) beamA = want ? .02 : 0;     // the beam fades in and out, never pops
+  const beam = beamA > 0 && hasCompass && pos;
   if (heat && now - heat.t0 > 7500) heat = null;
   const has = (rPts && rPts.length > 1) || (rTail && rTail.length > 1) || trav || beam || heat;
   if (!has) { if (painted) { x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height); painted = false; } return; }
   painted = true; const d = c.width / innerWidth; x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, innerWidth, innerHeight);
   x.lineCap = x.lineJoin = "round";
   const path = pts => { x.beginPath(); pts.forEach((p, i) => { const q = map.project(p); i ? x.lineTo(q.x, q.y) : x.moveTo(q.x, q.y); }); };
-  if (heat) {                                    // density heat: the search cells, brighter where more points fell; the chosen cell is outlined
-    const t = now - heat.t0, env = Math.min(1, t / 500) * Math.min(1, Math.max(0, (7500 - t) / 2000));
-    for (const cl of heat.cells) {
-      path(cl.poly); x.closePath(); const v = cl.n / heat.max;
-      x.fillStyle = "rgba(" + Math.round(138 - 59 * v) + "," + Math.round(125 + 118 * v) + ",255," + (.07 + v * .38) * env + ")"; x.fill();
-      if (cl.k === heat.best) { x.strokeStyle = "rgba(79,243,255," + env + ")"; x.lineWidth = 2; x.stroke(); }
+  if (heat) {                                    // density heat: soft glows where the points fell; it melts away as the camera tilts down to chase
+    const t = now - heat.t0, tilt = Math.max(0, 1 - (map.getPitch() - 22) / 14);
+    const env = Math.min(1, t / 600) * Math.min(1, Math.max(0, (7500 - t) / 2400)) * tilt;
+    if (env > .01) for (const cl of heat.cells) {
+      const v = cl.n / heat.max; if (v < .15 && cl.k !== heat.best) continue;
+      const cx = cl.poly.reduce((s, p) => s + p[0], 0) / cl.poly.length, cy = cl.poly.reduce((s, p) => s + p[1], 0) / cl.poly.length;
+      const q = map.project([cx, cy]), e = map.project(cl.poly[0]), r = Math.hypot(e.x - q.x, e.y - q.y) * 1.1;
+      if (!isFinite(r) || r > innerWidth || q.y < -r || q.y > innerHeight + r) continue;
+      const g = x.createRadialGradient(q.x, q.y, 0, q.x, q.y, r), a = (.05 + v * .3) * env;
+      g.addColorStop(0, "rgba(" + Math.round(138 - 59 * v) + "," + Math.round(125 + 118 * v) + ",255," + a + ")"); g.addColorStop(1, "rgba(138,125,255,0)");
+      x.fillStyle = g; x.beginPath(); x.arc(q.x, q.y, r, 0, 7); x.fill();
+      if (cl.k === heat.best) { x.strokeStyle = "rgba(79,243,255," + env * .9 + ")"; x.lineWidth = 1.5; x.beginPath(); x.arc(q.x, q.y, r * .45, 0, 7); x.stroke(); }
     }
   }
   if (trav) {                                    // rings around the target; ones you've crossed dim, a pulse keeps drawing in
@@ -804,7 +828,7 @@ function paintRoute() {
     const h = rad(heading), tip = [], me = { lat: pos.lat, lng: pos.lng }, L = 85;
     for (let i = -6; i <= 6; i++) { const a = h + rad(i * 4); tip.push(gp(me, L * Math.sin(a), L * Math.cos(a))); }
     const m0 = map.project([me.lng, me.lat]), m1 = map.project(gp(me, L * Math.sin(h), L * Math.cos(h)));
-    const g = x.createLinearGradient(m0.x, m0.y, m1.x, m1.y); g.addColorStop(0, "rgba(79,243,255,.34)"); g.addColorStop(1, "rgba(79,243,255,0)");
+    const g = x.createLinearGradient(m0.x, m0.y, m1.x, m1.y); g.addColorStop(0, "rgba(79,243,255," + .34 * beamA + ")"); g.addColorStop(1, "rgba(79,243,255,0)");
     path([[me.lng, me.lat], ...tip]); x.closePath(); x.fillStyle = g; x.fill();
   }
   if (trav && crumbs.length > 1) {               // breadcrumb tail: where you actually walked, fading behind you
@@ -1016,7 +1040,7 @@ async function runSpin(text, jid) {              // the intention is set; only n
   if (mapReady) { map.stop(); map.easeTo({ center: [c.lng, c.lat], zoom: 13.2, pitch: 0, bearing: 0, padding: PAD0, duration: 800 }); await sleep(900); }
   const g = await generate(c); g.from = c;
   await playSpin(g); lb(1200);
-  const n = nextSeq(), rid = agent + "-" + pad4(n);
+  const n = nextSeq(), rid = agent + "-" + pad4(n); bornRid = rid;
   const data = { uid, agent, seq: n, rid, type: g.type, src: g.src, lat: g.lat, lng: g.lng, journey: jid || rid,
     intention: text, blind: { text: "", img: "" }, level: 0, status: "pending", verdict: 0, found: "", photo: "", at: serverTimestamp() };
   rt = null; lastFetch = 0; shownD = null; near100 = null; nearSince = 0;
@@ -1115,7 +1139,8 @@ function updateTravel() {
   $("rinfo").textContent = rr ? Math.max(1, Math.round(rr.rem / rt.dist * rt.dur / 60)) + " min" : "~" + Math.max(1, Math.round(d * 1.25 / pace / 60)) + " min";
   document.body.dataset.near = d <= 100 ? "1" : "0";                    // the edges close in a notch near the point
   setBed(.012 + .03 * Math.max(0, 1 - d / 400));
-  if (d <= 100 && near100 !== active.rid) { near100 = active.rid; buzz([60, 80, 60]); sfx.near(); }
+  if (d <= 100 && near100 !== active.rid) { near100 = active.rid; buzz([60, 80, 60]); sfx.near(); document.body.dataset.lb = "1"; clearTimeout(lb.t); }   // bars ease in and stay until arrival
+  if (d > 130 && near100 === active.rid) { near100 = null; document.body.dataset.lb = "0"; }   // walked away again
   if (d <= 100) { if (!nearSince) nearSince = Date.now(); } else nearSince = 0;
   $("bhere").hidden = !(nearSince && Date.now() - nearSince > 120000);   // bad GPS must never block a report
   if (d <= Math.max(ARR, Math.min(pos.acc || 0, 60))) arrive();
@@ -1176,16 +1201,18 @@ document.querySelectorAll(".lvb").forEach(b => b.addEventListener("click", () =>
 }));
 function fillRep() {
   $("rid").textContent = active.rid; $("rtype").textContent = TG[active.type] + " " + active.type;
-  lvSel = null; document.querySelectorAll(".lvb").forEach(x => x.classList.remove("sel")); $("lv").classList.remove("chosen"); $("vr").classList.remove("ready");
+  lvSel = null; $("rep").classList.remove("seal"); document.querySelectorAll(".lvb").forEach(x => x.classList.remove("sel")); $("lv").classList.remove("chosen"); $("vr").classList.remove("ready");
 }
+let sealing = false;
 function finish(v) {
-  if (!active || lvSel == null) return; const rid = active.rid;
+  if (!active || lvSel == null || sealing) return; const rid = active.rid;
+  sealing = true; $("rep").classList.add("seal");                              // the chosen dot sinks into the map before the panel goes
   setChoose({ text: active.intention || "", jid: active.journey || rid });      // then: continue the journey from here, or end it
   const data = { status: "done", verdict: v, level: lvSel, found: "", photo: photoData, doneAt: serverTimestamp() };
   newRid = rid; v > 0 ? sfx.ok() : v < 0 ? sfx.no() : sfx.neutral(); buzz(v > 0 ? 40 : 90); scanSweep();
   const vd = $("verd"); vd.textContent = v > 0 ? "✓" : v < 0 ? "✕" : "⌀"; vd.hidden = false; vd.style.animation = "none"; void vd.offsetWidth; vd.style.animation = "";
   setTimeout(() => { vd.hidden = true; }, 1050);
-  updateDoc(doc(db, "reports", rid), data).catch(() => note("sync ✕"));
+  setTimeout(() => { sealing = false; updateDoc(doc(db, "reports", rid), data).catch(() => note("sync ✕")); }, reduced ? 0 : 700);
   photoData = ""; $("pprev").hidden = true; $("bphoto").parentElement.classList.remove("on");
 }
 $("byes").addEventListener("click", () => finish(1));
@@ -1194,7 +1221,16 @@ $("bnone").addEventListener("click", () => finish(0));      // could not reach i
 $("nxgo").addEventListener("click", () => {      // go on: a new point from where you stand, same intention
   if (!choose || !pos) return; const c = choose; setChoose(null); sfx.enter(); runSpin(c.text, c.jid);
 });
-$("nxend").addEventListener("click", () => { setChoose(null); sfx.close(); route(); });
+$("nxend").addEventListener("click", () => {    // end: pull up and back over the whole journey for a moment, then home
+  const c = choose; setChoose(null); sfx.close(); route();
+  const legs = c ? [...mine.values()].filter(r => (r.journey || r.rid) === c.jid) : [];
+  if (!mapReady || reduced || !legs.length) return;
+  const pts = legs.map(r => [r.lng, r.lat]).concat(pos ? [[pos.lng, pos.lat]] : []);
+  const w = Math.min(...pts.map(p => p[0])), e = Math.max(...pts.map(p => p[0])), s = Math.min(...pts.map(p => p[1])), n = Math.max(...pts.map(p => p[1]));
+  follow = false; lb(3400); whoosh(1.6, 900, 200, .03);
+  map.fitBounds([[w, s], [e, n]], { padding: PADV, maxZoom: 16.2, pitch: 40, bearing: -12, duration: 1800 });
+  setTimeout(() => { if (document.body.dataset.st === "home") { follow = true; if (pos) map.easeTo({ center: [pos.lng, pos.lat], zoom: 15.6, pitch: HOME_PITCH, bearing: 0, duration: 1600 }); } }, 3600);
+});
 
 /* ---------- screens ---------- */
 let lastRid = null;
@@ -1207,7 +1243,7 @@ function route() {
   $("hud").hidden = st !== "travel"; $("tfoot").hidden = st !== "travel"; $("rep").hidden = st !== "rep";
   $("dockhome").hidden = st !== "home"; wakeOn(st === "travel");
   if (!pend) { rt = null; drawRoute(); }
-  if (route.prev === "travel" && st !== "travel") homeCam(1000);        // leaving the chase: back to the 3D home view
+  if (route.prev === "travel" && st !== "travel") { homeCam(1000); if (st === "home") document.body.dataset.lb = "0"; }   // leaving the chase: back to the 3D home view
   route.prev = st;
   if (arr && $("rep").dataset.r !== active.rid) { $("rep").dataset.r = active.rid; fillRep(); }
   if (!arr) $("rep").dataset.r = "";
@@ -1344,10 +1380,10 @@ function boot(user) {
   if (!/^\d{4}$/.test(agent)) { signOut(auth); return; }
   store.set("tm.id", agent);
   try { walk = JSON.parse(store.get("tm.walk" + agent) || "[]"); if (!Array.isArray(walk)) walk = []; } catch { walk = []; }
-  $("open").classList.add("out");
+  $("open").classList.add("out"); titleCard();          // the pad dissolves straight into the title, the title into the flight
   setTimeout(() => {
     $("open").hidden = true; $("open").classList.remove("out"); $("app").hidden = false; $("mid").textContent = agent;
-    initMap(); startGeo(); subMine(); route(); tickLoop(); titleCard();
+    initMap(); startGeo(); subMine(); route(); tickLoop();
     if (!store.get("tm.spun")) $("bspin").classList.add("pulse1");
   }, reduced ? 0 : 480);
 }
