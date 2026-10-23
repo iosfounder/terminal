@@ -250,6 +250,7 @@ html[data-dots="1"] #show .sh p{font-family:var(--mono);letter-spacing:.01em}
 #sub i.now{color:#fff;text-shadow:0 0 10px rgba(79,243,255,.75)}
 #sub i.past{color:#f0f0f6}
 body[data-st="home"] #sub{bottom:calc(var(--sab) + 128px)}
+body[data-st="res"] #sub{bottom:auto;top:calc(var(--sat) + 64px)}             /* the end panel owns the bottom: the recap shows up top */
 #show:not([hidden]) ~ #sub,body[data-subs="0"] #sub,#card:not([hidden]) ~ #sub{display:none}
 html[data-dots="1"] #sub p{font-family:var(--mono)}
 
@@ -407,7 +408,7 @@ const pad4 = n => String(n).padStart(4, "0");
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
 
-const BUILD = "v9.4";
+const BUILD = "v9.4a";
 const ARR = 30, HOME_PITCH = 50;
 
 /* ---------- sound ---------- */
@@ -453,7 +454,7 @@ const sfx = {
 };
 // iPhone only unlocks sound and the compass from a finished tap (touchend / click), so keep trying on each one until both are awake
 const unlockEv = ["touchend", "click"];
-function unlock() { ac(); G.prime(); if (window.startMedia) window.startMedia(); musicStart(); startCompass(); if (AC && AC.state === "running" && (compassOn || !needsPerm)) unlockEv.forEach(t => removeEventListener(t, unlock, true)); }
+function unlock() { ac(); G.prime(); musicStart(); startCompass(); if (AC && AC.state === "running" && (compassOn || !needsPerm)) unlockEv.forEach(t => removeEventListener(t, unlock, true)); }
 unlockEv.forEach(t => addEventListener(t, unlock, true));
 
 /* ---------- dots ---------- */
@@ -724,7 +725,7 @@ async function initMap() {
     map.addLayer({ id: "lit2", type: "circle", source: "walk", paint: { "circle-radius": mR(60), "circle-color": "#8ff3ff", "circle-opacity": .09, "circle-blur": 1, "circle-pitch-alignment": "map", "circle-pitch-scale": "map" } }, b);
     setWalk();
     const ab = document.querySelector(".maplibregl-ctrl-attrib"); if (ab) { ab.classList.remove("maplibregl-compact-show"); ab.removeAttribute("open"); }
-    document.body.dataset.map = "1"; mapReady = true; applyDots(); drawMine(); drawAll(); setTarget(); paintRoute();
+    document.body.dataset.map = "1"; mapReady = true; applyDots(); drawMine(); drawAll(); setTarget(); paintRoute(); setTimeout(() => drawTitles(true), 400);   // places may have arrived before the map did
     if (pos) { ensureMe(); establish(); }
     setTimeout(fpsCheck, 7000);
   } catch (e) { console.error(e); map = null; mapReady = false; note("map ✕", true); }
@@ -1037,7 +1038,8 @@ function openStart() {
   const tog = (sel, f) => sbody.querySelectorAll(sel).forEach(b => b.addEventListener("click", () => { f(b); sfx.key(); sbody.querySelectorAll(sel).forEach(x => x.classList.toggle("on", x === b)); }));
   tog("[data-k]", b => { pick.k = b.dataset.k; store.set("tour.k", pick.k); });
   tog("[data-d]", b => { pick.d = +b.dataset.d; store.set("or.d", pick.d); });
-  $("sgo").addEventListener("click", () => { closeSheet(); sfx.enter(); G.say(pick.k === "tour" ? "Finding the best places around you." : "Finding a place for you.", !muted);   // spoken from the tap itself, so phones allow it
+  $("sgo").addEventListener("click", () => { closeSheet(); sfx.enter(); if (musicOn && window.startMedia) window.startMedia();   // only with our own music on: on iPhone any media playing pauses your own music app
+ G.say(pick.k === "tour" ? "Finding the best places around you." : "Finding a place for you.", !muted);   // spoken from the tap itself, so phones allow it
     startWalk(DISTS[units === "km" ? "km" : "mi"][pick.d], pick.k); });
 }
 // a single finish: a real named place at about the right walking distance
@@ -1280,8 +1282,8 @@ function drawTitles(force) {                     // floating titles over the mos
   if (!mapReady || !pos) return;
   if (!force && titlesAt && hav(titlesAt, pos) < 60) return;
   titlesAt = { lat: pos.lat, lng: pos.lng };
-  titleMk.forEach(m => m.remove()); titleMk = [];
-  const st = document.body.dataset.st; if (st !== "home" && st !== "travel") return;
+  const st = document.body.dataset.st;
+  if (st !== "home" && st !== "travel") { titleMk.forEach(m => m.remove()); titleMk = []; drawTitles.ids = ""; return; }
   if (!drawTitles.hooked) { drawTitles.hooked = true; map.on("moveend", () => setTimeout(() => { if (!map.isMoving()) drawTitles(true); }, 250)); }   // re-space them whenever the view settles
   const stopIds = new Set((active && active.stops || []).map(s => s.id)), kept = [], W = innerWidth, H = innerHeight;
   for (const p of pool) {                        // most notable first; never two on top of each other, never off screen
@@ -1291,6 +1293,9 @@ function drawTitles(force) {                     // floating titles over the mos
     if (kept.some(k => Math.abs(k.q.x - q.x) < 130 && Math.abs(k.q.y - q.y) < 62)) continue;
     kept.push({ p, q });
   }
+  const ids = kept.map(k => k.p.id + (heard.has(k.p.id) ? "h" : "")).join(",");
+  if (ids === drawTitles.ids && titleMk.length) return;                          // same places as already shown: leave them be (no re-animating every camera move)
+  drawTitles.ids = ids; titleMk.forEach(m => m.remove()); titleMk = [];
   kept.map(k => k.p).forEach((p, i) => {
     const el = mkEl('<div class="pt' + (heard.has(p.id) ? " h" : "") + '" style="--pd:' + i * 120 + 'ms"><i></i><span>' + esc(p.title) + (p.year != null ? "<small>" + (p.year < 0 ? -p.year + " BC" : p.year) + "</small>" : "") + "</span></div>");
     el.addEventListener("click", e => { e.stopPropagation(); heardOne(p, true); openCard(p, true); });
@@ -1508,9 +1513,10 @@ function route() {
   const st = resV ? "res" : spinning ? "spin" : pend ? "travel" : "home";
   document.body.dataset.st = st; if (st !== "home") { setHide(false); if (mn.classList.contains("open")) menu(false); }
   if (st !== "travel") { document.body.dataset.near = "0"; setBed(0); }
-  if (mapReady) map.setMinZoom(st === "travel" ? 13 : 9);                        // the map data has no buildings below zoom 13: on a walk, stay where the 3D city is
+  const mz = st === "travel" ? 13 : 9; if (mapReady && map.getMinZoom() !== mz) map.setMinZoom(mz);   // only when it changes: resetting it mid-render trips the map library                        // the map data has no buildings below zoom 13: on a walk, stay where the 3D city is
   if (st !== route.prev) setTimeout(() => { drawTitles(true); drawAmen(); }, 50);
-  if (st !== "travel") amenAt = null;               // the floating titles belong to home and walking only
+  if (st !== "travel") amenAt = null;
+  if (st === "home" && window.stopMedia) window.stopMedia();                   // the walk is over: let go of the phone's audio               // the floating titles belong to home and walking only
   $("hud").hidden = st !== "travel"; $("tfoot").hidden = st !== "travel"; $("res").hidden = st !== "res";
   $("dockhome").hidden = st !== "home"; wakeOn(st === "travel"); G.setWalking(st === "travel" || st === "spin");
   if (!pend) { rt = null; drawRoute(); }
@@ -1654,6 +1660,7 @@ function openVoices() {                          // every English voice on this 
   w(0, "RIFF"); dv.setUint32(4, 36 + n, true); w(8, "WAVEfmt "); dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true); dv.setUint32(24, 8000, true); dv.setUint32(28, 8000, true); dv.setUint16(32, 1, true); dv.setUint16(34, 8, true); w(36, "data"); dv.setUint32(40, n, true); b.fill(128, 44);
   const a = new Audio(URL.createObjectURL(new Blob([b], { type: "audio/wav" }))); a.loop = true; a.volume = .01;
   window.startMedia = () => { a.play().catch(() => {}); };
+  window.stopMedia = () => { if (!a.paused) a.pause(); };
   if ("mediaSession" in navigator) {
     try {
       navigator.mediaSession.metadata = new MediaMetadata({ title: "tour", artist: "your guide" });

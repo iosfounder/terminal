@@ -207,7 +207,7 @@ export function speakable(s) {
     .replace(/\bRd\b\.?/g, "Road").replace(/\bAve\b\.?/g, "Avenue").replace(/\bSq\b\.?/g, "Square")
     .replace(/\s{2,}/g, " ").replace(/\s+([,.;:])/g, "$1").trim();
 }
-const pieces = s => (s.match(/[^.!?]+[.!?]+["')\]]*(\s|$)|[^.!?]+$/g) || [s]).map(x => x.trim()).filter(Boolean);
+const pieces = s => s.split(/(?<=[.!?]["')\]]?)\s+(?=["'(\[]?[A-Z0-9])/).map(x => x.trim()).filter(Boolean);   // split at a sentence end followed by a new sentence; "0.5 miles" and "2,300" stay whole
 
 const lineFns = [], wordFns = [], idleFns = [];
 export const onLine = f => lineFns.push(f);       // a new piece starts: subtitles and slideshow captions
