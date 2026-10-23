@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>terminal</title>
+<meta name="theme-color" content="#05070a">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="terminal">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preload" href="DotsiesRect.ttf" as="font" type="font/ttf" crossorigin>
+<style>
+@font-face{font-family:"Dotsies";src:url("DotsiesRect.ttf") format("truetype");font-display:swap}
+@property --a{syntax:"<angle>";inherits:false;initial-value:0deg}
+:root{
+  --bg:#05070a; --panel:rgba(11,15,21,.72); --line:rgba(110,190,255,.14); --fg:#e6f4ff; --dim:#6b7f90;
+  --accent:#49e6ff; --glow:rgba(73,230,255,.35); --fs:28px; --r:12px;
+  --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
+  font-family:"Dotsies",var(--mono);font-size:22px;line-height:1.4}
+button,input,textarea{font:inherit;color:inherit;background:none;border:0;outline:0}
+button{cursor:pointer}
+::selection{background:var(--accent);color:#000}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+
+/* ambient layers */
+#fx{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.grid{position:fixed;inset:-50%;z-index:0;pointer-events:none;opacity:.5;
+  background:linear-gradient(var(--line) 1px,transparent 1px) 0 0/48px 48px,linear-gradient(90deg,var(--line) 1px,transparent 1px) 0 0/48px 48px;
+  -webkit-mask:radial-gradient(closest-side,#000 10%,transparent 70%);mask:radial-gradient(closest-side,#000 10%,transparent 70%);
+  animation:pan 40s linear infinite}
+@keyframes pan{to{transform:translate(48px,48px)}}
+.glow{position:fixed;z-index:0;pointer-events:none;width:60vmax;height:60vmax;left:50%;top:-20vmax;transform:translateX(-50%);
+  background:radial-gradient(circle,var(--glow),transparent 60%);opacity:.22;animation:breathe 7s ease-in-out infinite}
+@keyframes breathe{50%{opacity:.4;transform:translateX(-50%) scale(1.08)}}
+.scan{position:fixed;inset:0;z-index:50;pointer-events:none;mix-blend-mode:overlay;opacity:.5;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 3px)}
+.scan::after{content:"";position:absolute;left:0;right:0;height:18vh;top:-18vh;
+  background:linear-gradient(transparent,rgba(73,230,255,.07),transparent);animation:sweep 6.5s linear infinite}
+@keyframes sweep{to{top:100%}}
+
+/* forming letters (shared) */
+.l{display:inline-block}
+.anim .l{animation:form .7s cubic-bezier(.2,.9,.3,1.25) both;animation-delay:var(--d)}
+@keyframes form{from{opacity:0;transform:translate(var(--x),var(--y)) scale(.15);filter:blur(3px)}60%{opacity:1}to{opacity:1;transform:none;filter:none}}
+
+/* auth */
+#auth{position:relative;z-index:1;height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;padding:24px;text-align:center}
+#word{font-size:clamp(56px,14vw,104px);line-height:1;display:flex;align-items:center;justify-content:center;animation:glitch 7s infinite 3s}
+#word .caret{margin-left:.12em}
+.caret{display:inline-block;width:.42em;height:.9em;background:var(--accent);box-shadow:0 0 18px var(--accent);animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+@keyframes glitch{0%,92%,100%{transform:none;text-shadow:none}93%{transform:translate(-3px,1px);text-shadow:3px 0 #ff3d7f,-3px 0 var(--accent)}95%{transform:translate(3px,-1px);text-shadow:-3px 0 #ff3d7f,3px 0 var(--accent)}97%{transform:none}}
+.boot{color:var(--dim);font-size:18px;min-height:1.4em}
+.fadein{animation:fadeup .8s cubic-bezier(.2,.8,.2,1) both;animation-delay:var(--d,0s)}
+@keyframes fadeup{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.card{position:relative;display:flex;flex-direction:column;align-items:center;gap:16px;width:min(380px,100%);padding:22px;border-radius:16px;background:var(--panel);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.card::before,.panel::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;pointer-events:none;
+  background:conic-gradient(from var(--a),rgba(110,190,255,.12) 0 55%,var(--accent) 80%,rgba(110,190,255,.12));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;
+  animation:spin 7s linear infinite}
+@keyframes spin{to{--a:360deg}}
+#code{width:100%;text-align:center;padding:14px 10px;border:1px solid var(--line);border-radius:var(--r);background:rgba(0,0,0,.35);
+  font:600 20px var(--mono);letter-spacing:.18em;text-transform:uppercase;transition:border-color .2s,box-shadow .2s}
+#code:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow)}
+#code::placeholder{color:var(--dim);letter-spacing:.18em}
+.row{display:flex;gap:10px;width:100%}
+.btn{position:relative;flex:1;overflow:hidden;padding:13px 16px;border:1px solid var(--line);border-radius:var(--r);font-size:24px;color:var(--fg);background:rgba(255,255,255,.02);transition:border-color .2s,box-shadow .2s,transform .1s}
+.btn::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.18) 50%,transparent 65%);transform:translateX(-120%);transition:transform .6s}
+.btn:hover,.btn:focus-visible{border-color:var(--accent);box-shadow:0 0 22px var(--glow)}
+.btn:hover::after{transform:translateX(120%)}
+.btn:active{transform:scale(.97)}
+.btn.pri{background:var(--accent);color:#001318;border-color:var(--accent)}
+.plain{font:12px/1.5 var(--mono);color:var(--dim);max-width:340px}
+#err{font:12px/1.4 var(--mono);color:#ff7a90;max-width:340px;min-height:1.4em}
+.shake{animation:shake .4s}
+@keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+#codebox{width:100%;padding:16px 8px;border:1px dashed var(--accent);border-radius:var(--r);font:700 24px var(--mono);letter-spacing:.14em;color:var(--accent);text-shadow:0 0 14px var(--glow);user-select:all;word-break:break-all}
+
+/* main */
+#main{position:relative;z-index:1;height:100dvh;display:grid;grid-template-rows:auto 1fr}
+#hud{display:flex;align-items:center;gap:14px;padding:calc(10px + var(--sat)) 16px 6px}
+#brand{font-size:30px;display:flex;align-items:center;line-height:1}
+#brand .caret{width:.38em;height:.8em;margin-left:.15em}
+#hud .sp{flex:1}
+#clock,#aid{color:var(--dim);font-size:20px}
+#net{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:breathe2 2.4s ease-in-out infinite}
+#net.off{background:#ff5d5d;box-shadow:0 0 10px #ff5d5d}
+@keyframes breathe2{50%{opacity:.4}}
+#body{min-height:0;display:grid;grid-template-columns:minmax(260px,320px) 1fr;gap:12px;padding:6px 12px calc(12px + var(--sab))}
+.panel{position:relative;display:flex;flex-direction:column;min-height:0;min-width:0;border-radius:16px;background:var(--panel);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);animation:rise .8s cubic-bezier(.2,.8,.2,1) both}
+.panel>*{position:relative}
+#edit{animation-delay:.12s}
+.panel::before{opacity:.55;transition:opacity .3s}
+#edit:focus-within::before{opacity:1}
+@keyframes rise{from{opacity:0;transform:translateY(22px) scale(.98)}to{opacity:1;transform:none}}
+.bar{display:flex;align-items:center;gap:6px;padding:10px;border-bottom:1px solid var(--line);flex:none}
+#q{flex:1;min-width:0;padding:8px 12px;border:1px solid var(--line);border-radius:var(--r);font-size:22px;background:rgba(0,0,0,.25);transition:border-color .2s,box-shadow .2s}
+#q:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow)}
+#q::placeholder{color:var(--dim)}
+.ib{width:40px;height:40px;flex:none;display:grid;place-items:center;border-radius:var(--r);color:var(--dim);transition:color .15s,background .15s,box-shadow .2s,transform .1s}
+.ib:hover,.ib:focus-visible{color:var(--accent);background:rgba(73,230,255,.08);box-shadow:0 0 16px var(--glow)}
+.ib:active{transform:scale(.88)}
+.ib.on{color:var(--accent)}
+.ib.arm{background:var(--accent);color:#001318;box-shadow:0 0 18px var(--glow)}
+.ib svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ib.on svg.fillable{fill:currentColor}
+#list{flex:1;min-height:0;overflow-y:auto;list-style:none;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+#list li{position:relative;display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--line);cursor:pointer;overflow:hidden;transition:background .2s}
+#list li::before{content:"";position:absolute;left:0;top:50%;width:3px;height:0;background:var(--accent);box-shadow:0 0 12px var(--accent);transform:translateY(-50%);transition:height .25s}
+#list li:hover{background:rgba(73,230,255,.05)}
+#list li.sel{background:rgba(73,230,255,.09)}
+#list li.sel::before{height:70%}
+#list li.fresh{animation:slidein .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--n,0)*35ms)}
+@keyframes slidein{from{opacity:0;transform:translateX(-26px)}to{opacity:1;transform:none}}
+#list .t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;font-size:22px}
+#list .d{flex:none;color:var(--dim);font-size:16px}
+#list .pin{flex:none;width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
+#empty{padding:24px 14px;color:var(--dim);font-size:20px}
+.foot{display:flex;align-items:center;gap:6px;padding:8px 10px;border-top:1px solid var(--line);flex:none}
+.foot input[type=range]{flex:1;min-width:0;accent-color:var(--accent);height:24px}
+.foot .ib{width:34px;height:34px}
+#cnt{color:var(--dim);font-size:16px;min-width:2ch;text-align:right}
+
+#edit .bar{border-bottom:1px solid var(--line)}
+#back{display:none}
+#sp{flex:1}
+#sync{position:relative;width:10px;height:10px;border-radius:50%;border:2px solid var(--accent);margin:0 8px;flex:none}
+#sync.ok{background:var(--accent);box-shadow:0 0 10px var(--accent)}
+#sync.ping::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--accent);animation:ping .7s ease-out forwards}
+@keyframes ping{from{opacity:.9;transform:scale(.4)}to{opacity:0;transform:scale(1.8)}}
+#ta{flex:1;min-height:0;width:100%;resize:none;padding:18px 22px;font-size:var(--fs);line-height:1.7;caret-color:var(--accent);overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+#ta::placeholder{color:var(--dim)}
+#none{flex:1;display:grid;place-items:center;color:var(--dim);font-size:26px}
+#edit.wipe #ta,#edit.wipe #rd{animation:wipe .55s cubic-bezier(.3,.8,.2,1) both}
+@keyframes wipe{from{clip-path:inset(0 100% 0 0);opacity:.2}to{clip-path:inset(0);opacity:1}}
+
+/* read view */
+#rd{flex:1;min-height:0;overflow-y:auto;padding:18px 22px;font-size:var(--fs);line-height:1.9;white-space:pre-wrap;word-break:break-word;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+#rd .w{cursor:pointer;border-radius:4px;padding:2px 3px;margin:0 -1px;transition:background .15s,color .15s,box-shadow .2s}
+#rd .w:hover{box-shadow:0 0 0 1px var(--dim)}
+#rd .w.g{background:#3ddc84;color:#06140c;box-shadow:0 0 14px rgba(61,220,132,.45)}
+#rd .w.b{background:#4aa3ff;color:#06101c;box-shadow:0 0 14px rgba(74,163,255,.45)}
+#rd .w.y{background:#ffd23f;color:#1a1500;box-shadow:0 0 14px rgba(255,210,63,.4)}
+#rd .w.r{background:#ff5d5d;color:#1c0707;box-shadow:0 0 14px rgba(255,93,93,.45)}
+#rd .w.k{background:#000;color:#000;box-shadow:0 0 0 1px #2c3440}
+#rd .w.k:hover,#rd .w.k:active{color:var(--fg)}
+#rd .w.say{box-shadow:0 0 0 2px var(--accent),0 0 22px var(--accent);background:var(--accent);color:#000}
+#dock{display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 10px;border-top:1px solid var(--line);flex:none}
+#dock button{width:42px;height:42px;border-radius:var(--r);border:2px solid transparent;display:grid;place-items:center;transition:transform .15s,border-color .15s}
+#dock button:hover{transform:translateY(-3px)}
+#dock button i{width:24px;height:24px;border-radius:5px;display:block}
+#dock button.on{border-color:var(--fg)}
+#dock [data-c=g] i{background:#3ddc84}#dock [data-c=b] i{background:#4aa3ff}
+#dock [data-c=y] i{background:#ffd23f}#dock [data-c=r] i{background:#ff5d5d}
+#dock [data-c=k] i{background:#000;border:2px solid var(--dim)}
+#dock [data-c=x] i{background:none;border:2px solid var(--dim);position:relative}
+#dock [data-c=x] i::after{content:"";position:absolute;left:-2px;right:-2px;top:9px;border-top:2px solid var(--dim);transform:rotate(-45deg)}
+#mic.rec{background:var(--accent);color:#001318;animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.55}}
+
+/* lock */
+#lock{position:fixed;inset:0;z-index:40;background:rgba(5,7,10,.94);backdrop-filter:blur(18px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;animation:fadeup .4s both}
+#lock .rings{position:absolute;width:260px;height:260px;border-radius:50%;border:1px solid var(--accent);animation:ring 3s ease-out infinite;opacity:0;pointer-events:none}
+#lock .rings:nth-child(2){animation-delay:1s}#lock .rings:nth-child(3){animation-delay:2s}
+@keyframes ring{from{opacity:.7;transform:scale(.3)}to{opacity:0;transform:scale(2.4)}}
+#lock input{position:relative;width:220px;text-align:center;padding:12px;border:1px solid var(--line);border-radius:var(--r);font-size:30px;letter-spacing:.2em;background:rgba(0,0,0,.4)}
+#lock input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow)}
+#lock p{position:relative;color:var(--dim);font-size:22px}
+
+@media (max-width:760px){
+  #body{grid-template-columns:1fr;padding:4px 8px calc(8px + var(--sab))}
+  #side,#edit{grid-area:1/1}
+  body[data-view="list"] #edit{display:none}
+  body[data-view="edit"] #side{display:none}
+  #back{display:grid}
+  #clock,#aid{display:none}
+  #ta,#rd{padding:14px 16px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+  .anim .l{animation:none!important}
+}
+</style>
+</head>
+<body data-view="list">
+<canvas id="fx" aria-hidden="true"></canvas>
+<div class="grid" aria-hidden="true"></div>
+<div class="glow" aria-hidden="true"></div>
+<div class="scan" aria-hidden="true"></div>
+
+<section id="auth" hidden>
+  <h1 id="word" aria-label="terminal"></h1>
+  <p class="boot" id="boot" aria-hidden="true"></p>
+  <div class="card fadein" id="login" style="--d:1.3s">
+    <input id="code" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="14" placeholder="AGENT-CODE" aria-label="Agent code">
+    <div class="row">
+      <button id="enter" class="btn pri" type="button" aria-label="Enter">enter</button>
+      <button id="signup" class="btn" type="button" aria-label="New agent">new agent</button>
+    </div>
+    <p id="err" role="alert"></p>
+  </div>
+  <div class="card" id="reveal" hidden>
+    <div id="codebox"></div>
+    <p class="plain">your agent code. shown once. no recovery. store it now.</p>
+    <div class="row">
+      <button id="copy" class="btn" type="button" aria-label="Copy">copy</button>
+      <button id="stored" class="btn pri" type="button" aria-label="Stored">stored</button>
+    </div>
+  </div>
+</section>
+
+<div id="main" hidden>
+  <header id="hud">
+    <div id="brand" aria-label="terminal"></div>
+    <span class="sp"></span>
+    <span id="clock"></span>
+    <span id="aid"></span>
+    <span id="net" title="Connection"></span>
+  </header>
+  <div id="body">
+    <aside id="side" class="panel">
+      <div class="bar">
+        <input id="q" type="search" placeholder="search" autocomplete="off" spellcheck="false" aria-label="Search">
+        <button id="new" class="ib" type="button" title="New note (Alt+N)" aria-label="New note"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+      </div>
+      <ul id="list" role="listbox" aria-label="Notes"></ul>
+      <div id="empty" hidden>no notes</div>
+      <div class="foot">
+        <input id="size" type="range" min="18" max="56" step="1" aria-label="Text size">
+        <span id="cnt">0</span>
+        <button id="exp" class="ib" type="button" title="Export all as .md" aria-label="Export all"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></button>
+        <button id="lockbtn" class="ib" type="button" title="Lock (Alt+L)" aria-label="Lock"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></button>
+        <button id="out" class="ib" type="button" title="Sign out" aria-label="Sign out"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg></button>
+      </div>
+    </aside>
+    <section id="edit" class="panel">
+      <div class="bar" id="ebar" hidden>
+        <button id="back" class="ib" type="button" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <span id="sp"></span>
+        <span id="sync" title="Sync status"></span>
+        <button id="mic" class="ib" type="button" title="Dictate" aria-label="Dictate"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+        <button id="spk" class="ib" type="button" title="Read aloud" aria-label="Read aloud" hidden><svg viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4zM15.500 8.500a5 5 0 0 1 0 7M18.500 5.500a9 9 0 0 1 0 13"/></svg></button>
+        <button id="mode" class="ib" type="button" title="Edit / colour view" aria-label="Toggle view"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        <button id="pin" class="ib" type="button" title="Pin" aria-label="Pin"><svg class="fillable" viewBox="0 0 24 24"><path d="M12 17v5M9 3h6l-1 7 3 3v2H7v-2l3-3z"/></svg></button>
+        <button id="del" class="ib" type="button" title="Delete (press twice)" aria-label="Delete"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+      </div>
+      <textarea id="ta" hidden spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="write" aria-label="Note"></textarea>
+      <div id="rd" hidden tabindex="0" aria-label="Note colour view"></div>
+      <div id="dock" hidden>
+        <button type="button" data-c="g" aria-label="Green"><i></i></button>
+        <button type="button" data-c="b" aria-label="Blue"><i></i></button>
+        <button type="button" data-c="y" aria-label="Yellow"><i></i></button>
+        <button type="button" data-c="r" aria-label="Red"><i></i></button>
+        <button type="button" data-c="k" aria-label="Redact"><i></i></button>
+        <button type="button" data-c="x" aria-label="Erase"><i></i></button>
+      </div>
+      <div id="none">terminal</div>
+    </section>
+  </div>
+</div>
+
+<div id="lock" hidden>
+  <i class="rings"></i><i class="rings"></i><i class="rings"></i>
+  <p id="lkmsg">enter pin</p>
+  <input id="pinin" type="password" inputmode="numeric" autocomplete="off" aria-label="PIN">
+  <button id="lkout" class="ib" type="button" title="Sign out (clears PIN)" aria-label="Sign out"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg></button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, setDoc, deleteDoc, onSnapshot }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAnqt-2m5YRCTpquwIBQ9-rug4GxjKP9sw",
+  authDomain: "mishkan-emet.firebaseapp.com",
+  projectId: "mishkan-emet",
+  storageBucket: "mishkan-emet.firebasestorage.app",
+  messagingSenderId: "117280652842",
+  appId: "1:117280652842:web:fc1d92dd6e6f1c4184cd53"
+};
+const COLL = "terminal"; // users/{uid}/terminal/{noteId}
+
+const $ = id => document.getElementById(id);
+const el = { auth:$("auth"), main:$("main"), err:$("err"), q:$("q"), list:$("list"), empty:$("empty"), cnt:$("cnt"),
+  size:$("size"), ta:$("ta"), none:$("none"), ebar:$("ebar"), sync:$("sync"), pin:$("pin"), del:$("del"),
+  rd:$("rd"), dock:$("dock"), mic:$("mic"), spk:$("spk"), mode:$("mode"), edit:$("edit") };
+
+const store = {
+  get(k){ try{ return localStorage.getItem(k) }catch{ return null } },
+  set(k,v){ try{ localStorage.setItem(k,v) }catch{} }
+};
+const reduced = matchMedia("(prefers-reduced-motion:reduce)").matches;
+
+/* ---------- size ---------- */
+const setSize = n => { document.documentElement.style.setProperty("--fs", n + "px"); };
+const savedSize = parseInt(store.get("tm.size"), 10) || 28;
+el.size.value = savedSize; setSize(savedSize);
+el.size.addEventListener("input", () => { setSize(el.size.value); store.set("tm.size", el.size.value); });
+
+/* ---------- ambient background ---------- */
+(function () {
+  const c = $("fx"), x = c.getContext("2d"), cell = 24;
+  const accent = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#49e6ff";
+  let cols = [], H = 0, W = 0;
+  const size = () => {
+    W = c.width = innerWidth; H = c.height = innerHeight;
+    cols = Array.from({ length: Math.ceil(W / cell) }, () => ({ y: Math.random() * H / cell, v: .03 + Math.random() * .12, n: 3 + (Math.random() * 9 | 0), on: Math.random() < .3 }));
+  };
+  size(); addEventListener("resize", size);
+  const draw = () => {
+    x.clearRect(0, 0, W, H); x.fillStyle = accent;
+    cols.forEach((col, i) => {
+      if (!col.on) { if (Math.random() < .002) { col.on = true; col.y = -col.n; } return; }
+      for (let k = 0; k < col.n; k++) {
+        x.globalAlpha = (1 - k / col.n) * .17;
+        x.fillRect(i * cell + 8, (col.y - k) * cell + 8, 8, 8);
+      }
+      col.y += col.v;
+      if (col.y - col.n > H / cell) { col.on = Math.random() < .6; col.y = -col.n; col.v = .03 + Math.random() * .12; }
+    });
+    x.globalAlpha = 1;
+  };
+  if (reduced) { draw(); return; }
+  (function loop() { if (!document.hidden) draw(); requestAnimationFrame(loop); })();
+})();
+
+/* ---------- text forming ---------- */
+function forming(node, text, base = 0, step = 60, caret = false) {
+  node.classList.add("anim"); node.replaceChildren();
+  [...text].forEach((ch, i) => {
+    const l = document.createElement("span"); l.className = "l"; l.textContent = ch === " " ? " " : ch;
+    l.style.cssText = "--d:" + ((base + i * step + Math.random() * 120) | 0) + "ms;--x:" + ((Math.random() * 80 - 40) | 0) + "px;--y:" + ((Math.random() * 90 - 60) | 0) + "px";
+    node.appendChild(l);
+  });
+  if (caret) { const c = document.createElement("i"); c.className = "caret"; node.appendChild(c); }
+}
+
+/* ---------- firebase ---------- */
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+let db;
+try {
+  db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+} catch { db = initializeFirestore(app, {}); }
+
+/* ---------- agent code auth ---------- */
+const ALPHA = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+const hex = async s => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))].map(b => b.toString(16).padStart(2, "0")).join("");
+const clean = s => (s || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+const newCode = () => {
+  const a = new Uint32Array(12); crypto.getRandomValues(a);
+  const s = [...a].map(v => ALPHA[v % ALPHA.length]).join("");
+  return s.slice(0, 4) + "-" + s.slice(4, 8) + "-" + s.slice(8);
+};
+const creds = async code => {
+  const c = clean(code);
+  return { email: (await hex("id:" + c)).slice(0, 24) + "@terminal.iosci.org", password: await hex("pw:" + c) };
+};
+const showErr = m => { el.err.textContent = m || ""; };
+const shake = () => { const c = $("login"); c.classList.remove("shake"); void c.offsetWidth; c.classList.add("shake"); };
+let revealing = false;
+
+const codeIn = $("code");
+codeIn.addEventListener("input", () => {
+  const c = clean(codeIn.value).slice(0, 12);
+  codeIn.value = c.match(/.{1,4}/g)?.join("-") || "";
+});
+codeIn.addEventListener("keydown", e => { if (e.key === "Enter") doEnter(); });
+
+async function doEnter() {
+  showErr("");
+  if (clean(codeIn.value).length !== 12) { shake(); showErr("code is 12 characters"); return; }
+  try {
+    const { email, password } = await creds(codeIn.value);
+    await signInWithEmailAndPassword(auth, email, password);
+    codeIn.value = "";
+  } catch (e) { shake(); showErr(authMsg(e)); }
+}
+function authMsg(e) {
+  const c = e && e.code || "";
+  if (["auth/invalid-credential", "auth/user-not-found", "auth/wrong-password", "auth/invalid-email"].includes(c)) return "denied";
+  if (c === "auth/operation-not-allowed") return "email/password sign-in is not enabled in the firebase console";
+  if (c === "auth/network-request-failed") return "no connection";
+  if (c === "auth/too-many-requests") return "too many attempts. wait and retry";
+  return c || (e && e.message) || "error";
+}
+async function doSignup() {
+  showErr(""); revealing = true;
+  for (let t = 0; t < 4; t++) {
+    const code = newCode();
+    try {
+      const { email, password } = await creds(code);
+      await createUserWithEmailAndPassword(auth, email, password);
+      $("codebox").textContent = code; $("login").hidden = true; $("reveal").hidden = false;
+      return;
+    } catch (e) {
+      if (e.code === "auth/email-already-in-use") continue;
+      revealing = false; shake(); showErr(authMsg(e)); return;
+    }
+  }
+  revealing = false; showErr("could not issue a code. retry");
+}
+$("enter").addEventListener("click", doEnter);
+$("signup").addEventListener("click", doSignup);
+$("copy").addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText($("codebox").textContent); $("copy").textContent = "copied"; } catch { showErr("copy failed. select and copy manually"); }
+});
+$("stored").addEventListener("click", () => {
+  revealing = false; $("reveal").hidden = true; $("login").hidden = false; $("codebox").textContent = "";
+  onUser(auth.currentUser);
+});
+
+const doOut = () => { try { localStorage.removeItem("tm.pin"); } catch {} lockEl.hidden = true; signOut(auth); };
+$("out").addEventListener("click", doOut);
+$("lkout").addEventListener("click", doOut);
+
+function showAuth() {
+  el.main.hidden = true; el.auth.hidden = false;
+  $("login").hidden = false; $("reveal").hidden = true; $("copy").textContent = "copy";
+  forming($("word"), "terminal", 150, 85, true);
+  forming($("boot"), "secure channel open. awaiting agent.", 1000, 26);
+}
+
+/* ---------- hud ---------- */
+const pad2 = x => String(x).padStart(2, "0");
+const tick = () => { const d = new Date(); $("clock").textContent = pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + ":" + pad2(d.getSeconds()); };
+setInterval(() => { if (!document.hidden && !el.main.hidden) tick(); }, 1000);
+const netSync = () => $("net").classList.toggle("off", !navigator.onLine);
+addEventListener("online", netSync); addEventListener("offline", netSync); netSync();
+
+/* ---------- state ---------- */
+let uid = null, unsub = null;
+let notes = new Map();         // id -> {id,text,pinned,updatedAt}
+let curId = null, dirty = false, timer = null, armTimer = null;
+let mode = store.get("tm.mode") === "read" ? "read" : "edit", brush = store.get("tm.brush") || "y";
+const mobile = () => matchMedia("(max-width:760px)").matches;
+const view = v => { document.body.dataset.view = v; };
+
+const colRef = () => collection(db, "users", uid, COLL);
+const docRef = id => doc(db, "users", uid, COLL, id);
+const title = t => (t.split("\n").find(l => l.trim()) || "").trim().slice(0, 80);
+const fmt = ts => {
+  const d = new Date(ts), n = new Date();
+  const p = x => String(x).padStart(2, "0");
+  return d.toDateString() === n.toDateString() ? p(d.getHours()) + ":" + p(d.getMinutes()) : p(d.getDate()) + "/" + p(d.getMonth() + 1);
+};
+
+function onUser(user) {
+  if (unsub) { unsub(); unsub = null; }
+  notes = new Map(); curId = null; uid = null; seen.clear();
+  if (!user) { showAuth(); return; }
+  uid = user.uid; el.auth.hidden = true; el.main.hidden = false; showErr("");
+  forming($("brand"), "terminal", 200, 70, true);
+  $("aid").textContent = user.uid.slice(0, 6).toLowerCase(); tick();
+  openNote(null);
+  unsub = onSnapshot(colRef(), snap => {
+    snap.docChanges().forEach(ch => {
+      if (ch.type === "removed") notes.delete(ch.doc.id);
+      else notes.set(ch.doc.id, { id: ch.doc.id, ...ch.doc.data() });
+    });
+    el.sync.classList.toggle("ok", !snap.metadata.hasPendingWrites);
+    const cur = notes.get(curId);
+    if (curId && !cur) openNote(null);
+    else if (cur && !dirty && el.ta.value !== cur.text) {
+      const s = el.ta.selectionStart; el.ta.value = cur.text; try { el.ta.setSelectionRange(s, s); } catch {}
+    }
+    if (cur) syncPin(cur);
+    if (cur && mode === "read" && !el.rd.hidden && !dirty) renderRead(false);
+    renderList();
+  }, e => console.error(e));
+  if (!mobile()) view("list");
+}
+onAuthStateChanged(auth, u => { if (revealing) return; onUser(u); });
+const seen = new Set();
+
+/* ---------- list ---------- */
+function visible() {
+  const q = el.q.value.trim().toLowerCase();
+  return [...notes.values()]
+    .filter(n => !q || (n.text || "").toLowerCase().includes(q))
+    .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || (b.updatedAt || 0) - (a.updatedAt || 0));
+}
+function renderList() {
+  const items = visible();
+  el.cnt.textContent = notes.size;
+  el.empty.hidden = items.length > 0;
+  const frag = document.createDocumentFragment();
+  let fresh = 0;
+  for (const n of items) {
+    const li = document.createElement("li");
+    li.dataset.id = n.id; li.setAttribute("role", "option");
+    if (!seen.has(n.id)) { seen.add(n.id); li.classList.add("fresh"); li.style.setProperty("--n", Math.min(fresh++, 12)); }
+    if (n.id === curId) { li.classList.add("sel"); li.setAttribute("aria-selected", "true"); }
+    if (n.pinned) { const p = document.createElement("span"); p.className = "pin"; li.appendChild(p); }
+    const t = document.createElement("span"); t.className = "t"; t.textContent = title(n.text || "") || "…"; li.appendChild(t);
+    const d = document.createElement("span"); d.className = "d"; d.textContent = fmt(n.updatedAt || Date.now()); li.appendChild(d);
+    frag.appendChild(li);
+  }
+  el.list.replaceChildren(frag);
+}
+el.list.addEventListener("click", e => {
+  const li = e.target.closest("li"); if (li) openNote(li.dataset.id);
+});
+el.q.addEventListener("input", renderList);
+
+/* ---------- editor ---------- */
+async function flush() {
+  clearTimeout(timer); timer = null;
+  if (!dirty || !curId) return;
+  dirty = false;
+  const n = notes.get(curId); if (!n) return;
+  n.text = el.ta.value; n.updatedAt = Date.now();
+  el.sync.classList.remove("ok");
+  try { await setDoc(docRef(curId), { text: n.text, pinned: !!n.pinned, marks: n.marks || [], updatedAt: n.updatedAt }, { merge: true }); }
+  catch (e) { console.error(e); }
+}
+async function dropIfEmpty() {
+  const n = notes.get(curId);
+  if (n && !(el.ta.value || "").trim()) { notes.delete(curId); try { await deleteDoc(docRef(curId)); } catch {} }
+}
+async function openNote(id) {
+  await flush();
+  if (curId && curId !== id) await dropIfEmpty();
+  curId = id; disarm(); stopSpeech(); stopMic();
+  const n = id && notes.get(id);
+  el.ebar.hidden = !n; el.none.hidden = !!n;
+  if (n) { el.ta.value = n.text || ""; syncPin(n); view("edit"); if (!n.text) mode = "edit"; applyMode(true); if (!el.ta.hidden && (!mobile() || !n.text)) el.ta.focus(); }
+  else { el.ta.hidden = el.rd.hidden = el.dock.hidden = true; rdSig = ""; view("list"); }
+  renderList();
+}
+function syncPin(n) { el.pin.classList.toggle("on", !!n.pinned); }
+
+el.ta.addEventListener("input", () => {
+  dirty = true; const n = notes.get(curId);
+  if (n) { n.text = el.ta.value; n.updatedAt = Date.now(); }
+  el.sync.classList.remove("ok", "ping"); void el.sync.offsetWidth; el.sync.classList.add("ping");
+  clearTimeout(timer); timer = setTimeout(flush, 500);
+  renderList();
+});
+window.addEventListener("pagehide", flush);
+document.addEventListener("visibilitychange", () => { if (document.hidden) flush(); });
+
+async function newNote() {
+  await flush(); if (curId) await dropIfEmpty();
+  const ref = doc(colRef());
+  const n = { id: ref.id, text: "", pinned: false, updatedAt: Date.now() };
+  notes.set(n.id, n);
+  setDoc(ref, { text: "", pinned: false, updatedAt: n.updatedAt }).catch(console.error);
+  el.q.value = ""; curId = null;
+  await openNote(n.id); el.ta.focus();
+}
+$("new").addEventListener("click", newNote);
+$("back").addEventListener("click", () => openNote(null));
+
+el.pin.addEventListener("click", async () => {
+  const n = notes.get(curId); if (!n) return;
+  n.pinned = !n.pinned; syncPin(n); renderList();
+  try { await setDoc(docRef(n.id), { pinned: n.pinned }, { merge: true }); } catch (e) { console.error(e); }
+});
+
+function disarm() { clearTimeout(armTimer); el.del.classList.remove("arm"); }
+el.del.addEventListener("click", async () => {
+  if (!el.del.classList.contains("arm")) { el.del.classList.add("arm"); armTimer = setTimeout(disarm, 2500); return; }
+  disarm();
+  const id = curId; if (!id) return;
+  dirty = false; clearTimeout(timer); notes.delete(id); curId = null;
+  await openNote(null);
+  try { await deleteDoc(docRef(id)); } catch (e) { console.error(e); }
+});
+
+/* ---------- colour view, animation, speech, dictation ---------- */
+const WORD = /\S+/g;
+const wordsOf = t => [...t.matchAll(WORD)].map(m => ({ w: m[0], at: m.index }));
+let rdSig = "";
+const sigOf = n => (n.text || "") + "\u0000" + JSON.stringify(n.marks || []);
+
+function reanchor(n) {
+  if (!n.marks || !n.marks.length) return false;
+  const toks = wordsOf(n.text || "").map(x => x.w), used = new Set(), out = [];
+  let changed = false;
+  for (const m of n.marks) {
+    let j = -1;
+    if (toks[m.i] === m.w && !used.has(m.i)) j = m.i;
+    else for (let d = 1; d <= 12 && j < 0; d++) for (const k of [m.i - d, m.i + d])
+      if (k >= 0 && toks[k] === m.w && !used.has(k)) { j = k; break; }
+    if (j < 0) { changed = true; continue; }
+    if (j !== m.i) changed = true;
+    used.add(j); out.push({ i: j, w: m.w, c: m.c });
+  }
+  if (changed) n.marks = out;
+  return changed;
+}
+
+function renderRead(animate) {
+  const n = notes.get(curId); if (!n) return;
+  const sig = sigOf(n);
+  if (!animate && sig === rdSig) return;
+  rdSig = sig;
+  const text = n.text || "", top = el.rd.scrollTop;
+  const mk = new Map((n.marks || []).map(m => [m.i, m.c]));
+  const fast = !animate || text.length > 2500 || reduced;
+  el.rd.classList.toggle("anim", !fast);
+  const frag = document.createDocumentFragment();
+  let last = 0, i = 0;
+  for (const m of text.matchAll(WORD)) {
+    if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+    const s = document.createElement("span");
+    s.className = "w" + (mk.has(i) ? " " + mk.get(i) : ""); s.dataset.i = i;
+    if (fast) s.textContent = m[0];
+    else {
+      const base = Math.min(i * 22, 1400);
+      for (const ch of m[0]) {
+        const l = document.createElement("span"); l.className = "l"; l.textContent = ch;
+        l.style.cssText = "--d:" + ((base + Math.random() * 180) | 0) + "ms;--x:" + ((Math.random() * 80 - 40) | 0) + "px;--y:" + ((Math.random() * 80 - 60) | 0) + "px";
+        s.appendChild(l);
+      }
+    }
+    frag.appendChild(s);
+    last = m.index + m[0].length; i++;
+  }
+  if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+  el.rd.replaceChildren(frag); el.rd.scrollTop = top;
+}
+
+function applyMode(animate) {
+  const n = notes.get(curId); if (!n) return;
+  if (mode === "read" && !(n.text || "").trim()) mode = "edit";
+  const read = mode === "read";
+  el.ta.hidden = read; el.rd.hidden = el.dock.hidden = !read;
+  el.mic.hidden = read; el.spk.hidden = !read;
+  el.mode.classList.toggle("on", read);
+  if (read) {
+    if (reanchor(n)) { dirty = true; clearTimeout(timer); timer = setTimeout(flush, 500); }
+    stopMic(); renderRead(animate);
+  } else stopSpeech();
+}
+el.mode.addEventListener("click", async () => {
+  await flush(); mode = mode === "read" ? "edit" : "read"; store.set("tm.mode", mode);
+  wipe(); applyMode(true); if (mode === "edit") el.ta.focus();
+});
+function wipe() { if (reduced) return; el.edit.classList.remove("wipe"); void el.edit.offsetWidth; el.edit.classList.add("wipe"); }
+
+const syncDock = () => el.dock.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.c === brush));
+el.dock.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  brush = b.dataset.c; store.set("tm.brush", brush); syncDock();
+});
+syncDock();
+el.rd.addEventListener("click", e => {
+  const s = e.target.closest(".w"); if (!s) return;
+  const n = notes.get(curId); if (!n) return;
+  const i = +s.dataset.i, had = (n.marks || []).find(m => m.i === i);
+  const marks = (n.marks || []).filter(m => m.i !== i);
+  const add = brush !== "x" && !(had && had.c === brush);
+  if (add) marks.push({ i, w: s.textContent, c: brush });
+  n.marks = marks.slice(0, 600); n.updatedAt = Date.now();
+  s.className = "w" + (add ? " " + brush : "");
+  rdSig = sigOf(n);
+  dirty = true; clearTimeout(timer); timer = setTimeout(flush, 400);
+});
+
+/* read aloud with word follow */
+const synth = window.speechSynthesis;
+let speaking = false;
+if (!synth) el.spk.remove();
+function stopSpeech() {
+  if (!speaking) return;
+  speaking = false; synth.cancel(); el.spk.classList.remove("on");
+  el.rd.querySelectorAll(".say").forEach(x => x.classList.remove("say"));
+}
+el.spk.addEventListener("click", () => {
+  if (speaking) { stopSpeech(); return; }
+  const n = notes.get(curId); if (!n || !(n.text || "").trim()) return;
+  const starts = wordsOf(n.text).map(x => x.at);
+  const u = new SpeechSynthesisUtterance(n.text); u.lang = navigator.language || "en-GB";
+  let prev = null;
+  u.onboundary = e => {
+    let k = starts.length - 1; while (k > 0 && starts[k] > e.charIndex) k--;
+    const s = el.rd.querySelector('.w[data-i="' + k + '"]');
+    if (prev) prev.classList.remove("say");
+    if (s) { s.classList.add("say"); s.scrollIntoView({ block: "nearest" }); }
+    prev = s;
+  };
+  u.onend = u.onerror = () => { speaking = false; el.spk.classList.remove("on"); if (prev) prev.classList.remove("say"); };
+  synth.cancel(); speaking = true; el.spk.classList.add("on"); synth.speak(u);
+});
+
+/* dictation */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null;
+if (!SR) el.mic.remove();
+function stopMic() { if (rec) { try { rec.stop(); } catch {} } }
+el.mic.addEventListener("click", () => {
+  if (rec) { stopMic(); return; }
+  rec = new SR(); rec.lang = navigator.language || "en-GB"; rec.continuous = true; rec.interimResults = false;
+  rec.onresult = e => {
+    for (let k = e.resultIndex; k < e.results.length; k++) {
+      if (!e.results[k].isFinal) continue;
+      let t = e.results[k][0].transcript.trim(); if (!t) continue;
+      const a = el.ta, before = a.value.slice(0, a.selectionStart);
+      if (before && !/\s$/.test(before)) t = " " + t;
+      a.setRangeText(t, a.selectionStart, a.selectionEnd, "end");
+      a.dispatchEvent(new Event("input"));
+    }
+  };
+  rec.onend = rec.onerror = () => { rec = null; el.mic.classList.remove("rec"); };
+  try { rec.start(); el.mic.classList.add("rec"); } catch { rec = null; }
+});
+
+/* ---------- lock ---------- */
+const lockEl = $("lock"), pinIn = $("pinin"), lkMsg = $("lkmsg");
+const sha = async s => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode("dn:" + s)))].map(b => b.toString(16).padStart(2, "0")).join("");
+function lockNow() {
+  flush(); stopSpeech(); stopMic();
+  lockEl.hidden = false; pinIn.value = ""; lkMsg.textContent = store.get("tm.pin") ? "enter pin" : "set pin"; pinIn.focus();
+}
+pinIn.addEventListener("keydown", async e => {
+  if (e.key !== "Enter") return;
+  const v = pinIn.value.trim(); if (!v) return;
+  const h = await sha(v), saved = store.get("tm.pin");
+  if (!saved) { store.set("tm.pin", h); lockEl.hidden = true; }
+  else if (h === saved) lockEl.hidden = true;
+  else { lkMsg.textContent = "denied"; pinIn.value = ""; pinIn.classList.remove("shake"); void pinIn.offsetWidth; pinIn.classList.add("shake"); }
+});
+$("lockbtn").addEventListener("click", lockNow);
+let hiddenAt = 0, escAt = 0;
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) hiddenAt = Date.now();
+  else if (uid && store.get("tm.pin") && hiddenAt && Date.now() - hiddenAt > 60000) lockNow();
+});
+
+/* ---------- export ---------- */
+$("exp").addEventListener("click", async () => {
+  await flush();
+  const body = visible().map(n => n.text || "").join("\n\n---\n\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([body], { type: "text/markdown" }));
+  a.download = "dotsies-notes-" + new Date().toISOString().slice(0, 10) + ".md";
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+
+/* ---------- shortcuts ---------- */
+addEventListener("keydown", e => {
+  if (e.altKey && e.key.toLowerCase() === "n") { e.preventDefault(); newNote(); }
+  else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); if (mobile()) openNote(null); el.q.focus(); el.q.select(); }
+  else if (e.altKey && e.key.toLowerCase() === "l") { e.preventDefault(); if (uid) lockNow(); }
+  else if (e.key === "Escape" && document.activeElement !== el.q && uid && store.get("tm.pin")) { if (Date.now() - escAt < 500) lockNow(); escAt = Date.now(); }
+  else if (e.key === "Escape" && document.activeElement === el.q) { el.q.value = ""; renderList(); el.q.blur(); }
+});
+
+/* ---------- PWA ---------- */
+if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(console.error));
+</script>
+</body>
+</html>
