@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -15,7 +15,7 @@
 @font-face{font-family:"Dotsies";src:url("DotsiesRect.ttf") format("truetype");font-display:swap}
 :root{--k:#000;--w:#fff;--g:#777;--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:var(--k);color:var(--w);overflow:hidden;overscroll-behavior:none;
+html,body{height:100%;background:var(--k);color:var(--w);overflow:hidden;overscroll-behavior:none;touch-action:manipulation;-webkit-text-size-adjust:100%;
   font:14px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;text-transform:lowercase}
 html[data-dots="1"] body{font-family:"Dotsies",ui-monospace,monospace}
 button,input,textarea{font:inherit;color:inherit;background:none;border:0;outline:0;border-radius:0;text-transform:inherit}
@@ -71,6 +71,9 @@ button:active,button.on{background:var(--w);color:var(--k)}
 #top{position:fixed;top:0;left:0;right:0;z-index:700;background:var(--k);border-bottom:1px solid var(--w);
   padding:calc(var(--sat) + 8px) 12px 8px;display:flex;align-items:center;gap:8px}
 #top .sp{flex:1}
+#top{gap:6px}
+#top .o{width:40px;height:40px;font-size:18px}
+#me{font-size:19px}
 #me{font-size:20px;letter-spacing:.08em}
 #rk{text-transform:none;font-size:18px;min-width:2.2em;text-align:center;border:1px solid var(--w);padding:0 6px}
 #rk.flick{animation:inv .9s steps(1) 1}
@@ -122,6 +125,7 @@ textarea::placeholder{color:var(--g)}
 #sheet .rt{display:flex;gap:12px;align-items:center}
 #sheet p{white-space:pre-wrap;word-break:break-word}
 #sheet .st{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid #333}
+#sheet .st.hp{justify-content:flex-start;gap:14px;padding:9px 0}
 
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -144,6 +148,7 @@ textarea::placeholder{color:var(--g)}
     <span class="sp"></span>
     <button id="bglobal" class="o" type="button" aria-label="All agents">⊕</button>
     <button id="blist" class="o" type="button" aria-label="Reports">≡</button>
+    <button id="bhelp" class="o" type="button" aria-label="Help">?</button>
     <button id="bset" class="o" type="button" aria-label="Settings">⚙</button>
   </header>
   <p id="line" class="dim"></p>
@@ -340,7 +345,7 @@ let uid = null, agent = "", map = null, pos = null, follow = true, heading = 0, 
 let mine = new Map(), active = null, draft = null, spinning = false, arriving = null;
 let showAll = false, allDocs = new Map(), unsubMine = null, unsubAll = null, newRid = null;
 const net = new Map(); // rid -> net rating (own reports, lazy)
-let gMine, gTrail, gAll, meMk = null, tgMk = null;
+let gMine, gTrail, gAll, meMk = null, tgMk = null, todayLine = "";
 
 const flash = (ms = 100) => { if (reduced) return; const f = $("flash"); f.hidden = false; setTimeout(() => { f.hidden = true; }, ms); };
 const note = (t, dim = true) => { const l = $("line"); l.textContent = t; l.classList.toggle("dim", dim); };
@@ -410,9 +415,15 @@ function setTarget() {
 }
 
 /* ---------- location ---------- */
-function startGeo() {
-  if (!navigator.geolocation) { note("location off"); return; }
-  navigator.geolocation.watchPosition(onPos, () => note("location off"), { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 });
+let watchId = null;
+function startGeo(hi = true) {
+  if (!navigator.geolocation) { note("location ✕", false); return; }
+  if (watchId != null) navigator.geolocation.clearWatch(watchId);
+  watchId = navigator.geolocation.watchPosition(onPos, e => {
+    if (e.code === 1) note("location denied · allow in browser settings", false);
+    else if (hi) { note("locating…", false); startGeo(false); }
+    else note("location unavailable · try outside", false);
+  }, { enableHighAccuracy: hi, maximumAge: 5000, timeout: hi ? 15000 : 40000 });
 }
 function onPos(p) {
   const first = !pos;
@@ -420,11 +431,11 @@ function onPos(p) {
   if (!hasCompass && p.coords.heading != null && !isNaN(p.coords.heading) && p.coords.speed > 1) { heading = p.coords.heading; }
   if (!meMk) meMk = L.marker([pos.lat, pos.lng], { icon: L.divIcon({ className: "mkw me", html: "<b></b><i></i>", iconSize: [0, 0] }), interactive: false, zIndexOffset: 1000 }).addTo(map);
   else meMk.setLatLng([pos.lat, pos.lng]);
-  if (first) { map.setView([pos.lat, pos.lng], 16, { animate: false }); if ($("line").textContent === "location off") note(""); }
+  if (first) { map.setView([pos.lat, pos.lng], 16, { animate: false }); if ($("line").textContent.startsWith("locat")) { $("line").textContent = todayLine; $("line").classList.add("dim"); } }
   else if (follow && !spinning) map.panTo([pos.lat, pos.lng], { animate: true, duration: .4 });
   updateTravel(); drawCompass();
 }
-$("brec").addEventListener("click", () => { follow = true; if (pos) map.flyTo([pos.lat, pos.lng], Math.max(map.getZoom(), 15), { duration: .5 }); });
+$("brec").addEventListener("click", () => { follow = true; if (!pos) startGeo(true); if (pos) map.flyTo([pos.lat, pos.lng], Math.max(map.getZoom(), 15), { duration: .5 }); });
 
 /* ---------- spin (randonautica method) ---------- */
 async function rand16(n) {
@@ -482,7 +493,7 @@ function playSpin(g) {
 }
 async function spin() {
   if (spinning || draft || active) return;
-  if (!pos) { note("location off", false); return; }
+  if (!pos) { startGeo(true); note("locating…", false); return; }
   spinning = true; startCompass(); ac(); sfx.spin(); flash(80);
   const c = { lat: pos.lat, lng: pos.lng };
   map.setView([c.lat, c.lng], 14.5, { animate: false });
@@ -669,9 +680,22 @@ $("bset").addEventListener("click", () => {
   $("sout").addEventListener("click", () => { signOut(auth).then(() => location.reload()).catch(() => location.reload()); });
 });
 
+/* ---------- help ---------- */
+const HELP = [["⌖", "location on · allow"], ["◎", "spin → a point"], ["✎", "blind view first · draw + write"], ["▶", "go"],
+  ["➤", "follow the arrow"], ["✓ ✕", "there: write what is · matched / not"], ["◎", "again · trail grows"],
+  ["⊕", "all agents · ▲ ▼ rate"], ["≡", "your reports"], ["⚙", "dots · sound · exit"], ["◉", "evolution of mankind"]];
+function openHelp() {
+  if (sheet.classList.contains("open") && sbody.dataset.k === "help") { closeSheet(); return; }
+  openSheet(HELP.map(h => '<div class="st hp"><span style="font-size:20px;min-width:3.2em">' + esc(h[0]) + "</span><span>" + esc(h[1]) + "</span></div>").join(""));
+  sbody.dataset.k = "help";
+}
+$("bhelp").addEventListener("click", openHelp);
+["gesturestart", "gesturechange", "gestureend"].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
+document.addEventListener("touchmove", e => { if (e.touches.length > 1 && !e.target.closest("#map")) e.preventDefault(); }, { passive: false });
+
 /* ---------- daily line ---------- */
 function daily() {
-  const day = Math.floor(Date.now() / 864e5), t = LINES[day % LINES.length], l = $("line");
+  const day = Math.floor(Date.now() / 864e5), t = LINES[day % LINES.length], l = $("line"); todayLine = t;
   if (store.get("tm.day") === String(day) || reduced) { l.textContent = t; l.classList.add("dim"); return; }
   store.set("tm.day", String(day)); l.classList.remove("dim"); l.textContent = "";
   [...t].forEach((ch, i) => setTimeout(() => { l.textContent += ch; if (i % 2 === 0) sfx.key(); }, 700 + i * 55));
@@ -687,6 +711,7 @@ onAuthStateChanged(auth, user => {
   setTimeout(() => {
     $("open").hidden = true; $("app").hidden = false; $("me").textContent = agent;
     initMap(); map.invalidateSize(); startGeo(); subMine(); daily(); route();
+    if (!store.get("tm.help")) { store.set("tm.help", "1"); setTimeout(openHelp, 400); }
   }, $("boxes").classList.contains("inv") ? 260 : 0);
 });
 
