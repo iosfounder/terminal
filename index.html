@@ -195,6 +195,7 @@ body:not([data-st="travel"]) #hud,body:not([data-st="travel"]) #tfoot{display:no
 .tgm u{position:absolute;left:50%;top:16px;transform:translateX(-50%);max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:none;font-size:11px;letter-spacing:.1em;color:#dcdce6;text-shadow:0 0 4px #000,0 0 4px #000}
 .stp{display:block;width:20px;height:20px;margin:-10px 0 0 -10px;border:1px solid var(--c);border-radius:50%;font-size:11px;line-height:18px;text-align:center;color:var(--c);background:rgba(0,0,0,.6);box-shadow:0 0 10px rgba(79,243,255,.4)}
 .stp.got{opacity:.45}
+.am{display:block;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;font-size:11px;line-height:17px;text-align:center;font-weight:400;color:#e8e8f0;background:rgba(10,10,18,.78);border:1px solid rgba(255,255,255,.28);cursor:pointer}
 #dockhome #blook{position:absolute;right:20px;bottom:18px}
 
 /* places with a story: a thin line up from the spot, the name floating above it */
@@ -393,7 +394,7 @@ const pad4 = n => String(n).padStart(4, "0");
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
 
-const BUILD = "v9.2";
+const BUILD = "v9.3";
 const ARR = 30, HOME_PITCH = 50;
 
 /* ---------- sound ---------- */
@@ -439,7 +440,7 @@ const sfx = {
 };
 // iPhone only unlocks sound and the compass from a finished tap (touchend / click), so keep trying on each one until both are awake
 const unlockEv = ["touchend", "click"];
-function unlock() { ac(); G.prime(); if (window.startMedia) window.startMedia(); startCompass(); if (AC && AC.state === "running" && (compassOn || !needsPerm)) unlockEv.forEach(t => removeEventListener(t, unlock, true)); }
+function unlock() { ac(); G.prime(); if (window.startMedia) window.startMedia(); musicStart(); startCompass(); if (AC && AC.state === "running" && (compassOn || !needsPerm)) unlockEv.forEach(t => removeEventListener(t, unlock, true)); }
 unlockEv.forEach(t => addEventListener(t, unlock, true));
 
 /* ---------- dots ---------- */
@@ -860,18 +861,55 @@ function titleCard() {
   if (reduced) return; try { if (sessionStorage.getItem("tm.title")) return; sessionStorage.setItem("tm.title", "1"); } catch {}
   const t = $("title"); t.classList.remove("go"); void t.offsetWidth; t.classList.add("go"); lb(3600);
 }
-let bed = null;                                  // a very quiet low drone while you walk; it swells as you close in
-function setBed(g) {
-  const a = AC; if (!a) return; if (muted || document.hidden) g = 0;
-  if (!bed) {
-    if (g <= 0) return;
-    const o1 = a.createOscillator(), o2 = a.createOscillator(), lf = a.createOscillator(), lg = a.createGain(), v = a.createGain();
-    o1.type = o2.type = lf.type = "sine"; o1.frequency.value = 55; o2.frequency.value = 82.5; lf.frequency.value = .07; lg.gain.value = 5;
-    lf.connect(lg); lg.connect(o2.frequency); v.gain.value = 0; o1.connect(v); o2.connect(v); v.connect(a.destination); o1.start(); o2.start(); lf.start(); bed = v;
-  }
-  bed.gain.setTargetAtTime(g, a.currentTime, 1.4);
+/* ---------- music: a score made on the phone ---------- */
+// No recordings and no licences: slow chords, a low root, sparse bells drifting left and right, through a soft echo.
+// The mode follows the time of day; it rises on a walk, sinks under the voice, swells at a stop and as you near the next place.
+const MODES = { morning: [0, 2, 4, 6, 7, 9, 11], day: [0, 2, 4, 7, 9], dusk: [0, 2, 3, 5, 7, 9, 10], night: [0, 2, 3, 5, 7, 8, 10] };   // lydian, major pentatonic, dorian, aeolian
+const PROG = [[0, 2, 4], [5, 7, 9], [3, 5, 7], [4, 6, 8]];                       // scale-degree chords, cycled every 8 seconds
+let musicOn = store.get("tour.music") !== "0", mus = null, swellT = 0;
+const tod = () => { const h = new Date().getHours(); return h < 5 ? "night" : h < 11 ? "morning" : h < 17 ? "day" : h < 21 ? "dusk" : "night"; };
+const hz = s => 110 * 2 ** (s / 12);
+function musicStart() {
+  const a = AC; if (!a || mus || !musicOn) return;
+  const out = a.createGain(), lp = a.createBiquadFilter(), dl = a.createDelay(1.5), fb = a.createGain(), wet = a.createGain();
+  out.gain.value = 0; lp.type = "lowpass"; lp.frequency.value = 1300; lp.Q.value = .4; dl.delayTime.value = .43; fb.gain.value = .45; wet.gain.value = .4;
+  lp.connect(out); lp.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(wet); wet.connect(out); out.connect(a.destination);
+  const pad = [0, 1, 2].map(i => {
+    const o1 = a.createOscillator(), o2 = a.createOscillator(), g = a.createGain(), g2 = a.createGain(), pn = a.createStereoPanner ? a.createStereoPanner() : null;
+    o1.type = "triangle"; o2.type = "sawtooth"; o2.detune.value = 6 + i * 3; g.gain.value = 0; g2.gain.value = .22;
+    o1.connect(g); o2.connect(g2).connect(g); if (pn) { pn.pan.value = (i - 1) * .65; g.connect(pn).connect(lp); } else g.connect(lp);
+    o1.start(); o2.start(); return { o1, o2, g };
+  });
+  const bass = a.createOscillator(), bg = a.createGain(); bass.type = "sine"; bg.gain.value = 0; bass.connect(bg).connect(out); bass.start();
+  mus = { out, lp, pad, bass, bg, step: 0, near: 0 };
+  musicChord(); mus.ct = setInterval(musicChord, 8000); mus.bt = setTimeout(bell, 3000);
 }
-document.addEventListener("visibilitychange", () => { if (document.hidden) setBed(0); });
+function musicChord() {                          // the next chord, glided into
+  const a = AC; if (!a || !mus) return; const t = a.currentTime, sc = MODES[tod()], tri = PROG[mus.step++ % PROG.length];
+  const semi = d => sc[d % sc.length] + 12 * Math.floor(d / sc.length);
+  mus.pad.forEach((v, i) => { const f = hz(semi(tri[i]) + 12); v.o1.frequency.setTargetAtTime(f, t, 1.4); v.o2.frequency.setTargetAtTime(f, t, 1.4); v.g.gain.setTargetAtTime(.05, t, 2.5); });
+  mus.bass.frequency.setTargetAtTime(hz(semi(tri[0]) - 12), t, 1.8); mus.bg.gain.setTargetAtTime(.07, t, 2.5);
+}
+function bell() {                                // a sparse bell from the scale, somewhere in the stereo field
+  if (!mus) return; const a = AC, sc = MODES[tod()], t = a.currentTime, st = document.body.dataset.st;
+  if (st === "travel" || st === "res" || Math.random() < .4) {
+    const o = a.createOscillator(), g = a.createGain(), pn = a.createStereoPanner ? a.createStereoPanner() : null;
+    o.type = "sine"; o.frequency.value = hz(sc[rnd(sc.length)] + 24 + (rnd(3) ? 0 : 12));
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.03 + .02 * mus.near, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + 3.4);
+    o.connect(g); if (pn) { pn.pan.value = Math.random() * 1.6 - .8; g.connect(pn).connect(mus.lp); } else g.connect(mus.lp); o.start(t); o.stop(t + 3.5);
+  }
+  mus.bt = setTimeout(bell, (st === "travel" ? 1800 : 3200) + rnd(4000));
+}
+function musicLevel() {
+  if (!mus || !AC) return; const t = AC.currentTime, st = document.body.dataset.st, talk = G.busy();
+  let v = !musicOn || muted || document.hidden ? 0 : st === "travel" || st === "spin" ? .85 : st === "res" ? .8 : .4;
+  v *= .85 + .35 * mus.near; if (Date.now() < swellT) v *= 1.5; if (talk) v *= .38;          // sink under the voice
+  mus.out.gain.setTargetAtTime(v, t, talk ? .3 : 1.4);
+  mus.lp.frequency.setTargetAtTime((tod() === "night" ? 850 : 1250) + (st === "travel" ? 700 : 0) + 900 * mus.near, t, 2);
+}
+setInterval(musicLevel, 400);
+const musicSwell = () => { swellT = Date.now() + 7000; musicLevel(); };
+function setBed(g) { if (mus) mus.near = Math.max(0, Math.min(1, (g - .012) / .025)); }   // how close the next place is, 0..1
 function scanSweep() { if (reduced) return; const s = $("scan"); s.classList.remove("go"); void s.offsetWidth; s.classList.add("go"); }
 function fpsCheck() {                            // phones that struggle lose the extras: grain, glow
   let n = 0; const t0 = performance.now();
@@ -965,7 +1003,7 @@ function onPos(p) {
     else { const r = routeRemain(); if (r && r.bd > 40) fetchRoute(); }       // left the route: ask again
     drawRoute();
   }
-  updateTravel(); drawCompass(); refreshPool(); drawTitles(); factTick(); areaTick();
+  updateTravel(); drawCompass(); refreshPool(); drawTitles(); factTick(); areaTick(); refreshAmen(); amenTick();
 }
 $("brec").addEventListener("click", () => { follow = true; sfx.key(); if (!pos) startGeo(true); if (pos && mapReady) map.flyTo({ center: [pos.lng, pos.lat], zoom: Math.max(map.getZoom(), 15), pitch: HOME_PITCH, duration: 700 }); });
 setInterval(() => { $("brec").hidden = follow || document.body.dataset.st !== "home"; }, 400);
@@ -1076,7 +1114,7 @@ const nextSeq = () => [...mine.values()].reduce((m, r) => Math.max(m, r.seq || 0
 $("bspin").addEventListener("click", () => {
   if (spinning || active || resV) return;
   if (!pos) { startGeo(true); note("locating…"); sfx.no(); return; }
-  startCompass(); ac(); openStart();
+  startCompass(); ac(); musicStart(); openStart();
 });
 
 /* ---------- your path ---------- */
@@ -1131,7 +1169,7 @@ async function fetchRoute() {                    // one walking route through ev
     const j = await r.json();
     if (j.code === "Ok" && active && active.rid === rid) {
       const q = j.routes[0]; rt = { rid, mode, dist: q.distance, dur: q.duration, c: q.geometry.coordinates.map(c => [c[1], c[0]]) };
-      drawRoute(true); updateTravel();
+      drawRoute(true); updateTravel(); drawAmen();
     }
   } catch {} finally { routing = false; }
 }
@@ -1164,6 +1202,7 @@ function reachStop(T) {                          // at a stop: the camera circle
   updateDoc(doc(db, "reports", active.rid), { got }).catch(() => {});
   sfx.arrive(); buzz([80, 60, 160]); scanSweep(); lb(7000); near100 = null; document.body.dataset.near = "0";
   const p = T.id ? G.byId(T.id) : null;
+  musicSwell();
   if (p) { heardOne(p, true); slideshow([{ label: p.title, lat: p.lat, lng: p.lng, img: p.img, art: p.title, n: 5 }], 9000); } else G.say(T.name, !muted);
   if (mapReady && !reduced) { follow = false; map.jumpTo({ padding: PAD0 }); map.easeTo({ center: [T.lng, T.lat], zoom: 18, pitch: 62, bearing: map.getBearing() + 80, duration: 7000, easing: t => t * (2 - t) }); }
   setTimeout(() => { if (active && document.body.dataset.st === "travel") follow = true; }, 7200);
@@ -1292,6 +1331,54 @@ async function openCard(p, full, auto) {         // the place's own words, its f
 }
 function closeCard() { clearTimeout(cardT); $("card").hidden = true; }
 
+/* ---------- rest and supplies: real benches, water, toilets, cafés and shops along the way ---------- */
+const AMEN = { bench: ["⊓", "a bench"], drinking_water: ["◍", "drinking water"], toilets: ["⊽", "toilets"], shelter: ["⌂", "a shelter"], cafe: ["◒", "a café"], pub: ["◓", "a pub"], shop: ["▣", "a shop"], pharmacy: ["✚", "a pharmacy"] };
+const AMEN_SAY = new Set(["bench", "drinking_water", "toilets", "cafe"]);
+let amen = [], amenAt = null, amenTry = 0, amenMk = [], amenSaid = new Set(), lastAmen = null;
+async function refreshAmen() {                   // what's around, re-asked every 500 m of walking
+  if (!pos || !active || active.status !== "pending" || !mapReady) return;
+  if ((amenAt && hav(amenAt, pos) < 500) || Date.now() - amenTry < 20000) return;
+  amenTry = Date.now(); const here = { lat: pos.lat, lng: pos.lng };
+  const out = [], seen = new Set(), add = (k, lat, lng, name) => { const key = k + lat.toFixed(5) + lng.toFixed(5); if (!seen.has(key)) { seen.add(key); out.push({ k, lat, lng, name: name || "" }); } };
+  try {                                          // the map's own tiles: cafés, pubs, shops, pharmacies, toilets
+    map.querySourceFeatures("openmaptiles", { sourceLayer: "poi" }).forEach(f => {
+      const p = f.properties, g = f.geometry; if (g.type !== "Point") return;
+      const k = p.class === "cafe" ? "cafe" : p.subclass === "pub" || p.class === "beer" ? "pub" : p.subclass === "pharmacy" ? "pharmacy" : p.subclass === "toilets" || p.class === "toilets" ? "toilets"
+        : p.subclass === "drinking_water" ? "drinking_water" : p.class === "grocery" || /^(convenience|supermarket)$/.test(p.subclass) ? "shop" : null;
+      if (k) add(k, g.coordinates[1], g.coordinates[0], p.name);
+    });
+  } catch {}
+  try {                                          // benches, water and shelters aren't in the tiles: ask OpenStreetMap itself, gently (it's often busy)
+    const d = .006, b = [pos.lat - d, pos.lng - d * 1.6, pos.lat + d, pos.lng + d * 1.6].map(v => v.toFixed(5)).join(",");
+    const j = await (await fetch("https://overpass-api.de/api/interpreter?data=" + encodeURIComponent('[out:json][timeout:15];node["amenity"~"^(bench|drinking_water|shelter|toilets)$"](' + b + ");out 300;"), { signal: AbortSignal.timeout(15000) })).json();
+    (j.elements || []).forEach(x => add(x.tags.amenity, x.lat, x.lon, x.tags.name));
+  } catch {}
+  if (out.length) { amen = out; amenAt = here; drawAmen(); }   // nothing back (map or OpenStreetMap not ready): try again in 20 s rather than after 500 m
+}
+function drawAmen() {                            // small quiet marks, only along your route and near you
+  amenMk.forEach(m => m.remove()); amenMk = [];
+  if (!mapReady || !pos || document.body.dataset.st !== "travel") return;
+  const line = rt && rt.c ? rt.c.filter((_, i) => i % 4 === 0).map(c => ({ lat: c[0], lng: c[1] })) : [];
+  const nearLine = a => hav(pos, a) < 250 || line.some(c => hav(c, a) < 90);
+  const PRI = { bench: 0, drinking_water: 0, toilets: 1, shelter: 1, cafe: 2, pharmacy: 3, shop: 4, pub: 5 }, kept = [];
+  for (const a of amen.filter(nearLine).sort((x, y) => (PRI[x.k] - PRI[y.k]) || hav(pos, x) - hav(pos, y))) {   // seats and water first, never crowded, never more than 12
+    if (kept.length >= 12) break; if (kept.some(k => hav(k, a) < 45)) continue; kept.push(a);
+  }
+  kept.forEach(a => {
+    const el = mkEl('<b class="am" title="' + esc(AMEN[a.k][1]) + '">' + AMEN[a.k][0] + "</b>");
+    el.addEventListener("click", e => { e.stopPropagation(); sfx.key(); note((a.name ? a.name + " · " : "") + AMEN[a.k][1] + " · " + fmtD(hav(pos, a))); });
+    amenMk.push(mkAdd(el, a.lng, a.lat));
+  });
+}
+function amenTick() {                            // the guide mentions a seat, water, toilets or a café just ahead, at most once every 400 m
+  if (!pos || !active || active.status !== "pending" || (lastAmen && hav(lastAmen, pos) < 400)) return;
+  const ahead = a => !hasCompass || Math.abs(nrm(brg(pos, a) - heading)) < 70;
+  const a = amen.filter(a => AMEN_SAY.has(a.k) && !amenSaid.has(a.k + a.lat + a.lng)).map(a => ({ a, d: hav(pos, a) })).filter(o => o.d > 15 && o.d < 110 && ahead(o.a)).sort((x, y) => x.d - y.d)[0];
+  if (!a) return; amenSaid.add(a.a.k + a.a.lat + a.a.lng); lastAmen = { lat: pos.lat, lng: pos.lng };
+  const dist = units === "km" ? Math.round(a.d / 10) * 10 + " metres" : Math.round(a.d * 1.0936 / 10) * 10 + " yards";
+  G.say("There's " + AMEN[a.a.k][1] + (a.a.name && a.a.k === "cafe" ? ", " + a.a.name + "," : "") + " " + dist + " ahead.", !muted, 1);
+}
+
 /* ---------- the slideshow: photographs of where you are, where you're going, and each place ---------- */
 let showRun = 0;
 const SHOW_HOLD = 6500;
@@ -1349,7 +1436,7 @@ function endWalk(result) {
   stepW(); thin(wpath, 500).forEach(q => flat.push(+(+q[0]).toFixed(5), +(+q[1]).toFixed(5)));
   const data = { status: "done", result, walked: Math.round(wlen), dur: Date.now() - r.t0, path: flat, got: r.got || [], heard: wHeard.slice(0, 80), doneAt: serverTimestamp() };
   if (result === "arrived") {
-    sfx.arrive(); buzz(400); flash(1000, "79,243,255");
+    sfx.arrive(); buzz(400); flash(1000, "79,243,255"); musicSwell();
     const seen = (r.stops || []).filter((s, i) => (r.got || []).includes(i)), fin = r.stops ? null : (r.pid ? G.byId(r.pid) : null);
     const m = Math.round(wlen), said = units === "km" ? (m < 1000 ? m + " metres" : (m / 1000).toFixed(1) + " kilometres") : (m < 400 ? Math.round(m * 1.0936) + " yards" : (m / 1609.34).toFixed(1) + " miles");
     G.say("You made it. " + said + (seen.length ? ", " + seen.length + " places." : "."), !muted, 3);
@@ -1393,7 +1480,8 @@ function route() {
   document.body.dataset.st = st; if (st !== "home") { setHide(false); if (mn.classList.contains("open")) menu(false); }
   if (st !== "travel") { document.body.dataset.near = "0"; setBed(0); }
   if (mapReady) map.setMinZoom(st === "travel" ? 13 : 9);                        // the map data has no buildings below zoom 13: on a walk, stay where the 3D city is
-  if (st !== route.prev) setTimeout(() => drawTitles(true), 50);               // the floating titles belong to home and walking only
+  if (st !== route.prev) setTimeout(() => { drawTitles(true); drawAmen(); }, 50);
+  if (st !== "travel") amenAt = null;               // the floating titles belong to home and walking only
   $("hud").hidden = st !== "travel"; $("tfoot").hidden = st !== "travel"; $("res").hidden = st !== "res";
   $("dockhome").hidden = st !== "home"; wakeOn(st === "travel"); G.setWalking(st === "travel" || st === "spin");
   if (!pend) { rt = null; drawRoute(); }
@@ -1492,6 +1580,7 @@ $("bset").addEventListener("click", () => {
     '<button id="smode" class="o" type="button" aria-label="Route mode">' + (routeMode === "car" ? "ⓓ" : "ⓦ") + "</button>" +
     '<button id="svoice" class="o" type="button" aria-label="Voice">✺<small>' + vmode + "</small></button>" +
     '<button id="srate" class="o" type="button" aria-label="Voice speed">×<small>' + vrate + "</small></button>" +
+    '<button id="smusic" class="o' + (musicOn ? " on" : "") + '" type="button" aria-label="Music">♫</button>' +
     '<button id="shelp" class="o" type="button" aria-label="Help">?</button>' +
     '<button id="sout" class="o" type="button" aria-label="Sign out">⏻</button></div>' +
     '<div class="st g" style="border:0;justify-content:center"><span>' + BUILD + "</span></div>");
@@ -1503,6 +1592,7 @@ $("bset").addEventListener("click", () => {
   $("sdm").addEventListener("click", () => { store.set("tm.dotmap", DOTMAP ? "0" : "1"); sfx.key(); location.reload(); });
   $("svoice").addEventListener("click", e => { vi = (vi + 1) % 3; store.set("tour.vmode", vi); applyVoice(); e.currentTarget.querySelector("small").textContent = VMODES[vi]; sfx.key(); if (VMODES[vi] !== "off") G.say("Voice " + VMODES[vi] + ".", true, 3); });
   $("srate").addEventListener("click", e => { ri = (ri + 1) % 3; store.set("tour.vrate", ri); applyVoice(); e.currentTarget.querySelector("small").textContent = VRATES[ri]; sfx.key(); G.say("This is the speed.", true, 3); });
+  $("smusic").addEventListener("click", e => { musicOn = !musicOn; store.set("tour.music", musicOn ? "1" : "0"); e.currentTarget.classList.toggle("on", musicOn); sfx.key(); if (musicOn) musicStart(); musicLevel(); });
   $("shelp").addEventListener("click", openHelp);
   $("sout").addEventListener("click", () => { sfx.no(); signOut(auth).then(() => location.reload()).catch(() => location.reload()); });
 });
@@ -1527,7 +1617,7 @@ applyVoice();
 }
 const HELP = [["◎", "start a walk: a tour of several places, or one place with history, a view or green"], ["◌", "tour: a loop through the most notable real places around you"],
   ["▥ ◭ ♧", "history · view · green: one real place at about that distance"], ["✦", "places with a story float over the map; tap one, or walk past and the guide tells you"],
-  ["◉", "look around: the three most interesting things near you"], ["✺", "voice: always · only on walks · off, and speed in settings; earphone buttons: pause, skip, repeat"], ["➤", "arrow up = straight on"], ["✓ ■", "arrived · stopped"], ["✕", "hold to stop"],
+  ["◉", "look around: the three most interesting things near you"], ["⊓ ◍ ⊽ ◒ ▣", "bench · water · toilets · café · shop along your route (openstreetmap; benches are only partly mapped)"], ["♫", "music made on your phone; it follows the time of day and drops under the voice"], ["✺", "voice: always · only on walks · off, and speed in settings; earphone buttons: pause, skip, repeat"], ["➤", "arrow up = straight on"], ["✓ ■", "arrived · stopped"], ["✕", "hold to stop"],
   ["≡", "your walks · everyone's"], ["▦", "buildings are 3D from zoom 13; the map data has none further out"], ["⌁", "waiting to sync"], ["⚙", "settings"], ["", "facts: wikipedia · wikidata · photos: wikimedia commons · places: openstreetmap"]];
 function openHelp() {
   if (sheet.classList.contains("open") && sbody.dataset.k === "help") { closeSheet(); return; }

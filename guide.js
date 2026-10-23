@@ -113,6 +113,7 @@ export async function area(lat, lng) {
   areaAt0 = Date.now();
   try {
     const j = await get(NOM + "lat=" + lat + "&lon=" + lng);
+    if (!/^(suburb|quarter|neighbourhood|village|town|hamlet|city_district|borough|island|isolated_dwelling|locality|square)$/.test(j.addresstype || "")) { areaAt0 = 0; return lastArea ? lastArea.v : null; }   // only real neighbourhoods and villages, not "built-up areas" or regions
     const et = j.extratags || {}, name = j.name || (j.address && (j.address.suburb || j.address.neighbourhood || j.address.village || j.address.town)) || null;
     let line = "", url = null;
     if (et.wikipedia && /^en:/.test(et.wikipedia)) {
