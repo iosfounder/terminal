@@ -375,7 +375,7 @@ const pad4 = n => String(n).padStart(4, "0");
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
 
-const BUILD = "v9.0";
+const BUILD = "v9.0a";
 const ARR = 30, HOME_PITCH = 50;
 
 /* ---------- sound ---------- */
@@ -968,7 +968,8 @@ function openStart() {
   const tog = (sel, f) => sbody.querySelectorAll(sel).forEach(b => b.addEventListener("click", () => { f(b); sfx.key(); sbody.querySelectorAll(sel).forEach(x => x.classList.toggle("on", x === b)); }));
   tog("[data-k]", b => { pick.k = b.dataset.k; store.set("tour.k", pick.k); });
   tog("[data-d]", b => { pick.d = +b.dataset.d; store.set("or.d", pick.d); });
-  $("sgo").addEventListener("click", () => { closeSheet(); sfx.enter(); startWalk(DISTS[units === "km" ? "km" : "mi"][pick.d], pick.k); });
+  $("sgo").addEventListener("click", () => { closeSheet(); sfx.enter(); G.say(pick.k === "tour" ? "Finding the best places around you." : "Finding a place for you.", !muted);   // spoken from the tap itself, so phones allow it
+    startWalk(DISTS[units === "km" ? "km" : "mi"][pick.d], pick.k); });
 }
 // a single finish: a real named place at about the right walking distance
 const LMK = { viewpoint: 9, peak: 9, castle: 8, ruins: 8, monument: 8, memorial: 7, attraction: 7, artwork: 6, park: 6, garden: 6, nature_reserve: 6, museum: 5, place_of_worship: 5, church: 5,
@@ -1041,7 +1042,7 @@ function briefing(r) {                           // the whole walk in one frame,
     map.jumpTo({ padding: PAD0 }); map.fitBounds([[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]], { padding: PADV, maxZoom: 16.5, pitch: 45, bearing: -15, duration: reduced ? 0 : 1800 });
   }
   const words = r.stops ? "Your tour: " + r.stops.map(s => s.n).join(", ") + "." : "Heading to " + r.name + ".";
-  setTimeout(() => G.say(words, !muted), 900);
+  setTimeout(() => G.say(words + (areaNow ? " You are in " + areaNow.name + "." : ""), !muted), 400);
   setTimeout(() => { if (active && active.rid === r.rid && document.body.dataset.st === "travel") { follow = true; lb(0); } }, r.stops ? 5200 : 3200);
 }
 const nextSeq = () => [...mine.values()].reduce((m, r) => Math.max(m, r.seq || 0), 0) + 1;
@@ -1245,7 +1246,7 @@ async function areaTick() {                      // crossing into a new neighbou
   const first = !areaNow; areaNow = v;
   const el = $("area"); el.querySelector("b").textContent = v.name; el.querySelector("span").textContent = v.line || "";
   el.classList.remove("go"); void el.offsetWidth; el.classList.add("go");
-  if (!first && active && active.status === "pending") setTimeout(() => G.say(v.name + ". " + (v.line || ""), !muted), 600);
+  if (active && active.status === "pending") setTimeout(() => G.say(v.name + ". " + (v.line || ""), !muted), 600);
 }
 async function openCard(p, full, auto) {         // the place's own words, its facts, its picture, and where they come from
   clearTimeout(cardT);
