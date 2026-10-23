@@ -241,6 +241,18 @@ html[data-dots="1"] #card .cx{font-family:var(--mono);letter-spacing:.01em}
 #show .bar{position:absolute;left:0;top:calc(var(--sat) + 0px);height:2px;background:var(--c);box-shadow:0 0 10px var(--c);z-index:2;width:0}
 html[data-dots="1"] #show .sh p{font-family:var(--mono);letter-spacing:.01em}
 
+/* subtitles: every word the guide says, the current one lit */
+#sub{position:fixed;left:14px;right:14px;bottom:calc(var(--sab) + 88px);z-index:748;display:flex;justify-content:center;pointer-events:none;opacity:0;transform:translateY(8px);transition:opacity .45s ease,transform .45s var(--ease)}
+#sub.on{opacity:1;transform:none}
+#sub p{max-width:560px;padding:8px 13px;border-radius:12px;background:rgba(0,0,0,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  font-size:15px;line-height:1.42;color:#cfcfda;text-transform:none;text-align:center;letter-spacing:.005em;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+#sub i{font-style:normal;transition:color .15s,text-shadow .15s}
+#sub i.now{color:#fff;text-shadow:0 0 10px rgba(79,243,255,.75)}
+#sub i.past{color:#f0f0f6}
+body[data-st="home"] #sub{bottom:calc(var(--sab) + 128px)}
+#show:not([hidden]) ~ #sub,body[data-subs="0"] #sub,#card:not([hidden]) ~ #sub{display:none}
+html[data-dots="1"] #sub p{font-family:var(--mono)}
+
 /* a new area: its name sweeps across the street */
 #area{position:fixed;left:0;right:0;top:34%;z-index:690;text-align:center;pointer-events:none;opacity:0}
 #area b{display:block;font-family:"Dotsies",var(--mono);font-weight:400;font-size:min(13vw,72px);letter-spacing:.3em;text-indent:.3em;color:#fff;text-shadow:0 0 30px rgba(138,125,255,.7)}
@@ -352,6 +364,7 @@ body[data-lite="1"] #grain{display:none}
 
   <section id="card" hidden><button id="cardx" class="o sm" type="button" aria-label="Close">✕</button><img alt="" hidden><div class="cb"><div class="ct"></div><div class="cf"></div><p class="cx"></p><div class="cs"></div></div></section>
   <section id="show" hidden><div class="sl a"></div><div class="sl b"></div><div class="sh"><b></b><p></p><small></small></div><i class="bar"></i></section>
+  <div id="sub" aria-live="polite"><p></p></div>
   <div id="area" aria-hidden="true"><b></b><span></span></div>
   <div id="sync" hidden>⌁</div>
   <section id="res" hidden>
@@ -394,7 +407,7 @@ const pad4 = n => String(n).padStart(4, "0");
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
 
-const BUILD = "v9.3";
+const BUILD = "v9.4";
 const ARR = 30, HOME_PITCH = 50;
 
 /* ---------- sound ---------- */
@@ -902,7 +915,7 @@ function bell() {                                // a sparse bell from the scale
 }
 function musicLevel() {
   if (!mus || !AC) return; const t = AC.currentTime, st = document.body.dataset.st, talk = G.busy();
-  let v = !musicOn || muted || document.hidden ? 0 : st === "travel" || st === "spin" ? .85 : st === "res" ? .8 : .4;
+  let v = !musicOn || muted || document.hidden ? 0 : st === "travel" || st === "spin" ? .85 : st === "res" ? .8 : .28;
   v *= .85 + .35 * mus.near; if (Date.now() < swellT) v *= 1.5; if (talk) v *= .38;          // sink under the voice
   mus.out.gain.setTargetAtTime(v, t, talk ? .3 : 1.4);
   mus.lp.frequency.setTargetAtTime((tod() === "night" ? 850 : 1250) + (st === "travel" ? 700 : 0) + 900 * mus.near, t, 2);
@@ -1107,7 +1120,7 @@ function briefing(r) {                           // the whole walk in one frame,
   }, 300);
   const places = (r.stops || [{ n: r.name, lat: r.lat, lng: r.lng, id: r.pid }]).slice(0, 3);   // pictures of where you are, then where you're going
   if (pos) slideshow([{ label: areaNow ? areaNow.name : "", lat: pos.lat, lng: pos.lng, n: 2, r: 250, art: areaNow && areaNow.url ? decodeURIComponent(areaNow.url.split("/wiki/")[1]).replace(/_/g, " ") : null },
-    ...places.map(s => { const p = P(s.id); return { label: s.n, lat: s.lat, lng: s.lng, img: p && p.img, art: p ? p.title : null, n: 2 }; })]);
+    ...places.map(s => { const p = P(s.id); return { label: s.n, lat: s.lat, lng: s.lng, img: p && p.img, art: p ? p.title : null, n: 2 }; })], 0, 32000);   // the briefing never holds you more than ~30 s
   setTimeout(() => { if (active && active.rid === r.rid && document.body.dataset.st === "travel") { follow = true; lb(0); } }, r.stops ? 5200 : 3200);
 }
 const nextSeq = () => [...mine.values()].reduce((m, r) => Math.max(m, r.seq || 0), 0) + 1;
@@ -1274,7 +1287,7 @@ function drawTitles(force) {                     // floating titles over the mos
   for (const p of pool) {                        // most notable first; never two on top of each other, never off screen
     if (kept.length >= (st === "travel" ? 3 : 5)) break;
     if (hav(pos, p) > 450 || stopIds.has(p.id)) continue;
-    const q = map.project([p.lng, p.lat]); if (q.x < 75 || q.x > W - 75 || q.y < 90 || q.y > H - 120 || (st === "travel" && q.x > W - 190 && q.y < 200)) continue;   // and never under the compass
+    const q = map.project([p.lng, p.lat]); if (q.x < 75 || q.x > W - 75 || q.y < 90 || q.y > H - 190 || (st === "travel" && q.x > W - 190 && q.y < 200)) continue;   // and never under the compass
     if (kept.some(k => Math.abs(k.q.x - q.x) < 130 && Math.abs(k.q.y - q.y) < 62)) continue;
     kept.push({ p, q });
   }
@@ -1382,7 +1395,8 @@ function amenTick() {                            // the guide mentions a seat, w
 /* ---------- the slideshow: photographs of where you are, where you're going, and each place ---------- */
 let showRun = 0;
 const SHOW_HOLD = 6500;
-async function slideshow(groups, minMs = 0) {   // groups: [{ label, lat, lng, img }] -> real photos for each, played in order while the guide speaks
+let stepId = 0;
+async function slideshow(groups, minMs = 0, maxMs = 60000) {   // groups: [{ label, lat, lng, img }] -> real photos for each, played in order while the guide speaks
   const my = ++showRun, el = $("show");
   const sets = await Promise.all(groups.map(g => G.photos(g.lat, g.lng, g.img, g.n || 4, g.r || 160, g.art).then(ps => ps.map(p => ({ ...p, label: g.label }))).catch(() => [])));
   const slides = sets.flat(); if (my !== showRun || !slides.length) return;
@@ -1392,7 +1406,11 @@ async function slideshow(groups, minMs = 0) {   // groups: [{ label, lat, lng, i
   const step = () => {
     if (my !== showRun) return;
     const idx = i, s = slides[idx % slides.length], ly = L[flip], other = L[1 - flip]; flip = 1 - flip;
-    const img = new Image(); img.onload = img.onerror = () => {
+    if (slides[idx + 1]) { const pre = new Image(); pre.src = slides[idx + 1].src; }   // the next one loads while this one shows: no black gap
+    const img = new Image();
+    const sid = ++stepId;
+    img.onerror = () => { if (my !== showRun || sid !== stepId) return; slides.splice(idx % slides.length, 1); flip = 1 - flip; i = idx; if (slides.length) step(); else endShow(); };   // a photo that won't load is skipped, not shown blank
+    img.onload = () => {
       if (my !== showRun) return;
       ly.style.backgroundImage = 'url("' + s.src.replace(/"/g, "%22") + '")';
       ly.classList.remove("kb0", "kb1", "kb2", "in"); void ly.offsetWidth; ly.classList.add("in", "kb" + (idx % 3)); other.classList.remove("in");
@@ -1401,15 +1419,26 @@ async function slideshow(groups, minMs = 0) {   // groups: [{ label, lat, lng, i
     };
     img.src = s.src; i++;
     setTimeout(() => {                           // keep going while the guide is still talking, then end on the last picture
-      if (my !== showRun) return;
+      if (my !== showRun || sid !== stepId) return;
       const more = i < slides.length || G.busy() || Date.now() - t0 < minMs;
-      if (more && Date.now() - t0 < 90000) step(); else endShow();
+      if (more && Date.now() - t0 < maxMs) step(); else endShow();
     }, SHOW_HOLD);
   };
   step();
 }
 function endShow() { showRun++; const el = $("show"); el.classList.remove("on"); setTimeout(() => { if (!el.classList.contains("on")) el.hidden = true; }, 1000); }
 $("show").addEventListener("click", () => { sfx.close(); endShow(); });       // tap to skip back to the map
+{ // subtitles: each spoken piece as words, the current one lit as it's said
+  const box = $("sub"), p = box.querySelector("p"); let spans = [], idleT = null;
+  G.onLine(t => {
+    clearTimeout(idleT); let at = 0;
+    p.innerHTML = ""; spans = t.split(/(\s+)/).map(w => { const s = { from: at, to: at + w.length }; at += w.length; if (/^\s+$/.test(w)) { p.append(w); return null; } const i = document.createElement("i"); i.textContent = w; p.append(i); s.el = i; return s; }).filter(Boolean);
+    box.classList.add("on");
+  });
+  G.onWord(ci => spans.forEach(s => { s.el.classList.toggle("now", ci >= s.from && ci < s.to); s.el.classList.toggle("past", s.to <= ci); }));
+  G.onIdle(() => { clearTimeout(idleT); idleT = setTimeout(() => box.classList.remove("on"), 1600); });
+  document.body.dataset.subs = store.get("tour.subs") === "0" ? "0" : "1";
+}
 G.onLine(t => { const el = $("show"); if (el.hidden) return; const p = el.querySelector(".sh p"); p.style.opacity = 0; setTimeout(() => { p.textContent = t; p.style.opacity = 1; }, 260); });
 $("cardx").addEventListener("click", () => { sfx.close(); G.hush(); closeCard(); });
 function lookAround() {                          // the three most interesting real things within 250 m
@@ -1503,7 +1532,11 @@ function subMine() {
   unsubMine = onSnapshot(query(collection(db, "reports"), where("uid", "==", uid)), { includeMetadataChanges: true }, snap => {
     $("sync").hidden = !snap.metadata.hasPendingWrites;                         // ⌁ while something you did hasn't reached the server yet
     mine = new Map(); snap.forEach(d => { const r = { ...d.data(), rid: d.id }; if (isWalk(r)) mine.set(d.id, r); });
-    const cur = [...mine.values()].filter(r => r.status === "pending").sort((a, b) => b.seq - a.seq)[0] || null;
+    const open = [...mine.values()].filter(r => r.status === "pending").sort((a, b) => b.seq - a.seq);
+    open.forEach((r, i) => {                     // walks left running elsewhere: a newer one, or 12 hours old, are closed as stopped
+      if (i > 0 || Date.now() - (r.t0 || 0) > 12 * 3600e3) updateDoc(doc(db, "reports", r.rid), { status: "done", result: "left", doneAt: serverTimestamp() }).catch(() => {});
+    });
+    const cur = open[0] && Date.now() - (open[0].t0 || 0) <= 12 * 3600e3 ? open[0] : null;
     active = cur; if (active && spinning) spinning = false;
     drawMine(); route(); $("mid").textContent = agent;
   }, e => console.error(e));
@@ -1581,6 +1614,8 @@ $("bset").addEventListener("click", () => {
     '<button id="svoice" class="o" type="button" aria-label="Voice">✺<small>' + vmode + "</small></button>" +
     '<button id="srate" class="o" type="button" aria-label="Voice speed">×<small>' + vrate + "</small></button>" +
     '<button id="smusic" class="o' + (musicOn ? " on" : "") + '" type="button" aria-label="Music">♫</button>' +
+    '<button id="ssubs" class="o' + (document.body.dataset.subs !== "0" ? " on" : "") + '" type="button" aria-label="Subtitles">▭<small>subs</small></button>' +
+    '<button id="svname" class="o" type="button" aria-label="Choose voice">Aa<small>' + esc((G.voiceName() || "voice").replace(/^(Microsoft|Google)\s+/i, "").split(/[\s-]/)[0].toLowerCase()) + "</small></button>" +
     '<button id="shelp" class="o" type="button" aria-label="Help">?</button>' +
     '<button id="sout" class="o" type="button" aria-label="Sign out">⏻</button></div>' +
     '<div class="st g" style="border:0;justify-content:center"><span>' + BUILD + "</span></div>");
@@ -1593,6 +1628,8 @@ $("bset").addEventListener("click", () => {
   $("svoice").addEventListener("click", e => { vi = (vi + 1) % 3; store.set("tour.vmode", vi); applyVoice(); e.currentTarget.querySelector("small").textContent = VMODES[vi]; sfx.key(); if (VMODES[vi] !== "off") G.say("Voice " + VMODES[vi] + ".", true, 3); });
   $("srate").addEventListener("click", e => { ri = (ri + 1) % 3; store.set("tour.vrate", ri); applyVoice(); e.currentTarget.querySelector("small").textContent = VRATES[ri]; sfx.key(); G.say("This is the speed.", true, 3); });
   $("smusic").addEventListener("click", e => { musicOn = !musicOn; store.set("tour.music", musicOn ? "1" : "0"); e.currentTarget.classList.toggle("on", musicOn); sfx.key(); if (musicOn) musicStart(); musicLevel(); });
+  $("ssubs").addEventListener("click", e => { const on = document.body.dataset.subs === "0"; document.body.dataset.subs = on ? "1" : "0"; store.set("tour.subs", on ? "1" : "0"); e.currentTarget.classList.toggle("on", on); sfx.key(); });
+  $("svname").addEventListener("click", openVoices);
   $("shelp").addEventListener("click", openHelp);
   $("sout").addEventListener("click", () => { sfx.no(); signOut(auth).then(() => location.reload()).catch(() => location.reload()); });
 });
@@ -1600,8 +1637,18 @@ $("bset").addEventListener("click", () => {
 /* ---------- voice settings, and the earphone buttons ---------- */
 const VMODES = ["always", "walks", "off"], VRATES = [".9", "1", "1.2"];
 let vi = Math.min(2, +(store.get("tour.vmode") || 0)), ri = Math.min(2, +(store.get("tour.vrate") ?? 1));
-const applyVoice = () => G.setVoice(VMODES[vi], +VRATES[ri]);
+const applyVoice = () => G.setVoice(VMODES[vi], +VRATES[ri], store.get("tour.voiceId") || null);
 applyVoice();
+function openVoices() {                          // every English voice on this phone, female and British first; tap to hear it
+  const vs = G.voices(), cur = G.voiceName();
+  openSheet(vs.length ? vs.map(v => '<button class="li" data-v="' + esc(v.id) + '"><span>' + (v.female ? "♀ " : "· ") + esc(v.name) + '</span><span class="g">' + esc(v.lang) + (cur && cur.includes(v.name) ? " ●" : "") + "</span></button>").join("")
+    : '<p class="g">this phone has no English voices to choose from</p>');
+  sbody.dataset.k = "voices"; sfx.open();
+  sbody.querySelectorAll("[data-v]").forEach(b => b.addEventListener("click", () => {
+    store.set("tour.voiceId", b.dataset.v); applyVoice(); sfx.key(); G.hush(); G.say("Hello. I'll be your guide today.", true, 3);
+    sbody.querySelectorAll(".li .g").forEach(g => g.textContent = g.textContent.replace(" ●", "")); b.querySelector(".g").textContent += " ●";
+  }));
+}
 { // a silent, looping sound keeps the phone treating tour as media, so the earphone buttons reach it
   const n = 8000, b = new Uint8Array(44 + n), dv = new DataView(b.buffer), w = (o, s) => [...s].forEach((c, i) => b[o + i] = c.charCodeAt(0));
   w(0, "RIFF"); dv.setUint32(4, 36 + n, true); w(8, "WAVEfmt "); dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true); dv.setUint32(24, 8000, true); dv.setUint32(28, 8000, true); dv.setUint16(32, 1, true); dv.setUint16(34, 8, true); w(36, "data"); dv.setUint32(40, n, true); b.fill(128, 44);
@@ -1617,7 +1664,7 @@ applyVoice();
 }
 const HELP = [["◎", "start a walk: a tour of several places, or one place with history, a view or green"], ["◌", "tour: a loop through the most notable real places around you"],
   ["▥ ◭ ♧", "history · view · green: one real place at about that distance"], ["✦", "places with a story float over the map; tap one, or walk past and the guide tells you"],
-  ["◉", "look around: the three most interesting things near you"], ["⊓ ◍ ⊽ ◒ ▣", "bench · water · toilets · café · shop along your route (openstreetmap; benches are only partly mapped)"], ["♫", "music made on your phone; it follows the time of day and drops under the voice"], ["✺", "voice: always · only on walks · off, and speed in settings; earphone buttons: pause, skip, repeat"], ["➤", "arrow up = straight on"], ["✓ ■", "arrived · stopped"], ["✕", "hold to stop"],
+  ["◉", "look around: the three most interesting things near you"], ["⊓ ◍ ⊽ ◒ ▣", "bench · water · toilets · café · shop along your route (openstreetmap; benches are only partly mapped)"], ["♫", "music made on your phone; it follows the time of day and drops under the voice"], ["✺", "voice: always · only on walks · off, and speed in settings; earphone buttons: pause, skip, repeat"], ["Aa ▭", "choose the voice (your phone's own voices, female first) · subtitles on or off"], ["➤", "arrow up = straight on"], ["✓ ■", "arrived · stopped"], ["✕", "hold to stop"],
   ["≡", "your walks · everyone's"], ["▦", "buildings are 3D from zoom 13; the map data has none further out"], ["⌁", "waiting to sync"], ["⚙", "settings"], ["", "facts: wikipedia · wikidata · photos: wikimedia commons · places: openstreetmap"]];
 function openHelp() {
   if (sheet.classList.contains("open") && sbody.dataset.k === "help") { closeSheet(); return; }

@@ -171,23 +171,64 @@ export async function photos(lat, lng, own, n = 5, radius = 160, article) {
 
 // The phone's own voice, with a queue so lines never talk over each other.
 // Priority: 3 briefing, 2 a stop's story, 1 everything else. A higher line interrupts a lower one; an equal one waits its turn.
-let voice = null, mode = "always", rate = 1, walking = false, cur = null, q = [], last = null, token = 0;
-const pickVoice = () => { const vs = speechSynthesis.getVoices(); voice = vs.find(v => /en-GB/i.test(v.lang) && /natural|neural|google/i.test(v.name)) || vs.find(v => /en-GB/i.test(v.lang)) || vs.find(v => /^en/i.test(v.lang)) || null; };
+// Each line is spoken a sentence at a time: shorter pieces sound the same, and Chrome otherwise goes quiet after ~15 seconds.
+const FEMALE = /female|woman|samantha|serena|kate|martha|stephanie|fiona|moira|tessa|karen|victoria|allison|\bava\b|susan|zoe|libby|sonia|hazel|maisie|\bmia\b|emma|\bamy\b|olivia|aria|jenny|\bsara|zira|catherine|natasha|hollie|abbie|bella|ellie|\bsiri.*female/i;
+const MALE = /\bmale\b|daniel|arthur|oliver|george|ryan|thomas|\bguy\b|david|\bmark\b|james|\balex\b|fred|rishi|aaron|\btom\b|gordon|lee\b/i;
+const isFemale = v => FEMALE.test(v.name) && !(/\bmale\b/i.test(v.name) && !/female/i.test(v.name));
+let voice = null, chosen = null, mode = "always", rate = 1, walking = false, cur = null, q = [], last = null, token = 0;
+const rank = v => (isFemale(v) ? 0 : MALE.test(v.name) ? 20 : 10) + (/en-GB/i.test(v.lang) ? 0 : /^en/i.test(v.lang) ? 3 : 50) + (/natural|neural|online|premium|enhanced|google/i.test(v.name) ? 0 : 1);
+export function voices() {                       // English voices on this phone, female and British first
+  if (!("speechSynthesis" in window)) return [];
+  return speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)).sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name))
+    .map(v => ({ id: v.voiceURI, name: v.name.replace(/^(Microsoft|Google)\s+/i, "").replace(/\s*-\s*English.*$/i, "").replace(/\s*\(.*\)$/, ""), lang: v.lang, female: isFemale(v) }));
+}
+const pickVoice = () => {
+  const vs = "speechSynthesis" in window ? speechSynthesis.getVoices() : [];
+  voice = (chosen && vs.find(v => v.voiceURI === chosen)) || vs.filter(v => /^en/i.test(v.lang)).sort((a, b) => rank(a) - rank(b))[0] || null;
+};
 if ("speechSynthesis" in window) { pickVoice(); speechSynthesis.addEventListener("voiceschanged", pickVoice); }
+export const voiceName = () => voice ? voice.name : "";
 const ok = () => "speechSynthesis" in window && mode !== "off" && (mode === "always" || walking);
-export function setVoice(m, r) { if (m) mode = m; if (r) rate = r; if (!ok()) hush(); }
+export function setVoice(m, r, id) { if (m) mode = m; if (r) rate = r; if (id !== undefined) { chosen = id; pickVoice(); } if (!ok()) hush(); }
 export const setWalking = w => { walking = w; if (!ok()) hush(); };
 export function prime() {                        // called from a real tap: phones only allow speech once they've seen one
   if (!("speechSynthesis" in window)) return; const u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u);
 }
-function next() {
-  if (cur || !q.length) return; const it = q.shift(), my = ++token;
-  const u = new SpeechSynthesisUtterance(it.text); if (voice) u.voice = voice; u.lang = voice ? voice.lang : "en-GB"; u.rate = .98 * rate; u.pitch = .96;
-  const done = () => { if (token === my) { cur = null; next(); } };
-  u.onend = done; u.onerror = done; cur = it; last = it; if (lineHook) lineHook(it.text); speechSynthesis.speak(u);
+
+// Said the way a person would say it; the subtitles show exactly these words
+export function speakable(s) {
+  return String(s || "")
+    .replace(/\[[^\]]*\]/g, "")                                  // footnote marks
+    .replace(/\s*\([^()]*\)/g, "")                               // asides in brackets
+    .replace(/\bc\.\s?(\d{3,4})/g, "circa $1")
+    .replace(/\b(\d{3,4})\s?[–-]\s?(\d{2,4})\b/g, "$1 to $2")
+    .replace(/\bSt\.?\s(?=[A-Z])/g, "Saint ")                    // St Paul's
+    .replace(/(\b[A-Z][a-z]+)\sSt\b\.?/g, "$1 Street")           // Craven St
+    .replace(/\bRd\b\.?/g, "Road").replace(/\bAve\b\.?/g, "Avenue").replace(/\bSq\b\.?/g, "Square")
+    .replace(/\s{2,}/g, " ").replace(/\s+([,.;:])/g, "$1").trim();
 }
-let lineHook = null;
-export const onLine = f => { lineHook = f; };                                      // the slideshow captions what is being said
+const pieces = s => (s.match(/[^.!?]+[.!?]+["')\]]*(\s|$)|[^.!?]+$/g) || [s]).map(x => x.trim()).filter(Boolean);
+
+const lineFns = [], wordFns = [], idleFns = [];
+export const onLine = f => lineFns.push(f);       // a new piece starts: subtitles and slideshow captions
+export const onWord = f => wordFns.push(f);       // the word being spoken, where the phone reports it
+export const onIdle = f => idleFns.push(f);       // nothing left to say
+function next() {
+  if (cur) return;
+  if (!q.length) { idleFns.forEach(f => f()); return; }
+  const it = q[0];
+  if (!it.parts) it.parts = pieces(speakable(it.text));
+  const part = it.parts.shift(); if (!it.parts.length) q.shift();
+  if (!part) { next(); return; }
+  const my = ++token, u = new SpeechSynthesisUtterance(part);
+  if (voice) u.voice = voice; u.lang = voice ? voice.lang : "en-GB"; u.rate = .98 * rate; u.pitch = 1;
+  const done = () => { if (token === my) { clearTimeout(guard); cur = null; next(); } };
+  const guard = setTimeout(done, 1200 + part.length * 110 / rate);              // if the phone never says "finished", move on anyway
+  u.onend = done; u.onerror = done;
+  u.onboundary = e => { if (token === my && e.name !== "sentence") wordFns.forEach(f => f(e.charIndex, e.charLength || 0)); };
+  cur = { prio: it.prio, text: part }; last = it.text0 ? it : (it.text0 = it.text, it);
+  lineFns.forEach(f => f(part)); speechSynthesis.speak(u);
+}
 export const busy = () => !!cur || q.length > 0;
 export function say(text, on, prio = 1) {
   if (!text || on === false || !ok()) return null;
@@ -195,8 +236,8 @@ export function say(text, on, prio = 1) {
   else if (cur && prio < cur.prio) return null;                                                      // something more important is talking
   if (q.length < 6) q.push({ text, prio }); next(); return true;
 }
-export function hush() { q = []; cur = null; token++; if ("speechSynthesis" in window) speechSynthesis.cancel(); }
-export function skip() { if (!cur) return; token++; cur = null; if ("speechSynthesis" in window) speechSynthesis.cancel(); next(); }   // the earphones' "next"
-export function again() { if (last) { const l = last; hush(); say(l.text, true, l.prio); } }                                        // the earphones' "previous"
+export function hush() { q = []; cur = null; token++; if ("speechSynthesis" in window) speechSynthesis.cancel(); idleFns.forEach(f => f()); }
+export function skip() { if (!cur) return; token++; cur = null; if (q[0] && q[0].parts) q.shift(); if ("speechSynthesis" in window) speechSynthesis.cancel(); next(); }   // earphones' "next": the rest of this story
+export function again() { if (last) { const t = last.text0 || last.text, p = last.prio; hush(); say(t, true, p); } }                 // earphones' "previous"
 export const pause = () => { if ("speechSynthesis" in window) speechSynthesis.pause(); };
 export const resume = () => { if ("speechSynthesis" in window) speechSynthesis.resume(); };
