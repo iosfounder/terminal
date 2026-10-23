@@ -19,7 +19,7 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;height:100dvh;position:fixed;inset:0;width:100%;background:var(--k);color:var(--w);overflow:hidden;overscroll-behavior:none;touch-action:manipulation;-webkit-text-size-adjust:100%;
   font:16px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;text-transform:lowercase}
-html[data-dots="1"] body{font-family:"Dotsies",ui-monospace,monospace}
+html[data-dots="1"] body{font-family:"Dotsies",ui-monospace,monospace;letter-spacing:.2em}   /* the font packs letters edge to edge; a gap of one dot makes words readable */
 button,input,textarea{font:inherit;color:inherit;background:none;border:0;outline:0;border-radius:0;text-transform:inherit}
 button{cursor:pointer;border:1.5px solid var(--w);user-select:none;-webkit-user-select:none;transition:background .18s,color .18s,transform .18s var(--ease),opacity .25s,border-color .25s}
 button:active,button.on{background:var(--w);color:var(--k)}
@@ -31,7 +31,7 @@ button:active{transform:scale(.94)}
 .o.xl{width:80px;height:80px;font-size:34px;border-width:2px}
 .g{color:var(--g)}
 .o,#kp .mut{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace!important}   /* symbol buttons stay readable in Dots mode */
-.dw{font-family:"Dotsies",ui-monospace,monospace!important;font-size:34px;line-height:1}   /* the word "dots" is always written in Dots */
+.dw{font-family:"Dotsies",ui-monospace,monospace!important;letter-spacing:.2em;font-size:34px;line-height:1}   /* the word "dots" is always written in Dots */
 
 /* map + layers */
 #map{position:fixed;inset:0;background:var(--k);animation:wipe .9s var(--ease) both}
@@ -331,7 +331,7 @@ const pad4 = n => String(n).padStart(4, "0");
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
 
-const BUILD = "v7.2";
+const BUILD = "v7.2.1";
 const R = 1000, N = 500, G = 12, ARR = 30, HOME_PITCH = 50;
 const TG = { attractor:"◉", void:"◌", anomaly:"◈" };
 const LV = ["calm", "strange", "uncanny"];

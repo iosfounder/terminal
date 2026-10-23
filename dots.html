@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>dots sampler</title>
+<style>
+@font-face{font-family:"Dotsies";src:url("DotsiesRect.ttf") format("truetype");font-display:block}
+:root{--c:#4ff3ff;--i:#8a7dff}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#000;color:#fff;font:15px/1.4 ui-monospace,Menlo,Consolas,monospace;text-transform:lowercase}
+body{padding:calc(env(safe-area-inset-top,0px) + 14px) 14px 40px;max-width:760px;margin:0 auto}
+h1{font-size:15px;font-weight:400;color:#888;margin-bottom:12px}
+#ctl{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+input[type=text]{flex:1 1 220px;background:#0b0b0e;border:1px solid #333;border-radius:10px;color:#fff;font:inherit;font-size:16px;padding:10px 12px;outline:0}
+input[type=range]{flex:1 1 120px;accent-color:#4ff3ff}
+.row{border-top:1px solid #1d1d22;padding:14px 0 16px}
+.row small{display:block;color:#666;font-size:12px;margin-bottom:8px;letter-spacing:.08em}
+.t{font-family:"Dotsies",monospace;line-height:1.5;word-break:break-word}
+.t span{display:inline-block}
+.t .sp{width:.55em}
+svg{display:block;max-width:100%;height:auto}
+.key{display:flex;gap:14px;flex-wrap:wrap;color:#888;font-size:12px;margin-top:8px}
+.key i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle}
+</style>
+</head>
+<body>
+<h1>dots · reading styles</h1>
+<div id="ctl"><input id="tx" type="text" value="the quick brown fox seeks the strange place" spellcheck="false" autocapitalize="off"><input id="sz" type="range" min="30" max="86" value="52" aria-label="size"><input id="ls" type="range" min="0" max="60" value="20" aria-label="spacing"></div>
+<div id="out"></div>
+<script>
+// Which of the five rows (0 top .. 4 bottom) each letter lights, measured from DotsiesRect.ttf
+const M = { a:[0], b:[1], c:[2], d:[3], e:[4], f:[0,1], g:[1,2], h:[2,3], i:[3,4], j:[0,2], k:[1,3], l:[2,4], m:[0,3], n:[1,4], o:[0,4],
+  p:[0,1,2], q:[0,1,3], r:[0,2,3], s:[1,2,3], t:[1,2,4], u:[1,3,4], v:[2,3,4], w:[0,1,4], x:[0,2,4], y:[0,3,4], z:[0,1,3,4] };
+const WHITE = "#fff", CY = "#4ff3ff", IN = "#8a7dff", GR = "#8c8c99", DIM = "#6f6f7c";
+const grp = c => "abcde".includes(c) ? 0 : "fghi".includes(c) ? 1 : "jklmno".includes(c) ? 2 : 3;
+const SHAPE = [WHITE, IN, CY, GR];
+const isV = c => "aeiou".includes(c);
+const freq = c => "etaoinsr".includes(c) ? 0 : "hldcumwfg".includes(c) ? 1 : 2;
+const ROWS = ["#4ff3ff", "#6fc8ff", "#8a9dff", "#9b84ff", "#a77bff"];
+
+// 1) the real font, coloured per letter
+function fontRow(txt, colourOf, packed) {
+  const words = txt.split(" "), gap = packed ? 0 : ls / 100; let h = '<div class="t" style="font-size:' + sz + 'px">';
+  words.forEach((w, wi) => { [...w].forEach((c, ci) => { h += '<span style="color:' + colourOf(c, wi, ci) + ';margin-right:' + gap + 'em">' + c + "</span>"; }); h += '<span class="sp" style="width:' + (.5 + gap) + 'em"></span>'; });
+  return h + "</div>";
+}
+// 2) our own drawing from the dot rows: square or round, colour per dot or per letter
+function svgRow(txt, o) {
+  const s = sz / 52, cw = 15 * s, rp = 11.5 * s, d = 8 * s, gap = 11 * s, pad = 4 * s; let x = pad, parts = [], maxX = 0;
+  const words = txt.split(" ");
+  words.forEach((w, wi) => {
+    [...w].forEach((c, ci) => {
+      const rows = M[c]; if (!rows) { x += cw; return; }
+      rows.forEach(r => {
+        const col = o.dot ? o.dot(c, r, wi, ci) : o.letter(c, wi, ci), cx = x + d / 2, cy = pad + r * rp + d / 2;
+        parts.push(o.round ? '<circle cx="' + cx + '" cy="' + cy + '" r="' + d / 2 + '" fill="' + col + '"/>' : '<rect x="' + x + '" y="' + (pad + r * rp) + '" width="' + d + '" height="' + d + '" fill="' + col + '"/>');
+      });
+      if (o.ghost) parts.push('<text x="' + (x + d / 2) + '" y="' + (pad + 4 * rp + d + 14 * s) + '" font-size="' + 11 * s + '" fill="#555" text-anchor="middle" font-family="ui-monospace,monospace">' + c + "</text>");
+      x += cw;
+    });
+    x += gap;
+  });
+  maxX = x; const H = pad * 2 + 4 * rp + d + (o.ghost ? 18 * s : 0);
+  return '<svg viewBox="0 0 ' + Math.max(40, maxX) + " " + H + '" width="' + Math.max(40, maxX) + '" height="' + H + '">' + parts.join("") + "</svg>";
+}
+const styles = [
+  ["0 · plain dotsies, packed (as the app is now)", t => fontRow(t, () => WHITE, true), "letters touch: words become blobs"],
+  ["1 · plain dotsies, spaced (use the spacing slider)", t => fontRow(t, () => WHITE), ""],
+  ["2 · vowels lit", t => fontRow(t, c => isV(c) ? CY : WHITE), '<i style="background:#4ff3ff"></i>vowels <i style="background:#fff"></i>consonants'],
+  ["3 · shape families (from your chart)", t => fontRow(t, c => SHAPE[grp(c)]), '<i style="background:#fff"></i>a-e single <i style="background:#8a7dff"></i>f-i touching pair <i style="background:#4ff3ff"></i>j-o split pair <i style="background:#8c8c99"></i>p-z three+'],
+  ["4 · common dim, rare bright", t => fontRow(t, c => [DIM, "#c4c4cf", CY][freq(c)]), '<i style="background:#6f6f7c"></i>common <i style="background:#c4c4cf"></i>middle <i style="background:#4ff3ff"></i>rare'],
+  ["5 · word rhythm", t => fontRow(t, (c, wi, ci) => ci === 0 ? CY : wi % 2 ? "#9a9aaa" : WHITE), "first letter lit · words alternate bright / soft"],
+  ["6 · rows (colour = height of each dot)", t => svgRow(t, { dot: (c, r) => ROWS[r] }), '<i style="background:#4ff3ff"></i>top ... <i style="background:#a77bff"></i>bottom'],
+  ["7 · round dots", t => svgRow(t, { round: true, letter: () => WHITE }), ""],
+  ["8 · round dots, vowels lit", t => svgRow(t, { round: true, letter: c => isV(c) ? CY : WHITE }), ""],
+  ["9 · round dots, rows colour + vowels bigger glow", t => svgRow(t, { round: true, dot: (c, r) => isV(c) ? CY : ROWS[r] }), "vowels cyan · consonants by row"],
+  ["10 · ghost english under each letter", t => svgRow(t, { round: true, ghost: true, letter: () => WHITE }), "tiny letters, to fade out as you learn"],
+  ["11 · shapes + vowels (preset)", t => fontRow(t, c => isV(c) ? CY : [WHITE, IN, "#b9b3ff", GR][grp(c)]), "vowels cyan · rest by family"]
+];
+let sz = 52, ls = 20;
+document.getElementById("ls").addEventListener("input", e => { ls = +e.target.value; draw(); });
+function draw() {
+  const t = document.getElementById("tx").value.toLowerCase().replace(/[^a-z ]/g, "").trim() || "the strange place";
+  document.getElementById("out").innerHTML = styles.map(s => '<div class="row"><small>' + s[0] + "</small>" + s[1](t) + (s[2] ? '<div class="key">' + s[2] + "</div>" : "") + "</div>").join("");
+}
+document.getElementById("tx").addEventListener("input", draw);
+document.getElementById("sz").addEventListener("input", e => { sz = +e.target.value; draw(); });
+document.fonts.load("40px Dotsies").then(draw); draw();
+</script>
+</body>
+</html>
