@@ -16,10 +16,10 @@
 :root{--k:#000;--w:#fff;--g:#777;--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:var(--k);color:var(--w);overflow:hidden;overscroll-behavior:none;touch-action:manipulation;-webkit-text-size-adjust:100%;
-  font:14px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;text-transform:lowercase}
+  font:16px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;text-transform:lowercase}
 html[data-dots="1"] body{font-family:"Dotsies",ui-monospace,monospace}
 button,input,textarea{font:inherit;color:inherit;background:none;border:0;outline:0;border-radius:0;text-transform:inherit}
-button{cursor:pointer;border:1px solid var(--w);user-select:none;-webkit-user-select:none}
+button{cursor:pointer;border:1.5px solid var(--w);user-select:none;-webkit-user-select:none;transition:background .1s,color .1s}
 button:active,button.on{background:var(--w);color:var(--k)}
 :focus-visible{outline:1px solid var(--w);outline-offset:2px}
 [hidden]{display:none!important}
@@ -76,7 +76,7 @@ button:active,button.on{background:var(--w);color:var(--k)}
   padding:calc(var(--sat) + 8px) 12px 8px;display:flex;align-items:center;gap:8px}
 #top .sp{flex:1}
 #top{gap:6px}
-#top .o{width:40px;height:40px;font-size:18px}
+#top .o{width:44px;height:44px;font-size:19px}
 #me{font-size:19px}
 #me{font-size:20px;letter-spacing:.08em}
 #rk{text-transform:none;font-size:18px;min-width:2.2em;text-align:center;border:1px solid var(--w);padding:0 6px}
@@ -85,22 +85,55 @@ button:active,button.on{background:var(--w);color:var(--k)}
 #line{position:fixed;top:calc(var(--sat) + 62px);left:12px;right:12px;z-index:650;pointer-events:none;color:var(--w);text-shadow:0 0 3px #000,0 0 3px #000}
 #line.dim{color:var(--g)}
 
-/* dock */
-#dockhome{position:fixed;left:0;right:0;bottom:calc(var(--sab) + 22px);z-index:700;display:flex;align-items:center;justify-content:space-between;padding:0 20px;pointer-events:none}
-#dockhome>*{pointer-events:auto}
-#dockhome .cmp{width:80px;height:80px;background:var(--k);border-radius:50%}
+/* compass: ring + north tick; the big arrow shows where to walk */
 .cmp svg{width:100%;height:100%;display:block}
-.cmp .tg{display:none}.cmp.has .tg{display:block}
+.cmp .ar{display:none}.cmp.has .ar{display:block}
+#cmph{position:fixed;top:calc(var(--sat) + 64px);right:12px;width:68px;height:68px;z-index:650;pointer-events:none;background:rgba(0,0,0,.55);border-radius:50%}
 
-/* travel */
-#travel{position:fixed;left:0;right:0;bottom:0;z-index:700;background:var(--k);border-top:1px solid var(--w);
-  padding:16px 20px calc(var(--sab) + 16px);display:flex;align-items:center;justify-content:space-between;gap:12px}
-#dist{font-size:44px;line-height:1}
-#travel .cmp{width:150px;height:150px}
-#travel .cmp .ring{animation:blink var(--bd,2s) steps(1) infinite}
+/* dock */
+#dockhome{position:fixed;left:0;right:0;bottom:calc(var(--sab) + 22px);z-index:700;display:flex;align-items:center;justify-content:center;pointer-events:none}
+#dockhome>*{pointer-events:auto}
+#brec{position:absolute;left:20px;bottom:16px}
+#bspin.pulse1{animation:ring 1.6s ease-out infinite}
+@keyframes ring{0%{box-shadow:0 0 0 0 rgba(255,255,255,.7)}100%{box-shadow:0 0 0 26px rgba(255,255,255,0)}}
+
+/* hide to essentials */
+#top,#line,#cmph,#dockhome{transition:opacity .3s ease}
+body[data-hide="1"] #top,body[data-hide="1"] #line,body[data-hide="1"] #cmph,body[data-hide="1"] #dockhome{opacity:0;pointer-events:none}
+#dot{position:fixed;right:14px;bottom:calc(var(--sab) + 18px);z-index:710;width:36px;height:36px;font-size:14px;opacity:.7}
+
+/* travel: everything at the top */
+body[data-st="travel"] #top,body[data-st="travel"] #line,body[data-st="travel"] #cmph{display:none}
+#travel{position:fixed;top:0;left:0;right:0;z-index:700;background:var(--k);border-bottom:1.5px solid var(--w);
+  padding:calc(var(--sat) + 10px) 16px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px;animation:down .3s ease both}
+@keyframes down{from{transform:translateY(-30px);opacity:0}}
+#dist{font-size:46px;line-height:1;font-variant-numeric:tabular-nums}
+#rinfo{font-size:16px;margin-top:6px;min-height:1.4em}
+#travel .tb{display:flex;gap:10px;margin-top:10px}
+#travel .cmp{width:116px;height:116px;flex:none}
+#tfoot{position:fixed;left:20px;right:20px;bottom:calc(var(--sab) + 22px);z-index:710;display:flex;justify-content:space-between;align-items:center}
+.hold{position:relative;isolation:isolate;overflow:hidden}
+.hold::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--w);transform:scaleY(0);transform-origin:bottom;transition:transform .15s linear}
+.hold.press::before{transform:scaleY(1);transition:transform .9s linear}
+.hold.press{color:var(--k)}
+body[data-eyes="1"] #map,body[data-eyes="1"] #grid,body[data-eyes="1"] #fx{visibility:hidden}
+body[data-eyes="1"] #travel{bottom:0;flex-direction:column;justify-content:center;border-bottom:0;gap:20px;text-align:center}
+body[data-eyes="1"] #dist{font-size:22vw}
+body[data-eyes="1"] #travel .cmp{width:min(76vw,44vh);height:min(76vw,44vh)}
+body[data-eyes="1"] #bmode{display:none}
+body[data-eyes="1"] #travel .tb{justify-content:center}
+.rt-casing{stroke:#000}
+
+/* feedback */
+#verd{position:fixed;inset:0;z-index:850;display:grid;place-items:center;font-size:44vw;pointer-events:none;text-shadow:0 0 6px #000;animation:verd .8s ease both}
+@keyframes verd{0%{opacity:0;transform:scale(.6)}25%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.12)}}
+#open.out{animation:oout .3s ease forwards}
+@keyframes oout{to{opacity:0;transform:scale(1.25)}}
+#pad,#rep{animation:up .3s ease both}
+@keyframes up{from{opacity:0;transform:translateY(24px)}}
 
 /* pad */
-#pad,#rep{position:fixed;inset:0;z-index:750;background:var(--k);display:flex;flex-direction:column;gap:12px;
+#pad,#rep{position:fixed;inset:0 0 auto 0;height:var(--vh,100%);z-index:750;background:var(--k);display:flex;flex-direction:column;gap:12px;
   padding:calc(var(--sat) + 14px) 16px calc(var(--sab) + 16px);overflow:auto}
 #tbar{height:2px;background:var(--g);margin:-14px -16px 0}
 #tbar i{display:block;height:100%;width:0;background:var(--w)}
@@ -119,7 +152,7 @@ textarea::placeholder{color:var(--g)}
 
 /* sheet */
 #sheet{position:fixed;left:0;right:0;bottom:0;z-index:720;max-height:72vh;overflow:auto;background:var(--k);border-top:1px solid var(--w);
-  padding:58px 16px calc(var(--sab) + 18px);transform:translateY(105%);transition:transform .2s steps(4)}
+  padding:58px 16px calc(var(--sab) + 18px);transform:translateY(105%);transition:transform .28s cubic-bezier(.2,.8,.2,1)}
 #sheet.open{transform:none}
 #sheet .x{position:absolute;right:10px;top:8px}
 #sheet h2{font-size:18px;font-weight:400;margin-bottom:10px}
@@ -134,7 +167,7 @@ textarea::placeholder{color:var(--g)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
-<body>
+<body data-st="home" data-hide="0" data-eyes="0">
 <div id="map"></div>
 <div id="grid" aria-hidden="true"></div>
 <canvas id="fx" hidden aria-hidden="true"></canvas>
@@ -163,20 +196,29 @@ textarea::placeholder{color:var(--g)}
   </header>
   <p id="line" class="dim"></p>
 
+  <div class="cmp" id="cmph"></div>
   <div id="dockhome">
     <button id="brec" class="o" type="button" aria-label="Centre">⌖</button>
     <button id="bspin" class="o xl" type="button" aria-label="Spin">◎</button>
-    <div class="cmp" id="cmph"></div>
   </div>
+  <button id="dot" class="o" type="button" aria-label="Show" hidden>◉</button>
 
   <section id="travel" hidden>
-    <div>
+    <div class="tl">
       <div id="dist">–</div>
-      <div id="ttype" class="g"></div>
-      <button id="babort" class="o" type="button" aria-label="Abort" style="margin-top:14px">✕</button>
+      <div id="rinfo" class="g"></div>
+      <div class="tb">
+        <button id="bmode" class="o" type="button" aria-label="Foot or car">ⓦ</button>
+        <button id="bhere" class="o" type="button" aria-label="Here" hidden>⚑</button>
+      </div>
     </div>
     <div class="cmp" id="cmpt"></div>
   </section>
+  <div id="tfoot" hidden>
+    <button id="babort" class="o hold" type="button" aria-label="Hold to abort">✕</button>
+    <button id="brec2" class="o" type="button" aria-label="Centre">⌖</button>
+  </div>
+  <div id="verd" hidden></div>
 
   <section id="pad" hidden>
     <div id="tbar"><i></i></div>
@@ -198,6 +240,7 @@ textarea::placeholder{color:var(--g)}
     <input id="pfile" type="file" accept="image/*" capture="environment" hidden>
     <div class="row c">
       <button id="bno" class="o xl" type="button" aria-label="Deny">✕</button>
+      <button id="bnone" class="o xl" type="button" aria-label="Unreachable">⌀</button>
       <button id="byes" class="o xl" type="button" aria-label="Confirm">✓</button>
     </div>
   </section>
@@ -235,7 +278,7 @@ const pad4 = n => String(n).padStart(4, "0");
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
 
-const BUILD = "v4";
+const BUILD = "v5";
 const INTENT = "benefit of mankind";
 const R = 1000, N = 500, G = 12, ARR = 30;
 const TG = { attractor:"◉", void:"◌", anomaly:"◈" };
@@ -382,37 +425,48 @@ let uid = null, agent = "", map = null, pos = null, follow = true, heading = 0, 
 let mine = new Map(), active = null, draft = null, spinning = false, arriving = null;
 let showAll = false, allDocs = new Map(), unsubMine = null, unsubAll = null, newRid = null;
 const net = new Map(); // rid -> net rating (own reports, lazy)
-let gMine, gTrail, gAll, meMk = null, tgMk = null, todayLine = "";
+let gMine, gTrail, gAll, gRoute, meMk = null, tgMk = null, todayLine = "";
+let rt = null, routing = false, lastFetch = 0, routeMode = store.get("tm.mode") === "car" ? "car" : "foot";
+let near100 = null, nearSince = 0, wake = null, tickT = null, lastTouch = Date.now(), eyesOffAt = 0, spd = 0, shownD = null, targetD = 0, dtw = false;
+const vg = r => r.status !== "done" ? "○" : r.verdict > 0 ? "●" : r.verdict < 0 ? "✕" : "⌀";
+const setEyes = v => { document.body.dataset.eyes = v ? "1" : "0"; if (!v) eyesOffAt = Date.now(); };
+const setHide = v => { document.body.dataset.hide = v ? "1" : "0"; $("dot").hidden = !v; };
 
 const flash = (ms = 100) => { if (reduced) return; const f = $("flash"); f.hidden = false; setTimeout(() => { f.hidden = true; }, ms); };
 const note = (t, dim = true) => { const l = $("line"); l.textContent = t; l.classList.toggle("dim", dim); };
 
 /* ---------- compass ---------- */
-const CMP = '<svg viewBox="-50 -50 100 100"><g class="ring"><circle r="44" fill="none" stroke="#fff" stroke-width="1"/>' +
-  '<path d="M0-44V-33" stroke="#fff" stroke-width="3"/><path d="M0 44V40M44 0H40M-44 0H-40" stroke="#fff" stroke-width="1"/>' +
-  '<g class="tg"><path d="M0-31L7-17H-7Z" fill="#fff"/></g></g><circle r="2" fill="#fff"/></svg>';
+const CMP = '<svg viewBox="-50 -50 100 100"><circle r="46" fill="none" stroke="#fff" stroke-width="2"/>' +
+  '<g class="n"><path d="M0-46V-35" stroke="#fff" stroke-width="4"/></g>' +
+  '<g class="ar"><path d="M0-36L17-8H7V32H-7V-8H-17Z" fill="#fff"/></g></svg>';
 $("cmph").innerHTML = CMP; $("cmpt").innerHTML = CMP;
+const nrm = a => ((a % 360) + 540) % 360 - 180;                 // -180..180
+const smooth = (a, b, k) => (a + nrm(b - a) * k + 360) % 360;   // ease an angle toward another
+const buzz = p => { try { navigator.vibrate && navigator.vibrate(p); } catch {} };
+let lastAlign = 0;
 function drawCompass() {
-  const tb = active && pos ? brg(pos, active) : null;
+  const tb = active && pos && active.status === "pending" ? brg(pos, active) : null;
+  const rel = tb == null ? null : (hasCompass ? tb - heading : tb);   // arrow: up = straight on
   document.querySelectorAll(".cmp").forEach(c => {
-    c.querySelector(".ring").setAttribute("transform", "rotate(" + (-heading).toFixed(1) + ")");
-    const t = c.querySelector(".tg"); c.classList.toggle("has", tb != null);
-    if (tb != null) t.setAttribute("transform", "rotate(" + tb.toFixed(1) + ")");
+    c.querySelector(".n").setAttribute("transform", "rotate(" + (hasCompass ? -heading : 0).toFixed(1) + ")");
+    const on = tb != null && c.id === "cmpt"; c.classList.toggle("has", on);
+    if (on) c.querySelector(".ar").setAttribute("transform", "rotate(" + rel.toFixed(1) + ")");
   });
+  if (rel != null && hasCompass && Math.abs(nrm(rel)) < 12 && Date.now() - lastAlign > 3500) { lastAlign = Date.now(); buzz(25); }
 }
 function oe(e) {
   let h = null;
   if (e.webkitCompassHeading != null) h = e.webkitCompassHeading;
   else if (e.absolute && e.alpha != null) h = 360 - e.alpha;
   else if (e.type === "deviceorientationabsolute" && e.alpha != null) h = 360 - e.alpha;
-  if (h == null) return; hasCompass = true; heading = h; drawCompass();
+  if (h == null) return; heading = hasCompass ? smooth(heading, h, .25) : h; hasCompass = true; drawCompass();
 }
 function startCompass() {
   if (compassOn) return; compassOn = true;
   const attach = () => { addEventListener("deviceorientationabsolute", oe, true); addEventListener("deviceorientation", oe, true); };
+  attach();                                      // Android needs no permission; iPhone sends nothing until it is granted
   if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function")
-    DeviceOrientationEvent.requestPermission().then(r => { if (r === "granted") attach(); }).catch(() => {});
-  else attach();
+    DeviceOrientationEvent.requestPermission().then(() => {}).catch(() => {});
 }
 
 /* ---------- map ---------- */
@@ -420,12 +474,15 @@ function initMap() {
   if (map) return;
   map = L.map("map", { zoomControl: false, zoomSnap: .5, worldCopyJump: true }).setView([51.5, -0.12], 13);
   L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", { maxNativeZoom: 16, maxZoom: 19, attribution: "Esri · © OpenStreetMap" }).addTo(map);
-  gTrail = L.layerGroup().addTo(map); gMine = L.layerGroup().addTo(map); gAll = L.layerGroup();
+  gRoute = L.layerGroup().addTo(map); gTrail = L.layerGroup().addTo(map); gMine = L.layerGroup().addTo(map); gAll = L.layerGroup();
   map.on("dragstart", () => { follow = false; });
-  map.on("click", closeSheet);
+  map.on("click", () => {
+    if (sheet.classList.contains("open")) { closeSheet(); return; }
+    if (document.body.dataset.st === "home") setHide(document.body.dataset.hide !== "1");
+  });
 }
 const mkIcon = (r, mineFlag) => {
-  const g = r.status !== "done" ? "○" : r.verdict > 0 ? "●" : "✕";
+  const g = vg(r);
   const cls = "mk" + (mineFlag ? "" : " o2") + (r.rid === newRid ? " drop" : "");
   return L.divIcon({ className: "mkw", html: '<b class="' + cls + '">' + g + "</b>", iconSize: [0, 0] });
 };
@@ -463,13 +520,27 @@ function startGeo(hi = true) {
   }, { enableHighAccuracy: hi, maximumAge: 5000, timeout: hi ? 15000 : 40000 });
 }
 function onPos(p) {
+  const acc = p.coords.accuracy, t = Date.now();
+  if (pos && acc > 100 && t - pos.t < 15000) return;              // ignore poor fixes while we hold a recent good one
   const first = !pos;
-  pos = { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy };
+  let lat = p.coords.latitude, lng = p.coords.longitude;
+  if (pos) {
+    const jump = hav(pos, { lat, lng }), k = jump > 100 ? 1 : acc > 30 ? .35 : .6;   // ease small jitter, accept real moves
+    const dt = (t - pos.t) / 1000; if (dt > .5) spd = spd * .7 + (jump / dt) * .3;
+    lat = pos.lat + (lat - pos.lat) * k; lng = pos.lng + (lng - pos.lng) * k;
+  }
+  pos = { lat, lng, acc, t };
   if (!hasCompass && p.coords.heading != null && !isNaN(p.coords.heading) && p.coords.speed > 1) { heading = p.coords.heading; }
   if (!meMk) meMk = L.marker([pos.lat, pos.lng], { icon: L.divIcon({ className: "mkw me", html: "<b></b><i></i>", iconSize: [0, 0] }), interactive: false, zIndexOffset: 1000 }).addTo(map);
   else meMk.setLatLng([pos.lat, pos.lng]);
   if (first) { map.setView([pos.lat, pos.lng], 16, { animate: false }); if ($("line").textContent.startsWith("locat")) { $("line").textContent = todayLine; $("line").classList.add("dim"); } }
   else if (follow && !spinning) map.panTo([pos.lat, pos.lng], { animate: true, duration: .4 });
+  if (active && active.status === "pending") {
+    if (!rt || rt.rid !== active.rid || rt.mode !== routeMode) fetchRoute();
+    else { const r = routeRemain(); if (r && r.bd > 40) fetchRoute(); }       // left the route: ask again
+    if (spd > 1.8 && document.body.dataset.eyes === "0" && Date.now() - eyesOffAt > 30000) setEyes(1);   // moving fast: eyes up
+    drawRoute();
+  }
   updateTravel(); drawCompass();
 }
 $("brec").addEventListener("click", () => { follow = true; if (!pos) startGeo(true); if (pos) map.flyTo([pos.lat, pos.lng], Math.max(map.getZoom(), 15), { duration: .5 }); });
@@ -521,9 +592,10 @@ function playSpin(g) {
       }
       if (t > 1800) {
         if (!locked) { locked = true; sfx.lock(); }
-        x.lineWidth = 1; x.beginPath(); x.arc(T.x, T.y, Math.min(70, (t - 1800) / 400 * 70), 0, 7); x.stroke();
+        const k = t - 1800, rr = k < 300 ? k / 300 * 70 : 70 + ((k - 300) / 300) ** 2 * Math.hypot(cv.width, cv.height);   // ring swells into the pad
+        x.lineWidth = 1.5; x.beginPath(); x.arc(T.x, T.y, rr, 0, 7); x.stroke();
       }
-      if (t < 2300) requestAnimationFrame(f); else { x.clearRect(0, 0, cv.width, cv.height); cv.hidden = true; res(); }
+      if (t < 2400) requestAnimationFrame(f); else { x.clearRect(0, 0, cv.width, cv.height); cv.hidden = true; res(); }
     };
     requestAnimationFrame(f);
   });
@@ -531,7 +603,7 @@ function playSpin(g) {
 async function spin() {
   if (spinning || draft || active) return;
   if (!pos) { startGeo(true); note("locating…", false); return; }
-  spinning = true; startCompass(); ac(); sfx.spin(); flash(80);
+  spinning = true; startCompass(); ac(); sfx.spin(); flash(80); $("bspin").classList.remove("pulse1"); store.set("tm.spun", "1");
   const c = { lat: pos.lat, lng: pos.lng };
   map.setView([c.lat, c.lng], 14.5, { animate: false });
   const g = await generate(c); g.from = c;
@@ -560,26 +632,116 @@ $("pgo").addEventListener("click", () => {
   const data = { uid, agent, seq: n, rid, type: d.type, src: d.src, lat: d.lat, lng: d.lng, fromLat: d.from.lat, fromLng: d.from.lng,
     intention: INTENT, blind: { text: $("btxt").value.trim().slice(0, 1000), img: inked ? cv.toDataURL("image/png") : "" },
     status: "pending", verdict: 0, found: "", photo: "", at: serverTimestamp() };
-  draft = null; sfx.lock();
+  draft = null; sfx.lock(); rt = null; lastFetch = 0; shownD = null; near100 = null; nearSince = 0;
   setDoc(doc(db, "reports", rid), data).catch(() => note("sync ✕", false));
+  follow = false;                                  // overview first: you and the point, with the route between
+  map.flyToBounds(L.latLngBounds([[pos.lat, pos.lng], [d.lat, d.lng]]), { paddingTopLeft: [40, 210], paddingBottomRight: [40, 120], duration: .8, maxZoom: 17 });
   route();
 });
 
 /* ---------- travel ---------- */
+const seg = (a, b) => hav({ lat: a[0], lng: a[1] }, { lat: b[0], lng: b[1] });
+function routeRemain() {                         // nearest point on the route, and the distance left along it
+  if (!rt || !active || rt.rid !== active.rid || !pos) return null;
+  let bi = 0, bd = 1e12;
+  for (let i = 0; i < rt.c.length; i++) { const d = hav(pos, { lat: rt.c[i][0], lng: rt.c[i][1] }); if (d < bd) { bd = d; bi = i; } }
+  let rem = bd; for (let i = bi; i < rt.c.length - 1; i++) rem += seg(rt.c[i], rt.c[i + 1]);
+  return { bi, bd, rem };
+}
+async function fetchRoute() {
+  if (!active || !pos || active.status !== "pending" || routing || Date.now() - lastFetch < 15000) return;
+  routing = true; lastFetch = Date.now();
+  const rid = active.rid, mode = routeMode, [svc, prof] = mode === "car" ? ["routed-car", "driving"] : ["routed-foot", "foot"];
+  try {
+    const r = await fetch("https://routing.openstreetmap.de/" + svc + "/route/v1/" + prof + "/" + pos.lng + "," + pos.lat + ";" + active.lng + "," + active.lat +
+      "?overview=full&geometries=geojson", { signal: AbortSignal.timeout(8000) });
+    const j = await r.json();
+    if (j.code === "Ok" && active && active.rid === rid) {
+      const q = j.routes[0]; rt = { rid, mode, dist: q.distance, dur: q.duration, c: q.geometry.coordinates.map(c => [c[1], c[0]]) };
+      drawRoute(true); updateTravel();
+    }
+  } catch {} finally { routing = false; }
+}
+function drawRoute(anim) {                       // thick white line with a black edge along the route, dashed for the last stretch
+  if (!map) return; gRoute.clearLayers();
+  if (!active || active.status !== "pending" || !pos) return;
+  const T = [active.lat, active.lng], P = [pos.lat, pos.lng], rr = routeRemain();
+  let pts = null, tail = [P, T];
+  if (rr) { pts = [P, ...rt.c.slice(rr.bi)]; const e = pts[pts.length - 1]; tail = seg(e, T) > 12 ? [e, T] : null; }
+  if (pts) {
+    L.polyline(pts, { color: "#000", weight: 10, opacity: 1, lineCap: "round", lineJoin: "round", interactive: false }).addTo(gRoute);
+    const ln = L.polyline(pts, { color: "#fff", weight: 4, opacity: 1, lineCap: "round", lineJoin: "round", interactive: false }).addTo(gRoute);
+    const el = anim && !reduced && ln.getElement && ln.getElement();
+    if (el && el.getTotalLength) {
+      const len = el.getTotalLength(); el.style.strokeDasharray = len; el.style.strokeDashoffset = len; el.getBoundingClientRect();
+      el.style.transition = "stroke-dashoffset .7s ease-out"; el.style.strokeDashoffset = 0;
+      setTimeout(() => { el.style.strokeDasharray = ""; el.style.transition = ""; }, 800);
+    }
+  }
+  if (tail) L.polyline(tail, { color: "#fff", weight: 3, dashArray: "1 9", lineCap: "round", opacity: .95, interactive: false }).addTo(gRoute);
+}
+function setDist(d) {                            // numbers glide instead of jumping
+  targetD = d;
+  if (shownD == null || Math.abs(d - shownD) > 400) { shownD = d; $("dist").textContent = fmtD(d); return; }
+  if (dtw) return; dtw = true;
+  const step = () => { shownD += (targetD - shownD) * .3; if (Math.abs(targetD - shownD) < 1) { shownD = targetD; dtw = false; } $("dist").textContent = fmtD(shownD); if (dtw) setTimeout(step, 40); };
+  step();
+}
+function arrive() {
+  if (!active || arriving === active.rid) return;
+  arriving = active.rid; sfx.arrive(); buzz(400); flash(180); setEyes(0); setHide(false);
+  updateDoc(doc(db, "reports", active.rid), { status: "arrived", arrivedAt: serverTimestamp() }).catch(() => { arriving = null; });
+}
 function updateTravel() {
   if (!active || !pos || active.status !== "pending") return;
-  const d = hav(pos, active); $("dist").textContent = fmtD(d);
-  $("travel").querySelector(".cmp").style.setProperty("--bd", Math.max(.15, Math.min(2, d / 500)).toFixed(2) + "s");
-  if (d <= Math.max(ARR, Math.min(pos.acc || 0, 60)) && arriving !== active.rid) {
-    arriving = active.rid; sfx.arrive(); flash(180);
-    updateDoc(doc(db, "reports", active.rid), { status: "arrived", arrivedAt: serverTimestamp() }).catch(() => { arriving = null; });
-  }
+  const d = hav(pos, active); setDist(d);
+  const rr = routeRemain();
+  $("rinfo").textContent = rr ? "↳ " + fmtD(rr.rem) + " · " + Math.max(1, Math.round(rr.rem / rt.dist * rt.dur / 60)) + " min" : "";
+  if (d <= 100 && near100 !== active.rid) { near100 = active.rid; buzz([60, 80, 60]); tone(880, .1); tone(880, .1, "square", .05, .18); }
+  if (d <= 100) { if (!nearSince) nearSince = Date.now(); } else nearSince = 0;
+  $("bhere").hidden = !(nearSince && Date.now() - nearSince > 120000);   // bad GPS must never block a report
+  if (d <= Math.max(ARR, Math.min(pos.acc || 0, 60))) arrive();
 }
-$("babort").addEventListener("click", () => {
-  if (!active) return; sfx.no();
-  deleteDoc(doc(db, "reports", active.rid)).catch(() => {});
-  mine.delete(active.rid); active = null; setTarget(); drawMine(); route();
+$("bhere").addEventListener("click", arrive);
+$("bmode").addEventListener("click", () => {
+  routeMode = routeMode === "foot" ? "car" : "foot"; store.set("tm.mode", routeMode); $("bmode").textContent = routeMode === "car" ? "ⓓ" : "ⓦ";
+  rt = null; lastFetch = 0; fetchRoute(); drawRoute(); sfx.key();
 });
+function abortNow() {
+  if (!active) return; sfx.no(); buzz(80);
+  deleteDoc(doc(db, "reports", active.rid)).catch(() => {});
+  mine.delete(active.rid); active = null; rt = null; setTarget(); drawMine(); drawRoute(); route();
+}
+{ // ✕ must be held, so a pocket or a bump cannot end a mission
+  const b = $("babort"); let t = null;
+  const stop = () => { if (t) { clearTimeout(t); t = null; } b.classList.remove("press"); };
+  b.addEventListener("pointerdown", e => { e.preventDefault(); b.classList.add("press"); t = setTimeout(() => { t = null; b.classList.remove("press"); abortNow(); }, 900); });
+  ["pointerup", "pointerleave", "pointercancel"].forEach(ev => b.addEventListener(ev, stop));
+  b.addEventListener("contextmenu", e => e.preventDefault());
+}
+$("brec2").addEventListener("click", () => {     // overview of you + the point  <->  follow me
+  if (!pos || !active) return;
+  if (follow) { follow = false; map.flyToBounds(L.latLngBounds([[pos.lat, pos.lng], [active.lat, active.lng]]), { paddingTopLeft: [40, 210], paddingBottomRight: [40, 120], duration: .6, maxZoom: 17 }); }
+  else { follow = true; map.flyTo([pos.lat, pos.lng], 17, { duration: .6 }); }
+});
+$("travel").addEventListener("click", e => { if (!e.target.closest("button")) setEyes(document.body.dataset.eyes !== "1"); });
+addEventListener("pointerdown", () => { lastTouch = Date.now(); }, true);
+setInterval(() => {                              // 10 s without a touch while walking: eyes up
+  if (active && active.status === "pending" && document.body.dataset.eyes === "0" && Date.now() - lastTouch > 10000 && !sheet.classList.contains("open")) setEyes(1);
+}, 1000);
+function tickLoop() {                            // soft ticks that speed up as you close in
+  clearTimeout(tickT);
+  if (!(active && active.status === "pending" && pos) || muted || document.hidden) { tickT = setTimeout(tickLoop, 1500); return; }
+  const d = hav(pos, active); tone(1100, .015, "square", .018);
+  tickT = setTimeout(tickLoop, Math.max(350, Math.min(3000, 350 + (d - 30) * 2.6)));
+}
+async function wakeOn(on) {
+  try {
+    if (on && !wake && navigator.wakeLock) { wake = await navigator.wakeLock.request("screen"); wake.addEventListener("release", () => { wake = null; }); }
+    else if (!on && wake) { await wake.release(); wake = null; }
+  } catch {}
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden && active && active.status === "pending") wakeOn(true); });
 
 /* ---------- report ---------- */
 let photoData = "";
@@ -602,25 +764,35 @@ function fillRep() {
 function finish(v) {
   if (!active) return; const rid = active.rid;
   const data = { status: "done", verdict: v, found: $("found").value.trim().slice(0, 2000), photo: photoData, doneAt: serverTimestamp() };
-  newRid = rid; v > 0 ? sfx.ok() : sfx.no(); flash(60);
+  newRid = rid; v > 0 ? sfx.ok() : sfx.no(); buzz(v > 0 ? 40 : 90); flash(60);
+  const vd = $("verd"); vd.textContent = v > 0 ? "✓" : v < 0 ? "✕" : "⌀"; vd.hidden = false; vd.style.animation = "none"; void vd.offsetWidth; vd.style.animation = "";
+  setTimeout(() => { vd.hidden = true; }, 850);
   updateDoc(doc(db, "reports", rid), data).catch(() => note("sync ✕", false));
   photoData = ""; $("found").value = ""; $("pprev").hidden = true;
 }
 $("byes").addEventListener("click", () => finish(1));
 $("bno").addEventListener("click", () => finish(-1));
+$("bnone").addEventListener("click", () => finish(0));      // could not reach it: counts neither way
 
 /* ---------- routing ---------- */
 let lastRid = null;
 function route() {
   const pend = active && active.status === "pending", arr = active && active.status === "arrived";
-  $("pad").hidden = !draft; $("rep").hidden = !(arr && !draft); $("travel").hidden = !(pend && !draft);
-  $("dockhome").hidden = !!(draft || active);
+  const st = draft ? "pad" : pend ? "travel" : arr ? "rep" : "home";
+  document.body.dataset.st = st; if (st !== "home") setHide(false); if (st !== "travel") setEyes(0);
+  $("pad").hidden = !draft; $("rep").hidden = !(arr && !draft); $("travel").hidden = !(pend && !draft); $("tfoot").hidden = st !== "travel";
+  $("dockhome").hidden = !!(draft || active); wakeOn(st === "travel");
+  if (!pend) { rt = null; gRoute && gRoute.clearLayers(); }
   if (draft && $("pad").dataset.o !== "1") { $("pad").dataset.o = "1"; openPad(); }
   if (!draft) $("pad").dataset.o = "0";
   if (arr && $("rep").dataset.r !== active.rid) { $("rep").dataset.r = active.rid; fillRep(); }
   if (!arr) $("rep").dataset.r = "";
-  const rid = active ? active.rid : null; if (rid !== lastRid) { lastRid = rid; arriving = null; setTarget(); }
-  if (pend) updateTravel();
+  const rid = active ? active.rid : null;
+  if (rid !== lastRid) {
+    lastRid = rid; arriving = null; shownD = null; near100 = null; nearSince = 0; setTarget();
+    if (pend && pos && map && follow) { follow = false; map.flyToBounds(L.latLngBounds([[pos.lat, pos.lng], [active.lat, active.lng]]), { paddingTopLeft: [40, 210], paddingBottomRight: [40, 120], duration: .6, maxZoom: 17 }); }
+  }
+  if (pend) { fetchRoute(); drawRoute(); updateTravel(); }
   drawCompass();
 }
 
@@ -628,7 +800,7 @@ function route() {
 const RANKS = ["I", "II", "III", "IV", "V"], TH = [0, 3, 8, 20, 50];
 let rankLvl = null;
 function score() {
-  const d = [...mine.values()].filter(r => r.status === "done");
+  const d = [...mine.values()].filter(r => r.status === "done" && r.verdict !== 0);   // ⌀ counts neither way
   return d.length + 2 * d.filter(r => r.verdict > 0).length + d.reduce((s, r) => s + (net.get(r.rid) || 0), 0);
 }
 function updateRank() {
@@ -667,22 +839,27 @@ $("bglobal").addEventListener("click", () => {
 
 /* ---------- sheets ---------- */
 const sheet = $("sheet"), sbody = $("sbody");
-const openSheet = html => { sbody.innerHTML = html; sheet.classList.add("open"); };
-function closeSheet() { sheet.classList.remove("open"); }
+let pushed = false;                              // phone back button closes a sheet instead of leaving the app
+const openSheet = html => { sbody.innerHTML = html; sheet.classList.add("open"); if (!pushed) { try { history.pushState({ sh: 1 }, ""); pushed = true; } catch {} } };
+function closeSheet(fromPop) {
+  sheet.classList.remove("open");
+  if (pushed) { pushed = false; if (fromPop !== true) { try { history.back(); } catch {} } }
+}
+addEventListener("popstate", () => { if (sheet.classList.contains("open")) closeSheet(true); });
 $("sx").addEventListener("click", closeSheet);
 
 $("blist").addEventListener("click", () => {
   if (sheet.classList.contains("open") && sbody.dataset.k === "list") { closeSheet(); return; }
   const arr = [...mine.values()].sort((a, b) => b.seq - a.seq);
   openSheet(arr.length ? arr.map(r => '<button class="li" data-r="' + esc(r.rid) + '"><span>' + esc(r.rid) + " " +
-    (r.status !== "done" ? "○" : r.verdict > 0 ? "●" : "✕") + " " + TG[r.type] + '</span><span class="g">' + esc(fmtT(r)) + "</span></button>").join("") : '<p class="g">–</p>');
+    vg(r) + " " + TG[r.type] + '</span><span class="g">' + esc(fmtT(r)) + "</span></button>").join("") : '<p class="g">–</p>');
   sbody.dataset.k = "list";
   sbody.querySelectorAll(".li").forEach(b => b.addEventListener("click", () => { const r = mine.get(b.dataset.r); if (r) { map.flyTo([r.lat, r.lng], 16, { duration: .5 }); openReport(r); } }));
 });
 
 async function openReport(r) {
   const own = r.uid === uid;
-  const head = "<h2>" + esc(r.rid) + " " + (r.status !== "done" ? "○" : r.verdict > 0 ? "●" : "✕") + " " + TG[r.type] + ' <span class="g">' + esc(fmtT(r)) + " · " + esc(r.src || "") + "</span></h2>";
+  const head = "<h2>" + esc(r.rid) + " " + vg(r) + " " + TG[r.type] + ' <span class="g">' + esc(fmtT(r)) + " · " + esc(r.src || "") + "</span></h2>";
   let b = '<div class="bl">';
   if (r.blind && r.blind.img) b += '<img src="' + esc(r.blind.img) + '" alt="">';
   if (r.blind && r.blind.text) b += "<p>" + esc(r.blind.text) + "</p>";
@@ -720,7 +897,8 @@ $("bset").addEventListener("click", () => {
 
 /* ---------- help ---------- */
 const HELP = [["⌖", "location on · allow"], ["◎", "spin → a point"], ["✎", "blind view first · draw + write"], ["▶", "go"],
-  ["➤", "follow the arrow"], ["✓ ✕", "there: write what is · matched / not"], ["◎", "again · trail grows"],
+  ["➤", "arrow up = straight on"], ["ⓦ ⓓ", "walk · drive route"], ["✕", "hold to end"], ["◉", "tap map: hide / show"],
+  ["✓ ✕ ⌀", "there: write what is · matched / not / can't reach"], ["◎", "again · trail grows"],
   ["⊕", "all agents · ▲ ▼ rate"], ["≡", "your reports"], ["⚙", "dots · sound · exit"], ["◉", "benefit of mankind"]];
 function openHelp() {
   if (sheet.classList.contains("open") && sbody.dataset.k === "help") { closeSheet(); return; }
@@ -750,11 +928,18 @@ function boot(user) {
   uid = user.uid; agent = user.displayName || pendingId || store.get("tm.id") || "";
   if (!/^\d{4}$/.test(agent)) { signOut(auth); return; }
   store.set("tm.id", agent);
+  $("open").classList.add("out");
   setTimeout(() => {
-    $("open").hidden = true; $("app").hidden = false; $("me").textContent = agent;
-    initMap(); map.invalidateSize(); startGeo(); subMine(); daily(); route();
+    $("open").hidden = true; $("open").classList.remove("out"); $("app").hidden = false; $("me").textContent = agent;
+    $("bmode").textContent = routeMode === "car" ? "ⓓ" : "ⓦ";
+    initMap(); map.invalidateSize(); startGeo(); subMine(); daily(); route(); tickLoop();
     if (!store.get("tm.help")) { store.set("tm.help", "1"); setTimeout(openHelp, 400); }
-  }, $("boxes").classList.contains("inv") ? 260 : 0);
+    else if (!store.get("tm.spun")) $("bspin").classList.add("pulse1");
+  }, reduced ? 0 : 280);
+}
+if (window.visualViewport) {                    // keep ▶ ✓ ✕ above the keyboard
+  const f = () => document.documentElement.style.setProperty("--vh", visualViewport.height + "px");
+  visualViewport.addEventListener("resize", f); visualViewport.addEventListener("scroll", f); f();
 }
 
 if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(console.error));
