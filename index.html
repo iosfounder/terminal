@@ -119,7 +119,7 @@ body[data-st="intent"] #dim{opacity:1}
 #mn{position:fixed;top:calc(var(--sat) + 66px);right:12px;z-index:725;display:flex;flex-direction:column;align-items:flex-end;gap:10px;pointer-events:none}
 #mn>*{opacity:0;transform:translate(8px,-20px) scale(.5);transform-origin:top right;transition:transform .42s cubic-bezier(.2,1.25,.3,1),opacity .25s;pointer-events:none}
 #mn.open>*{opacity:1;transform:none;pointer-events:auto}
-#mn.open>*:nth-child(2){transition-delay:.04s}#mn.open>*:nth-child(3){transition-delay:.08s}#mn.open>*:nth-child(4){transition-delay:.12s}#mn.open>*:nth-child(5){transition-delay:.16s}
+#mn.open>*:nth-child(2){transition-delay:.04s}#mn.open>*:nth-child(3){transition-delay:.08s}#mn.open>*:nth-child(4){transition-delay:.12s}
 #mid{font-size:var(--t1);letter-spacing:.14em;padding:7px 14px;border:1px solid rgba(255,255,255,.22);border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.02));-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
 #mn .o.on{background:var(--w)}
 body:not([data-st="home"]) #bm,body:not([data-st="home"]) #mn{display:none}
@@ -140,6 +140,10 @@ body:not([data-st="home"]) #bm,body:not([data-st="home"]) #mn{display:none}
 /* everything that disappears when you tap the map */
 #bm,#mn,#dockhome,#toast{transition:opacity .45s ease}
 body[data-hide="1"] #bm,body[data-hide="1"] #mn,body[data-hide="1"] #dockhome,body[data-hide="1"] #toast{opacity:0!important;pointer-events:none}
+/* idle: after a few quiet seconds the controls sink into the picture; a touch brings them back */
+body[data-idle="1"] #bm,body[data-idle="1"] #dockhome,body[data-idle="1"] #tfoot{opacity:.16;transition:opacity 2.2s ease}
+body[data-idle="1"] #hud .cmp{opacity:.8}
+#tfoot{transition:opacity .5s ease}
 
 /* walking: small, top right, no bar */
 .cmp svg{width:100%;height:100%;display:block}
@@ -192,8 +196,10 @@ html[data-dots="1"] .kk.go,html[data-dots="1"] .kk.sp{font-size:20px}
 #lv.chosen .lvb{opacity:.28;transform:scale(.85)}
 #lv.chosen .lvb.sel{opacity:1;transform:scale(1.18)}
 .lvb.sel i{background:var(--lc);box-shadow:0 0 34px var(--lc)}
-#vr{display:flex;gap:26px;align-items:center;justify-content:center;opacity:.25;pointer-events:none;transition:opacity .5s}
-#vr.ready{opacity:1;pointer-events:auto}
+.lvb span{transition:transform .4s var(--ease)}
+.lvb.sel span{transform:translateY(12px)}
+#vr{display:flex;gap:26px;align-items:center;justify-content:center;opacity:0;transform:translateY(12px);pointer-events:none;transition:opacity .6s var(--ease),transform .6s var(--ease)}   /* one decision at a time: the verdict appears once you have felt it */
+#vr.ready{opacity:1;transform:none;pointer-events:auto}
 #vr .o{width:60px;height:60px;font-size:26px}
 #rep .pv{display:flex;gap:12px;align-items:center}
 #rep .pv:not(.on){display:none}
@@ -216,6 +222,11 @@ html[data-dots="1"] .kk.go,html[data-dots="1"] .kk.sp{font-size:20px}
 #sheet p{white-space:pre-wrap;word-break:break-word}
 #sheet .st{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid #222}
 #sheet .st.hp{justify-content:flex-start;gap:14px;padding:9px 0}
+#sheet .sg{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:6px 0 4px}
+#sheet .sg .o{width:100%;height:64px;border-radius:20px;font-size:20px}
+#sheet .sg .o .dw{font-size:30px}
+#sheet .li>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+#sheet .li>span:last-child{flex:none;white-space:nowrap}
 .ld{display:inline-block;width:12px;height:12px;border-radius:50%;border:1.5px solid #fff;vertical-align:middle;margin-right:6px}
 .ld.l1{border-color:var(--i);background:var(--i)}.ld.l2{border-color:var(--c);background:var(--c)}
 
@@ -265,7 +276,6 @@ body[data-lite="1"] #grain{display:none}
     <div id="mid"></div>
     <button id="bglobal" class="o sm" type="button" aria-label="All agents">⊕</button>
     <button id="blist" class="o sm" type="button" aria-label="Reports">≡</button>
-    <button id="bhelp" class="o sm" type="button" aria-label="Help">?</button>
     <button id="bset" class="o sm" type="button" aria-label="Settings">⚙</button>
   </nav>
 
@@ -347,7 +357,7 @@ const pad4 = n => String(n).padStart(4, "0");
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
 
-const BUILD = "v7.4";
+const BUILD = "v7.5";
 const R = 1000, N = 500, G = 12, ARR = 30, HOME_PITCH = 50;
 const TG = { attractor:"◉", void:"◌", anomaly:"◈" };
 const LV = ["calm", "strange", "uncanny"];
@@ -833,7 +843,12 @@ function establish() {                           // the opening shot: down from 
   map.once("moveend", () => { flying = false; });   // registered after the jump, so only the flight's end clears it
   setTimeout(() => { flying = false; }, 5000);       // never leave the camera locked
 }
-["pointerdown", "touchstart", "wheel"].forEach(ev => addEventListener(ev, () => { idleAt = Date.now(); if (drift) { drift = false; homeCam(500); } }, true));
+const wake1 = () => { idleAt = Date.now(); document.body.dataset.idle = "0"; if (drift) { drift = false; homeCam(500); } };
+["pointerdown", "touchstart", "wheel", "keydown"].forEach(ev => addEventListener(ev, wake1, true));
+setInterval(() => {                              // quiet for a few seconds: the controls sink into the picture
+  const d = document.body.dataset, calm = (d.st === "home" || d.st === "travel") && !mn.classList.contains("open") && !sheet.classList.contains("open");
+  const v = calm && Date.now() - idleAt > 5000 ? "1" : "0"; if (d.idle !== v) d.idle = v;
+}, 500);
 setInterval(() => {                              // the idle camera: a slow, small breathing sway for the first 20 s of stillness
   const d = document.body.dataset;
   if (!mapReady || reduced || document.hidden || d.lite === "1" || flying) return;
@@ -1232,8 +1247,8 @@ function renderList() {
   const arr = src.filter(r => r.status === "done" || !listAll).sort((a, b) => listAll ? tms(b) - tms(a) : b.seq - a.seq).slice(0, 150);
   const tabs = '<div class="st" style="border:0;padding:0 0 8px;gap:10px;justify-content:flex-start"><button class="o sm' + (listAll ? "" : " on") + '" data-t="0" type="button" aria-label="Mine">◉</button>' +
     '<button class="o sm' + (listAll ? " on" : "") + '" data-t="1" type="button" aria-label="Everyone">⊕</button></div>';
-  openSheet(tabs + (arr.length ? arr.map(r => '<button class="li" data-r="' + esc(r.rid) + '"><span>' + ldot(r) + esc(r.rid) + " " + vg(r) + " " + TG[r.type] +
-    '</span><span class="g">' + esc(fmtT(r)) + "</span></button>").join("") : '<p class="g">–</p>'));
+  openSheet(tabs + (arr.length ? arr.map(r => '<button class="li" data-r="' + esc(r.rid) + '"><span>' + ldot(r) + esc(r.intention || r.rid) +
+    '</span><span class="g">' + vg(r) + " " + esc(fmtT(r)) + "</span></button>").join("") : '<p class="g">–</p>'));
   sbody.dataset.k = "list";
   sbody.querySelectorAll("[data-t]").forEach(b => b.addEventListener("click", () => { listAll = b.dataset.t === "1"; sfx.key(); if (listAll) subAll(); renderList(); }));
   sbody.querySelectorAll(".li").forEach(b => b.addEventListener("click", () => { const r = (mine.get(b.dataset.r) || allDocs.get(b.dataset.r)); if (r) { follow = false; if (mapReady) map.flyTo({ center: [r.lng, r.lat], zoom: 15.8, duration: 800 }); openReport(r); } }));
@@ -1255,19 +1270,22 @@ function openReport(r) {
 $("bset").addEventListener("click", () => {
   if (sheet.classList.contains("open") && sbody.dataset.k === "set") { closeSheet(); return; }
   const on = document.documentElement.dataset.dots === "1";
-  openSheet('<div class="st"><span class="dw">dots</span><button id="sdots" class="o' + (on ? " on" : "") + '" type="button">' + (on ? "●" : "○") + '</button></div>' +
-    '<div class="st"><span>♪</span><button id="smute" class="o' + (!muted ? " on" : "") + '" type="button">' + (!muted ? "●" : "○") + '</button></div>' +
-    '<div class="st"><span>' + (units === "mi" ? "mi" : "km") + '</span><button id="sunit" class="o" type="button">⇄</button></div>' +
-    '<div class="st"><span>' + (routeMode === "car" ? "ⓓ" : "ⓦ") + '</span><button id="smode" class="o" type="button">⇄</button></div>' +
-    '<div class="st"><span>⋰</span><button id="sdm" class="o' + (DOTMAP ? " on" : "") + '" type="button">' + (DOTMAP ? "●" : "○") + '</button></div>' +
-    '<div class="st"><span>⏻</span><button id="sout" class="o" type="button">⏻</button></div>' +
-    '<div class="st g"><span>' + BUILD + "</span></div>");
+  openSheet('<div class="sg">' +
+    '<button id="sdots" class="o' + (on ? " on" : "") + '" type="button" aria-label="Dots"><span class="dw">dots</span></button>' +
+    '<button id="smute" class="o' + (!muted ? " on" : "") + '" type="button" aria-label="Sound">♪</button>' +
+    '<button id="sdm" class="o' + (DOTMAP ? " on" : "") + '" type="button" aria-label="Dotted map">⋰</button>' +
+    '<button id="sunit" class="o" type="button" aria-label="Units">' + units + "</button>" +
+    '<button id="smode" class="o" type="button" aria-label="Route mode">' + (routeMode === "car" ? "ⓓ" : "ⓦ") + "</button>" +
+    '<button id="shelp" class="o" type="button" aria-label="Help">?</button>' +
+    '<button id="sout" class="o" type="button" aria-label="Sign out">⏻</button></div>' +
+    '<div class="st g" style="border:0;justify-content:center"><span>' + BUILD + "</span></div>");
   sbody.dataset.k = "set"; sfx.open();
-  $("sdots").addEventListener("click", e => { const v = document.documentElement.dataset.dots !== "1"; setDots(v); applyDots(); sfx.key(); e.currentTarget.classList.toggle("on", v); e.currentTarget.textContent = v ? "●" : "○"; });
-  $("smute").addEventListener("click", e => { muted = !muted; store.set("tm.mute", muted ? "1" : "0"); e.currentTarget.classList.toggle("on", !muted); e.currentTarget.textContent = !muted ? "●" : "○"; sfx.key(); });
-  $("sunit").addEventListener("click", e => { units = units === "mi" ? "km" : "mi"; store.set("tm.units", units); e.currentTarget.previousElementSibling.textContent = units; sfx.key(); });
-  $("smode").addEventListener("click", e => { routeMode = routeMode === "foot" ? "car" : "foot"; store.set("tm.mode", routeMode); e.currentTarget.previousElementSibling.textContent = routeMode === "car" ? "ⓓ" : "ⓦ"; rt = null; lastFetch = 0; sfx.key(); if (active) { fetchRoute(); } });
+  $("sdots").addEventListener("click", e => { const v = document.documentElement.dataset.dots !== "1"; setDots(v); applyDots(); sfx.key(); e.currentTarget.classList.toggle("on", v); });
+  $("smute").addEventListener("click", e => { muted = !muted; store.set("tm.mute", muted ? "1" : "0"); e.currentTarget.classList.toggle("on", !muted); sfx.key(); });
+  $("sunit").addEventListener("click", e => { units = units === "mi" ? "km" : "mi"; store.set("tm.units", units); e.currentTarget.textContent = units; sfx.key(); });
+  $("smode").addEventListener("click", e => { routeMode = routeMode === "foot" ? "car" : "foot"; store.set("tm.mode", routeMode); e.currentTarget.textContent = routeMode === "car" ? "ⓓ" : "ⓦ"; rt = null; lastFetch = 0; sfx.key(); if (active) { fetchRoute(); } });
   $("sdm").addEventListener("click", () => { store.set("tm.dotmap", DOTMAP ? "0" : "1"); sfx.key(); location.reload(); });
+  $("shelp").addEventListener("click", openHelp);
   $("sout").addEventListener("click", () => { sfx.no(); signOut(auth).then(() => location.reload()).catch(() => location.reload()); });
 });
 
@@ -1279,7 +1297,6 @@ function openHelp() {
   openSheet(HELP.map(h => '<div class="st hp"><span style="font-size:20px;min-width:3.6em">' + esc(h[0]) + "</span><span>" + esc(h[1]) + "</span></div>").join(""));
   sbody.dataset.k = "help"; sfx.open();
 }
-$("bhelp").addEventListener("click", openHelp);
 ["gesturestart", "gesturechange", "gestureend"].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
 document.addEventListener("touchmove", e => { if (e.touches.length > 1 && !e.target.closest("#map")) e.preventDefault(); }, { passive: false });
 
