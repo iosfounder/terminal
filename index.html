@@ -196,6 +196,7 @@ html[data-dots="1"] .kk.go,html[data-dots="1"] .kk.sp{font-size:20px}
 #vr.ready{opacity:1;pointer-events:auto}
 #vr .o{width:60px;height:60px;font-size:26px}
 #rep .pv{display:flex;gap:12px;align-items:center}
+#rep .pv:not(.on){display:none}
 #rep img{width:60px;height:60px;object-fit:cover;border:1px solid var(--w);filter:grayscale(1) contrast(1.1)}
 #nx{position:fixed;left:0;right:0;bottom:0;z-index:750;padding:30px 16px calc(var(--sab) + 26px);background:linear-gradient(to bottom,rgba(0,0,0,0),#000 40%);display:flex;gap:44px;justify-content:center;animation:up .7s var(--ease) both}
 #nxgo{border-color:var(--c);color:var(--c);box-shadow:0 0 24px rgba(79,243,255,.25)}
@@ -346,7 +347,7 @@ const pad4 = n => String(n).padStart(4, "0");
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
 
-const BUILD = "v7.3a";
+const BUILD = "v7.4";
 const R = 1000, N = 500, G = 12, ARR = 30, HOME_PITCH = 50;
 const TG = { attractor:"◉", void:"◌", anomaly:"◈" };
 const LV = ["calm", "strange", "uncanny"];
@@ -390,10 +391,12 @@ const sfx = {
   level: n => n === 0 ? (tone(196, .7, "sine", .08), tone(247, .7, "sine", .05, .02)) : n === 1 ? (tone(330, .8, "triangle", .07, 0, 290), tone(415, .8, "triangle", .05, .05, 380)) : (tone(1320, .6, "sine", .05), tone(1760, .7, "sine", .04, .08), whoosh(.7, 1500, 5000, .02)),
   ok: () => { tone(520, .12, "sine", .06); tone(780, .25, "sine", .05, .1); },
   neutral: () => tone(440, .3, "sine", .05),
-  no: () => { tone(300, .14, "sine", .06); tone(160, .3, "sine", .06, .12); },
-  rank: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, .25, "sine", .05, i * .09))
+  no: () => { tone(300, .14, "sine", .06); tone(160, .3, "sine", .06, .12); }
 };
-addEventListener("pointerdown", () => { ac(); startCompass(); }, { once: true });
+// iPhone only unlocks sound and the compass from a finished tap (touchend / click), so keep trying on each one until both are awake
+const unlockEv = ["touchend", "click"];
+function unlock() { ac(); startCompass(); if (AC && AC.state === "running" && (compassOn || !needsPerm)) unlockEv.forEach(t => removeEventListener(t, unlock, true)); }
+unlockEv.forEach(t => addEventListener(t, unlock, true));
 
 /* ---------- dots ---------- */
 const setDots = on => { document.documentElement.dataset.dots = on ? "1" : "0"; store.set("tm.dots", on ? "1" : "0"); };
@@ -435,7 +438,7 @@ $("bmode").addEventListener("click", () => { if (!busy && !hold) setMode(omode =
 $("bgo").addEventListener("click", () => (omode === "in" ? doIn : doNew)());
 addEventListener("keydown", e => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
-  if (!$("open").hidden && !$("ack").hidden === false) {
+  if (!$("open").hidden && $("ack").hidden) {
     if (/^\d$/.test(e.key)) addDigit(e.key); else if (e.key === "Backspace") delDigit(); else if (e.key === "Enter") (omode === "in" ? doIn : doNew)();
   } else if (document.body.dataset.st === "intent") {
     if (e.key === "Backspace") kbKey("⌫"); else if (e.key === "Enter") kbKey("▶"); else if (e.key.length === 1) kbKey(e.key.toLowerCase());
@@ -519,7 +522,7 @@ let showAll = false, allDocs = new Map(), unsubMine = null, unsubAll = null, new
 let meMk = null, tgMk = null;
 let heat = null, crumbs = [], crumbLast = null, walk = [], walkLast = null;     // density heat, breadcrumb tail, remembered walking (fog of war)
 let rt = null, routing = false, lastFetch = 0, routeMode = store.get("tm.mode") === "car" ? "car" : "foot";
-let near100 = null, nearSince = 0, wake = null, tickT = null, spd = 0, shownD = null, targetD = 0, dtw = false, rankSeen = null;
+let near100 = null, nearSince = 0, wake = null, tickT = null, spd = 0, shownD = null, targetD = 0, dtw = false;
 const vg = r => r.status !== "done" ? "○" : r.verdict > 0 ? "●" : r.verdict < 0 ? "✕" : "⌀";
 const setHide = v => {                           // tap the map: everything fades and the camera pulls back; tap again: it all returns
   const was = document.body.dataset.hide === "1"; if (v === was) return;
@@ -563,12 +566,14 @@ function oe(e) {
   else if (e.type === "deviceorientationabsolute" && e.alpha != null) h = 360 - e.alpha;
   if (h == null) return; heading = hasCompass ? smooth(heading, h, .25) : h; hasCompass = true; drawCompass();
 }
+const needsPerm = typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function";
+let compassAsked = false;
 function startCompass() {
-  if (compassOn) return; compassOn = true;
-  const attach = () => { addEventListener("deviceorientationabsolute", oe, true); addEventListener("deviceorientation", oe, true); };
-  attach();                                      // Android needs no permission; iPhone sends nothing until it is granted
-  if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function")
-    DeviceOrientationEvent.requestPermission().then(() => {}).catch(() => {});
+  if (compassOn) return;
+  if (!compassAsked) { compassAsked = true; addEventListener("deviceorientationabsolute", oe, true); addEventListener("deviceorientation", oe, true); }   // Android needs no permission
+  if (!needsPerm) { compassOn = true; return; }
+  if (startCompass.pending) return; startCompass.pending = true;          // iPhone: ask from a real tap; if that is refused, the next tap asks again
+  DeviceOrientationEvent.requestPermission().then(r => { startCompass.pending = false; if (r === "granted" || r === "denied") compassOn = true; }).catch(() => { startCompass.pending = false; });
 }
 
 /* ---------- map (vector, MapLibre) ---------- */
@@ -845,11 +850,13 @@ function sweepRipple() {                         // a ring spreads out from you 
 }
 
 /* ---------- location ---------- */
-let watchId = null;
+let watchId = null, geoNote = false;
 function startGeo(hi = true) {
-  if (!navigator.geolocation) { note("location ✕", true); return; }
+  if (!navigator.geolocation) { note("location ✕", true); geoNote = true; return; }
   if (watchId != null) navigator.geolocation.clearWatch(watchId);
   watchId = navigator.geolocation.watchPosition(onPos, e => {
+    if (pos) return;                                                    // we already have a position: a late timeout is not worth a message
+    geoNote = true;
     if (e.code === 1) note("location is off · allow it in your browser", true);
     else if (hi) { note("locating…", true); startGeo(false); }
     else note("no location yet · try outside", true);
@@ -867,7 +874,7 @@ function onPos(p) {
   }
   pos = { lat, lng, acc, t };
   if (!hasCompass && p.coords.heading != null && !isNaN(p.coords.heading) && p.coords.speed > 1) { heading = p.coords.heading; }
-  if (first) note("");
+  if (geoNote) { geoNote = false; note(""); }                       // a fix arrived: the location warning goes away by itself
   if (!walkLast || hav(walkLast, pos) > 25) {      // remember where you've been (kept on this device)
     walkLast = { lat: pos.lat, lng: pos.lng }; walk.push([+pos.lng.toFixed(5), +pos.lat.toFixed(5)]);
     if (walk.length > 1500) walk.splice(0, walk.length - 1500);
@@ -1057,7 +1064,8 @@ function updateTravel() {
   if (!active || !pos || active.status !== "pending") return;
   const d = hav(pos, active); setDist(d);
   const rr = routeRemain();
-  $("rinfo").textContent = rr ? Math.max(1, Math.round(rr.rem / rt.dist * rt.dur / 60)) + " min" : "";
+  const pace = routeMode === "car" ? 9 : 1.25;                          // m/s, used when the route service is unreachable
+  $("rinfo").textContent = rr ? Math.max(1, Math.round(rr.rem / rt.dist * rt.dur / 60)) + " min" : "~" + Math.max(1, Math.round(d * 1.25 / pace / 60)) + " min";
   document.body.dataset.near = d <= 100 ? "1" : "0";                    // the edges close in a notch near the point
   if (d <= 100 && near100 !== active.rid) { near100 = active.rid; buzz([60, 80, 60]); sfx.near(); }
   if (d <= 100) { if (!nearSince) nearSince = Date.now(); } else nearSince = 0;
@@ -1097,15 +1105,19 @@ async function wakeOn(on) {
 document.addEventListener("visibilitychange", () => { if (!document.hidden && active && active.status === "pending") wakeOn(true); });
 
 /* ---------- at the point: how did it feel, then did it match ---------- */
+const setChoose = c => { choose = c; try { c ? store.set("tm.choose", JSON.stringify({ u: uid, ...c })) : store.set("tm.choose", ""); } catch {} };     // survives a reload
 let photoData = "", lvSel = null;
 $("bphoto").addEventListener("click", () => { sfx.key(); $("pfile").click(); });
+{ let pt = null;                                  // photos are rare: the button stays hidden until you press and hold the report ID
+  const on = () => { pt = setTimeout(() => { pt = null; $("bphoto").parentElement.classList.add("on"); sfx.open(); buzz(20); }, 700); }, off = () => { clearTimeout(pt); pt = null; };
+  $("rid").addEventListener("pointerdown", on); ["pointerup", "pointerleave", "pointercancel"].forEach(t => $("rid").addEventListener(t, off)); }
 $("pfile").addEventListener("change", () => {
   const f = $("pfile").files[0]; if (!f) return;
   const img = new Image(), u = URL.createObjectURL(f);
   img.onload = () => {
-    const s = Math.min(1, 720 / Math.max(img.width, img.height)), c = document.createElement("canvas");
+    const s = Math.min(1, 480 / Math.max(img.width, img.height)), c = document.createElement("canvas");
     c.width = Math.round(img.width * s); c.height = Math.round(img.height * s); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-    photoData = c.toDataURL("image/jpeg", .55); URL.revokeObjectURL(u); $("pprev").src = photoData; $("pprev").hidden = false;
+    photoData = c.toDataURL("image/jpeg", .5); URL.revokeObjectURL(u); $("pprev").src = photoData; $("pprev").hidden = false;
   };
   img.src = u; $("pfile").value = "";
 });
@@ -1120,21 +1132,21 @@ function fillRep() {
 }
 function finish(v) {
   if (!active || lvSel == null) return; const rid = active.rid;
-  choose = { text: active.intention || "", jid: active.journey || rid };        // then: continue the journey from here, or end it
+  setChoose({ text: active.intention || "", jid: active.journey || rid });      // then: continue the journey from here, or end it
   const data = { status: "done", verdict: v, level: lvSel, found: "", photo: photoData, doneAt: serverTimestamp() };
   newRid = rid; v > 0 ? sfx.ok() : v < 0 ? sfx.no() : sfx.neutral(); buzz(v > 0 ? 40 : 90); scanSweep();
   const vd = $("verd"); vd.textContent = v > 0 ? "✓" : v < 0 ? "✕" : "⌀"; vd.hidden = false; vd.style.animation = "none"; void vd.offsetWidth; vd.style.animation = "";
   setTimeout(() => { vd.hidden = true; }, 1050);
   updateDoc(doc(db, "reports", rid), data).catch(() => note("sync ✕"));
-  photoData = ""; $("pprev").hidden = true;
+  photoData = ""; $("pprev").hidden = true; $("bphoto").parentElement.classList.remove("on");
 }
 $("byes").addEventListener("click", () => finish(1));
 $("bno").addEventListener("click", () => finish(-1));
 $("bnone").addEventListener("click", () => finish(0));      // could not reach it: counts neither way
 $("nxgo").addEventListener("click", () => {      // go on: a new point from where you stand, same intention
-  if (!choose || !pos) return; const c = choose; choose = null; sfx.enter(); runSpin(c.text, c.jid);
+  if (!choose || !pos) return; const c = choose; setChoose(null); sfx.enter(); runSpin(c.text, c.jid);
 });
-$("nxend").addEventListener("click", () => { choose = null; sfx.close(); route(); });
+$("nxend").addEventListener("click", () => { setChoose(null); sfx.close(); route(); });
 
 /* ---------- screens ---------- */
 let lastRid = null;
@@ -1167,6 +1179,10 @@ function subMine() {
     mine = new Map(); snap.forEach(d => mine.set(d.id, { ...d.data(), rid: d.id }));
     const cur = [...mine.values()].filter(r => r.status === "pending" || r.status === "arrived").sort((a, b) => b.seq - a.seq)[0] || null;
     active = cur; if (active && spinning) spinning = false;
+    if (!choose && !cur && !subMine.once) {          // reloaded between two legs: bring the continue / end choice back
+      try { const s = JSON.parse(store.get("tm.choose") || "null"); if (s && s.u === uid && s.jid) choose = { text: s.text || "", jid: s.jid }; } catch {}
+    }
+    subMine.once = true;
     drawMine(); route(); updateRank();
   }, e => console.error(e));
 }
