@@ -167,6 +167,22 @@ textarea::placeholder{color:var(--g)}
 #sheet .st{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid #333}
 #sheet .st.hp{justify-content:flex-start;gap:14px;padding:9px 0}
 
+/* film look */
+#grain{position:fixed;inset:0;z-index:880;pointer-events:none;opacity:.07;mix-blend-mode:overlay;background-size:160px 160px}
+#vig{position:fixed;inset:0;z-index:640;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 58%,rgba(0,0,0,.6) 100%);transition:opacity .8s ease}
+body[data-near="1"] #vig{background:radial-gradient(ellipse at 50% 45%,transparent 36%,rgba(0,0,0,.8) 100%)}
+body[data-eyes="1"] #vig{opacity:0}
+body[data-lite="1"] #grain{display:none}
+#scan{position:fixed;left:0;right:0;top:-4px;height:3px;z-index:870;pointer-events:none;opacity:0;background:linear-gradient(90deg,transparent,#fff 50%,transparent);box-shadow:0 0 22px #fff}
+#scan.go{animation:scan .9s cubic-bezier(.5,0,.3,1)}
+@keyframes scan{0%{top:-4px;opacity:.95}100%{top:100%;opacity:0}}
+.me em.sw{position:absolute;left:-110px;top:-110px;width:220px;height:220px;border:1px solid #fff;border-radius:50%;opacity:0;animation:sweep 6s ease-out infinite 2s}
+@keyframes sweep{0%{transform:scale(.05);opacity:.55}75%{opacity:0}100%{transform:scale(1);opacity:0}}
+.mk.rip{animation:rip .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:var(--rd,0ms)}
+@keyframes rip{from{transform:scale(2.4);opacity:0}to{transform:none;opacity:1}}
+.rpl{position:absolute;left:-250px;top:-250px;width:500px;height:500px;border:1.5px solid #fff;border-radius:50%;animation:rpl 1.8s cubic-bezier(.2,.6,.3,1) forwards}
+@keyframes rpl{from{transform:scale(.02);opacity:.9}to{transform:scale(3);opacity:0}}
+
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -175,6 +191,9 @@ textarea::placeholder{color:var(--g)}
 <div id="grid" aria-hidden="true"></div>
 <canvas id="fx" hidden aria-hidden="true"></canvas>
 <div id="flash" hidden></div>
+<div id="vig" aria-hidden="true"></div>
+<div id="grain" aria-hidden="true"></div>
+<div id="scan" aria-hidden="true"></div>
 
 <section id="open">
   <div id="boxes"><i></i><i></i><i></i><i></i><input id="idin" type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" aria-label="ID"></div>
@@ -281,7 +300,7 @@ const pad4 = n => String(n).padStart(4, "0");
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
 
-const BUILD = "v6";
+const BUILD = "v6.1";
 const INTENT = "benefit of mankind";
 const R = 1000, N = 500, G = 12, ARR = 30;
 const TG = { attractor:"◉", void:"◌", anomaly:"◈" };
@@ -299,9 +318,20 @@ function tone(f, d = .12, type = "square", g = .05, at = 0, f2) {
   v.gain.setValueAtTime(g, t); v.gain.exponentialRampToValueAtTime(.0001, t + d);
   o.connect(v).connect(a.destination); o.start(t); o.stop(t + d + .02);
 }
+function whoosh(d = .9, f0 = 300, f1 = 2400, g = .05) {          // airy filtered noise sweep
+  if (muted) return; const a = ac(); if (!a) return; const n = Math.floor(a.sampleRate * d), buf = a.createBuffer(1, n, a.sampleRate), ch = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) ch[i] = Math.random() * 2 - 1;
+  const s = a.createBufferSource(); s.buffer = buf; const f = a.createBiquadFilter(); f.type = "bandpass"; f.Q.value = 1.2; const t = a.currentTime;
+  f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(f1, t + d);
+  const v = a.createGain(); v.gain.setValueAtTime(.0001, t); v.gain.exponentialRampToValueAtTime(g, t + d * .6); v.gain.exponentialRampToValueAtTime(.0001, t + d);
+  s.connect(f).connect(v).connect(a.destination); s.start(t); s.stop(t + d + .05);
+}
 const sfx = {
   key: () => tone(800, .03, "square", .03),
-  spin: () => tone(110, .8, "sawtooth", .06, 0, 40),
+  spin: () => { tone(46, 1.7, "sine", .1, 0, 92); whoosh(1.5, 120, 900, .03); },
+  dive: () => whoosh(.8, 400, 3200, .05),
+  type: t => t === "attractor" ? tone(880, .22, "sine", .06) : t === "void" ? tone(196, .4, "sine", .08) : (tone(660, .14, "sine", .05), tone(990, .14, "sine", .04, .12)),
+  beat: () => { tone(62, .16, "sine", .13, 0, 36); tone(62, .12, "sine", .07, .17, 36); },
   lock: () => { tone(1200, .05); tone(600, .08, "square", .05, .06); },
   arrive: () => { tone(660, .15); tone(990, .28, "square", .05, .16); },
   ok: () => { tone(520, .1); tone(780, .2, "square", .05, .1); },
@@ -433,7 +463,13 @@ let rt = null, routing = false, lastFetch = 0, routeMode = store.get("tm.mode") 
 let near100 = null, nearSince = 0, wake = null, tickT = null, lastTouch = Date.now(), eyesOffAt = 0, spd = 0, shownD = null, targetD = 0, dtw = false;
 const vg = r => r.status !== "done" ? "○" : r.verdict > 0 ? "●" : r.verdict < 0 ? "✕" : "⌀";
 const setEyes = v => { document.body.dataset.eyes = v ? "1" : "0"; if (!v) { eyesOffAt = Date.now(); setTimeout(() => { if (mapReady) map.resize(); }, 60); } };
-const setHide = v => { document.body.dataset.hide = v ? "1" : "0"; $("dot").hidden = !v; };
+const setHide = v => {                           // hide: the interface fades and the camera pulls back to a wide, tilted frame
+  const was = document.body.dataset.hide === "1";
+  document.body.dataset.hide = v ? "1" : "0"; $("dot").hidden = !v;
+  if (mapReady && v !== was && document.body.dataset.st === "home" && !reduced) {
+    if (v) map.easeTo({ pitch: 48, zoom: map.getZoom() - .6, duration: 1600 }); else flatCam(900);
+  }
+};
 $("dot").addEventListener("click", () => setHide(false));
 
 const flash = (ms = 100) => { if (reduced) return; const f = $("flash"); f.hidden = false; setTimeout(() => { f.hidden = true; }, ms); };
@@ -558,14 +594,16 @@ async function initMap() {
     map.addLayer({ id: "head", type: "circle", source: "head", paint: { "circle-radius": 7, "circle-color": "#fff", "circle-blur": .6, "circle-opacity": .95 } }, b);
     const ab = document.querySelector(".maplibregl-ctrl-attrib"); if (ab) { ab.classList.remove("maplibregl-compact-show"); ab.removeAttribute("open"); }
     mapReady = true; applyDots(); drawMine(); drawAll(); drawRoute(); setTarget();
-    if (pos) { ensureMe(); map.jumpTo({ center: [pos.lng, pos.lat], zoom: 15.2 }); }
+    if (pos) { ensureMe(); establish(); }
+    setTimeout(fpsCheck, 7000);
   } catch (e) { console.error(e); map = null; mapReady = false; note("map ✕", false); }
 }
 const mkEl = html => { const el = document.createElement("div"); el.className = "mkw"; el.innerHTML = html; return el; };
 const mkAdd = (el, lng, lat) => new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat([lng, lat]).addTo(map);
-function reportMk(r, mineFlag) {
-  const g = vg(r), el = mkEl('<b class="mk' + (mineFlag ? "" : " o2") + (r.rid === newRid ? " drop" : "") + '">' + g + "</b>");
-  el.addEventListener("click", e => { e.stopPropagation(); openReport(r); });
+function reportMk(r, mineFlag, delay) {
+  const g = vg(r), el = mkEl('<b class="mk' + (mineFlag ? "" : " o2") + (r.rid === newRid ? " drop" : "") + (delay != null ? " rip" : "") + '"' +
+    (delay != null ? ' style="--rd:' + delay + 'ms"' : "") + ">" + g + "</b>");
+  el.addEventListener("click", e => { e.stopPropagation(); follow = false; if (mapReady) map.easeTo({ center: [r.lng, r.lat], duration: 700 }); openReport(r); });
   return mkAdd(el, r.lng, r.lat);
 }
 const partial = (c, f) => {                      // first fraction f of a line, by length
@@ -597,7 +635,10 @@ function drawMine() {
 function drawAll() {
   if (!mapReady) return; allMk.forEach(m => m.remove()); allMk = [];
   if (!showAll) return;
-  [...allDocs.values()].filter(r => r.uid !== uid).forEach(r => allMk.push(reportMk(r, false)));
+  const here = pos || { lat: 51.5, lng: -0.12 };
+  const arr = [...allDocs.values()].filter(r => r.uid !== uid).sort((a, b) => hav(here, a) - hav(here, b));   // nearest first
+  const rip = ripNext && arr.length > 0; if (rip) ripNext = false;
+  arr.forEach((r, i) => allMk.push(reportMk(r, false, rip ? Math.min(i * 90, 2600) : null)));
 }
 function setTarget() {
   if (!mapReady) return;
@@ -606,7 +647,7 @@ function setTarget() {
 }
 function ensureMe() {
   if (!mapReady || !pos || meMk) return;
-  meMk = mkAdd(mkEl("<b></b><i></i>"), pos.lng, pos.lat); meMk.getElement().classList.add("me");
+  meMk = mkAdd(mkEl('<em class="sw"></em><b></b><i></i>'), pos.lng, pos.lat); meMk.getElement().classList.add("me");
 }
 const PADV = { top: 210, bottom: 120, left: 40, right: 40 };
 function overview(ms = 800, t = active) {         // you and the point in one frame, flat, north up
@@ -624,6 +665,53 @@ function camTick() {                             // the chase camera: tilts and 
   map.easeTo({ center: [pos.lng, pos.lat], bearing: cur + d, pitch: 56, zoom: 17, padding: PADT, duration: 700, easing: t => t });
 }
 camT = setInterval(camTick, 650);
+
+/* ---------- film look ---------- */
+{ const c = document.createElement("canvas"); c.width = c.height = 160; const x = c.getContext("2d"), d = x.createImageData(160, 160);
+  for (let i = 0; i < d.data.length; i += 4) { const v = Math.random() * 255 | 0; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+  x.putImageData(d, 0, 0); $("grain").style.backgroundImage = "url(" + c.toDataURL() + ")"; }
+function scanSweep() { if (reduced) return; const s = $("scan"); s.classList.remove("go"); void s.offsetWidth; s.classList.add("go"); }
+function fpsCheck() {                            // phones that struggle lose the extras, in order: grain, glow, drift
+  let n = 0; const t0 = performance.now();
+  const f = () => { n++; if (performance.now() - t0 < 2500) requestAnimationFrame(f);
+    else if (document.hasFocus() && n > 8 && n / 2.5 < 40) { document.body.dataset.lite = "1"; if (mapReady) try { map.setLayoutProperty("rglow", "visibility", "none"); } catch {} } };
+  requestAnimationFrame(f);
+}
+
+/* ---------- shots: flyover, idle drift, ripple ---------- */
+let flying = false, established = false, lastCtr = null, idleAt = Date.now(), drift = false, ripNext = false;
+function establish() {                           // the opening shot: down from a high, tilted view onto your dot
+  if (established || !mapReady || !pos) return; established = true;
+  const center = [pos.lng, pos.lat]; let seen = false;
+  try { seen = sessionStorage.getItem("tm.est") === "1"; sessionStorage.setItem("tm.est", "1"); } catch {}
+  if (reduced) { map.jumpTo({ center, zoom: 15.2 }); return; }
+  flying = true;
+  const stop = () => { if (flying) { map.stop(); flying = false; } };
+  map.once("mousedown", stop); map.once("touchstart", stop);
+  if (seen) { map.jumpTo({ center, zoom: 12.6 }); map.flyTo({ center, zoom: 15.2, duration: 800, essential: true }); }
+  else {
+    map.jumpTo({ center: [pos.lng + .7, pos.lat + .35], zoom: 5, pitch: 52, bearing: -28 });
+    scanSweep(); whoosh(2.8, 160, 1700, .04);
+    map.flyTo({ center, zoom: 15.2, pitch: 0, bearing: 0, duration: 3400, curve: 1.5, essential: true });
+  }
+  map.once("moveend", () => { flying = false; });   // registered after the jump, so only the flight's end clears it
+  setTimeout(() => { flying = false; }, 4500);       // never leave the camera locked
+}
+["pointerdown", "touchstart", "wheel"].forEach(ev => addEventListener(ev, () => { idleAt = Date.now(); if (drift) { drift = false; flatCam(500); } }, true));
+setInterval(() => {                              // the idle camera: a slow, small breathing sway for the first 20 s of stillness
+  const d = document.body.dataset;
+  if (!mapReady || reduced || document.hidden || d.lite === "1" || flying) return;
+  if (d.st !== "home" || d.hide === "1" || spinning || sheet.classList.contains("open") || showAll) { drift = false; return; }
+  const idle = Date.now() - idleAt;
+  if (idle > 26000) { if (drift) { drift = false; flatCam(1500); } return; }
+  if (idle < 6000) return;
+  drift = true; const k = Date.now() / 1000;
+  map.easeTo({ bearing: Math.sin(k / 9) * 4, pitch: 10 + Math.sin(k / 7) * 3, duration: 4200, easing: t => t });
+}, 4000);
+function sweepRipple() {                         // a ring spreads out from you when the shared map opens
+  if (!mapReady || !pos || reduced) return;
+  const mk = mkAdd(mkEl('<div class="rpl"></div>'), pos.lng, pos.lat); setTimeout(() => mk.remove(), 2000);
+}
 
 /* ---------- location ---------- */
 let watchId = null;
@@ -650,8 +738,8 @@ function onPos(p) {
   if (!hasCompass && p.coords.heading != null && !isNaN(p.coords.heading) && p.coords.speed > 1) { heading = p.coords.heading; }
   if (mapReady) {
     if (!meMk) ensureMe(); else meMk.setLngLat([pos.lng, pos.lat]);
-    if (first) map.jumpTo({ center: [pos.lng, pos.lat], zoom: 15.2 });
-    else if (follow && !spinning && document.body.dataset.st === "home") map.easeTo({ center: [pos.lng, pos.lat], duration: 400 });
+    if (first) establish();
+    else if (follow && !spinning && !flying && document.body.dataset.st === "home" && (!lastCtr || hav(lastCtr, pos) > 4)) { lastCtr = { lat: pos.lat, lng: pos.lng }; map.easeTo({ center: [pos.lng, pos.lat], duration: 600 }); }
   }
   if (first && $("line").textContent.startsWith("locat")) { $("line").textContent = todayLine; $("line").classList.add("dim"); }
   if (active && active.status === "pending") {
@@ -698,9 +786,14 @@ function playSpin(g) {
     const cv = $("fx"), x = cv.getContext("2d"); cv.width = innerWidth; cv.height = innerHeight; cv.hidden = false;
     if (!mapReady) { res(); return; }
     const P = g.pts.map(p => { const q = map.project([p.lng, p.lat]); return { x: q.x, y: q.y, keep: p.c === g.cell }; });
-    const T = map.project([g.lng, g.lat]), t0 = performance.now(); let locked = false;
+    const T = map.project([g.lng, g.lat]), t0 = performance.now(); let locked = false, dived = false;
+    const C = map.project([g.from.lng, g.from.lat]), E = map.project([g.from.lng + 1000 / (111320 * Math.cos(rad(g.from.lat))), g.from.lat]), rpx = Math.abs(E.x - C.x);
     const f = now => {
       const t = now - t0; x.clearRect(0, 0, cv.width, cv.height); x.fillStyle = "#fff"; x.strokeStyle = "#fff";
+      if (t < 1000) {                            // the search circle opens around you, then fades as the points arrive
+        x.globalAlpha = Math.max(0, 1 - (t - 500) / 500); x.lineWidth = 1.2; x.beginPath(); x.arc(C.x, C.y, rpx * Math.min(1, t / 500), 0, 7); x.stroke(); x.globalAlpha = 1;
+      }
+      if (t > 1750 && !dived) { dived = true; sfx.dive(); map.easeTo({ center: [g.lng, g.lat], zoom: 15.8, duration: 650 }); }       // the dive toward the chosen cell
       const show = Math.min(P.length, Math.floor(t / 350 * P.length));
       for (let i = 0; i < show; i++) {
         const p = P[i]; let px = p.x, py = p.y;
@@ -711,7 +804,7 @@ function playSpin(g) {
         x.fillRect(px - 1, py - 1, 2, 2);
       }
       if (t > 1800) {
-        if (!locked) { locked = true; sfx.lock(); }
+        if (!locked) { locked = true; sfx.lock(); sfx.type(g.type); }
         const k = t - 1800, rr = k < 300 ? k / 300 * 70 : 70 + ((k - 300) / 300) ** 2 * Math.hypot(cv.width, cv.height);   // ring swells into the pad
         x.lineWidth = 1.5; x.beginPath(); x.arc(T.x, T.y, rr, 0, 7); x.stroke();
       }
@@ -723,7 +816,7 @@ function playSpin(g) {
 async function spin() {
   if (spinning || draft || active) return;
   if (!pos) { startGeo(true); note("locating…", false); return; }
-  spinning = true; startCompass(); ac(); sfx.spin(); flash(80); $("bspin").classList.remove("pulse1"); store.set("tm.spun", "1");
+  spinning = true; startCompass(); ac(); sfx.spin(); flash(80); scanSweep(); $("bspin").classList.remove("pulse1"); store.set("tm.spun", "1");
   const c = { lat: pos.lat, lng: pos.lng };
   if (mapReady) { map.stop(); map.jumpTo({ center: [c.lng, c.lat], zoom: 13.2, pitch: 0, bearing: 0, padding: PAD0 }); await sleep(180); }
   const g = await generate(c); g.from = c;
@@ -755,7 +848,7 @@ $("pgo").addEventListener("click", () => {
   draft = null; sfx.lock(); rt = null; lastFetch = 0; shownD = null; near100 = null; nearSince = 0;
   setDoc(doc(db, "reports", rid), data).catch(() => note("sync ✕", false));
   follow = false;                                  // overview first: you and the point, with the route between
-  overview(900, d); route();
+  overview(900, d); route(); whoosh(.9, 200, 1600, .04); scanSweep();
   setTimeout(() => { if (active && active.rid === rid && document.body.dataset.st === "travel") follow = true; }, 2600);   // then the camera swoops in behind you
 });
 
@@ -809,7 +902,8 @@ function setDist(d) {                            // numbers glide instead of jum
 }
 function arrive() {
   if (!active || arriving === active.rid) return;
-  arriving = active.rid; sfx.arrive(); buzz(400); flash(180); setEyes(0); setHide(false);
+  arriving = active.rid; sfx.arrive(); buzz(400); flash(180); setEyes(0); setHide(false); scanSweep(); document.body.dataset.near = "0";
+  if (mapReady && !reduced) map.easeTo({ center: [active.lng, active.lat], pitch: 0, bearing: 0, zoom: 17.2, padding: PAD0, duration: 900 });   // drop to a top-down view of the point
   updateDoc(doc(db, "reports", active.rid), { status: "arrived", arrivedAt: serverTimestamp() }).catch(() => { arriving = null; });
 }
 function updateTravel() {
@@ -817,6 +911,7 @@ function updateTravel() {
   const d = hav(pos, active); setDist(d);
   const rr = routeRemain();
   $("rinfo").textContent = rr ? "↳ " + fmtD(rr.rem) + " · " + Math.max(1, Math.round(rr.rem / rt.dist * rt.dur / 60)) + " min" : "";
+  document.body.dataset.near = d <= 100 ? "1" : "0";                    // the edges close in a notch near the point
   if (d <= 100 && near100 !== active.rid) { near100 = active.rid; buzz([60, 80, 60]); tone(880, .1); tone(880, .1, "square", .05, .18); }
   if (d <= 100) { if (!nearSince) nearSince = Date.now(); } else nearSince = 0;
   $("bhere").hidden = !(nearSince && Date.now() - nearSince > 120000);   // bad GPS must never block a report
@@ -852,8 +947,8 @@ setInterval(() => {                              // 10 s without a touch while w
 function tickLoop() {                            // soft ticks that speed up as you close in
   clearTimeout(tickT);
   if (!(active && active.status === "pending" && pos) || muted || document.hidden) { tickT = setTimeout(tickLoop, 1500); return; }
-  const d = hav(pos, active); tone(1100, .015, "square", .018);
-  tickT = setTimeout(tickLoop, Math.max(350, Math.min(3000, 350 + (d - 30) * 2.6)));
+  const d = hav(pos, active); sfx.beat();
+  tickT = setTimeout(tickLoop, Math.max(600, Math.min(3200, 600 + (d - 30) * 2.6)));      // a heartbeat that quickens as you close in
 }
 async function wakeOn(on) {
   try {
@@ -884,7 +979,7 @@ function fillRep() {
 function finish(v) {
   if (!active) return; const rid = active.rid;
   const data = { status: "done", verdict: v, found: $("found").value.trim().slice(0, 2000), photo: photoData, doneAt: serverTimestamp() };
-  newRid = rid; v > 0 ? sfx.ok() : sfx.no(); buzz(v > 0 ? 40 : 90); flash(60);
+  newRid = rid; v > 0 ? sfx.ok() : sfx.no(); buzz(v > 0 ? 40 : 90); flash(60); scanSweep();
   const vd = $("verd"); vd.textContent = v > 0 ? "✓" : v < 0 ? "✕" : "⌀"; vd.hidden = false; vd.style.animation = "none"; void vd.offsetWidth; vd.style.animation = "";
   setTimeout(() => { vd.hidden = true; }, 850);
   updateDoc(doc(db, "reports", rid), data).catch(() => note("sync ✕", false));
@@ -899,7 +994,7 @@ let lastRid = null;
 function route() {
   const pend = active && active.status === "pending", arr = active && active.status === "arrived";
   const st = draft ? "pad" : pend ? "travel" : arr ? "rep" : "home";
-  document.body.dataset.st = st; if (st !== "home") setHide(false); if (st !== "travel") setEyes(0);
+  document.body.dataset.st = st; if (st !== "home") setHide(false); if (st !== "travel") { setEyes(0); document.body.dataset.near = "0"; }
   $("pad").hidden = !draft; $("rep").hidden = !(arr && !draft); $("travel").hidden = !(pend && !draft); $("tfoot").hidden = st !== "travel";
   $("dockhome").hidden = !!(draft || active); wakeOn(st === "travel");
   if (!pend) { rt = null; drawRoute(); }
@@ -956,7 +1051,9 @@ function subAll() {
 }
 $("bglobal").addEventListener("click", () => {
   showAll = !showAll; $("bglobal").classList.toggle("on", showAll); sfx.key();
-  if (showAll) subAll(); drawAll();
+  if (showAll) { ripNext = true; subAll(); sweepRipple(); scanSweep(); sfx.dive(); if (mapReady && !reduced) map.easeTo({ pitch: 42, zoom: map.getZoom() - .9, duration: 1400 }); }
+  else if (mapReady && document.body.dataset.st === "home") flatCam(900);
+  drawAll();
 });
 
 /* ---------- sheets ---------- */
