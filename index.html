@@ -182,6 +182,9 @@ html[data-dots="1"] .kk.go,html[data-dots="1"] .kk.sp{font-size:20px}
 #vr .o{width:60px;height:60px;font-size:26px}
 #rep .pv{display:flex;gap:12px;align-items:center}
 #rep img{width:60px;height:60px;object-fit:cover;border:1px solid var(--w);filter:grayscale(1) contrast(1.1)}
+#nx{position:fixed;left:0;right:0;bottom:0;z-index:750;padding:30px 16px calc(var(--sab) + 26px);background:linear-gradient(to bottom,rgba(0,0,0,0),#000 40%);display:flex;gap:44px;justify-content:center;animation:up .7s var(--ease) both}
+#nxgo{border-color:var(--c);color:var(--c);box-shadow:0 0 24px rgba(79,243,255,.25)}
+#nxgo:active{background:var(--c);color:var(--k)}
 #sheet img{max-width:100%;max-height:34vh;display:block;border:1px solid var(--w)}
 #sheet img.gray{filter:grayscale(1) contrast(1.1)}
 
@@ -290,6 +293,11 @@ body[data-lite="1"] #grain{display:none}
     <input id="pfile" type="file" accept="image/*" capture="environment" hidden>
   </section>
 
+  <section id="nx" hidden>
+    <button id="nxend" class="o xl" type="button" aria-label="End">■</button>
+    <button id="nxgo" class="o xl" type="button" aria-label="Continue">▶</button>
+  </section>
+
   <section id="sheet"><button id="sx" class="o x" type="button" aria-label="Close">✕</button><div id="sbody"></div></section>
 </div>
 
@@ -323,7 +331,7 @@ const pad4 = n => String(n).padStart(4, "0");
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
 
-const BUILD = "v7.1";
+const BUILD = "v7.2";
 const R = 1000, N = 500, G = 12, ARR = 30, HOME_PITCH = 50;
 const TG = { attractor:"◉", void:"◌", anomaly:"◈" };
 const LV = ["calm", "strange", "uncanny"];
@@ -491,7 +499,7 @@ const fmtT = r => { const t = r.at && r.at.toMillis ? r.at.toMillis() : Date.now
 
 /* ---------- state ---------- */
 let uid = null, agent = "", map = null, pos = null, follow = true, heading = 0, hasCompass = false, compassOn = false;
-let mine = new Map(), active = null, spinning = false, typing = false, arriving = null;
+let mine = new Map(), active = null, spinning = false, typing = false, arriving = null, choose = null;
 let showAll = false, allDocs = new Map(), unsubMine = null, unsubAll = null, newRid = null;
 let meMk = null, tgMk = null;
 let heat = null, crumbs = [], crumbLast = null, walk = [], walkLast = null;     // density heat, breadcrumb tail, remembered walking (fog of war)
@@ -931,7 +939,7 @@ function playSpin(g) {
   });
 }
 const nextSeq = () => [...mine.values()].reduce((m, r) => Math.max(m, r.seq || 0), 0) + 1;
-async function runSpin(text) {                   // the intention is set; only now does the machine place a point
+async function runSpin(text, jid) {              // the intention is set; only now does the machine place a point (jid: the journey this continues)
   if (spinning || active) return;
   spinning = true; route(); sfx.spin(); scanSweep(); $("bspin").classList.remove("pulse1"); store.set("tm.spun", "1");
   setTimeout(() => { if (spinning && !active) { spinning = false; route(); } }, 9000);          // safety: never get stuck
@@ -940,7 +948,7 @@ async function runSpin(text) {                   // the intention is set; only n
   const g = await generate(c); g.from = c;
   await playSpin(g);
   const n = nextSeq(), rid = agent + "-" + pad4(n);
-  const data = { uid, agent, seq: n, rid, type: g.type, src: g.src, lat: g.lat, lng: g.lng, fromLat: c.lat, fromLng: c.lng,
+  const data = { uid, agent, seq: n, rid, type: g.type, src: g.src, lat: g.lat, lng: g.lng, journey: jid || rid,
     intention: text, blind: { text: "", img: "" }, level: 0, status: "pending", verdict: 0, found: "", photo: "", at: serverTimestamp() };
   rt = null; lastFetch = 0; shownD = null; near100 = null; nearSince = 0;
   heat = { cells: g.cells, best: g.cell, max: g.max, t0: Date.now() };       // why the machine chose that spot
@@ -956,7 +964,8 @@ $("bspin").addEventListener("click", () => {
 
 /* ---------- the intention: typed on our own keyboard ---------- */
 let itxt = "";
-const QW = ["1234567890", "qwertyuiop", "asdfghjkl", "zxcvbnm"], DT = ["1234567890", "abcdefghi", "jklmnopqr", "stuvwxyz"];   // Dots keys follow the chart: the alphabet in order
+// Dots keys follow the chart, which is the font's own shape order: single dots a-e, adjacent pairs f-i, gapped pairs j-o, then the 3-dot shapes p-z
+const QW = ["1234567890", "qwertyuiop", "asdfghjkl", "zxcvbnm"], DT = ["1234567890", "abcde", "fghi", "jklmno", "pqrstu", "vwxyz"];
 function buildKb() {
   const rows = document.documentElement.dataset.dots === "1" ? DT : QW; let h = "";
   rows.forEach(r => { h += '<div class="kr">' + [...r].map(k => '<button class="kk" type="button" data-k="' + k + '">' + k + "</button>").join("") + "</div>"; });
@@ -1096,6 +1105,7 @@ function fillRep() {
 }
 function finish(v) {
   if (!active || lvSel == null) return; const rid = active.rid;
+  choose = { text: active.intention || "", jid: active.journey || rid };        // then: continue the journey from here, or end it
   const data = { status: "done", verdict: v, level: lvSel, found: "", photo: photoData, doneAt: serverTimestamp() };
   newRid = rid; v > 0 ? sfx.ok() : v < 0 ? sfx.no() : sfx.neutral(); buzz(v > 0 ? 40 : 90); scanSweep();
   const vd = $("verd"); vd.textContent = v > 0 ? "✓" : v < 0 ? "✕" : "⌀"; vd.hidden = false; vd.style.animation = "none"; void vd.offsetWidth; vd.style.animation = "";
@@ -1106,12 +1116,17 @@ function finish(v) {
 $("byes").addEventListener("click", () => finish(1));
 $("bno").addEventListener("click", () => finish(-1));
 $("bnone").addEventListener("click", () => finish(0));      // could not reach it: counts neither way
+$("nxgo").addEventListener("click", () => {      // go on: a new point from where you stand, same intention
+  if (!choose || !pos) return; const c = choose; choose = null; sfx.enter(); runSpin(c.text, c.jid);
+});
+$("nxend").addEventListener("click", () => { choose = null; sfx.close(); route(); });
 
 /* ---------- screens ---------- */
 let lastRid = null;
 function route() {
   const pend = active && active.status === "pending", arr = active && active.status === "arrived";
-  const st = typing ? "intent" : spinning ? "spin" : pend ? "travel" : arr ? "rep" : "home";
+  const st = typing ? "intent" : spinning ? "spin" : pend ? "travel" : arr ? "rep" : choose ? "choose" : "home";
+  $("nx").hidden = st !== "choose";
   document.body.dataset.st = st; if (st !== "home") { setHide(false); if (mn.classList.contains("open")) menu(false); }
   if (st !== "travel") document.body.dataset.near = "0";
   $("hud").hidden = st !== "travel"; $("tfoot").hidden = st !== "travel"; $("rep").hidden = st !== "rep";
@@ -1131,18 +1146,7 @@ function route() {
 }
 
 /* ---------- reports data + rank (plain numbers) ---------- */
-const TH = [0, 3, 8, 20, 50];
-function score() {
-  const d = [...mine.values()].filter(r => r.status === "done" && r.verdict !== 0);   // ⌀ counts neither way
-  return d.length + 2 * d.filter(r => r.verdict > 0).length + d.filter(r => r.level > 0).length;
-}
-function updateRank() {
-  const s = score(); let l = 0; TH.forEach((t, i) => { if (s >= t) l = i; });
-  $("mid").textContent = agent + " · " + (l + 1);
-  const saved = parseInt(store.get("tm.rank" + agent), 10);
-  if (!isNaN(saved) && l > saved) { const b = $("bm"); b.classList.remove("flick"); void b.offsetWidth; b.classList.add("flick"); sfx.rank(); note("↑ " + (l + 1)); }
-  if (isNaN(saved) || l > saved) store.set("tm.rank" + agent, String(l));
-}
+const updateRank = () => { $("mid").textContent = agent; };      // no ranks, no score: just your ID
 function subMine() {
   unsubMine = onSnapshot(query(collection(db, "reports"), where("uid", "==", uid)), snap => {
     mine = new Map(); snap.forEach(d => mine.set(d.id, { ...d.data(), rid: d.id }));
@@ -1155,6 +1159,7 @@ function subAll() {
   if (unsubAll) return;
   unsubAll = onSnapshot(query(collection(db, "reports"), where("status", "==", "done"), limit(400)), snap => {
     allDocs = new Map(); snap.forEach(d => allDocs.set(d.id, { ...d.data(), rid: d.id })); drawAll();
+    if (listAll && sheet.classList.contains("open") && sbody.dataset.k === "list") renderList();
   }, e => console.error(e));
 }
 
@@ -1189,13 +1194,22 @@ addEventListener("popstate", () => { if (sheet.classList.contains("open")) close
 $("sx").addEventListener("click", () => { sfx.close(); closeSheet(); });
 const ldot = r => '<span class="ld l' + (r.status === "done" ? (r.level || 0) : 0) + '"></span>';
 
+let listAll = false;                             // the list shows your reports, or everyone's
+const tms = r => r.at && r.at.toMillis ? r.at.toMillis() : 0;
+function renderList() {
+  const src = listAll ? [...allDocs.values()] : [...mine.values()];
+  const arr = src.filter(r => r.status === "done" || !listAll).sort((a, b) => listAll ? tms(b) - tms(a) : b.seq - a.seq).slice(0, 150);
+  const tabs = '<div class="st" style="border:0;padding:0 0 8px;gap:10px;justify-content:flex-start"><button class="o sm' + (listAll ? "" : " on") + '" data-t="0" type="button" aria-label="Mine">◉</button>' +
+    '<button class="o sm' + (listAll ? " on" : "") + '" data-t="1" type="button" aria-label="Everyone">⊕</button></div>';
+  openSheet(tabs + (arr.length ? arr.map(r => '<button class="li" data-r="' + esc(r.rid) + '"><span>' + ldot(r) + esc(r.rid) + " " + vg(r) + " " + TG[r.type] +
+    '</span><span class="g">' + esc(fmtT(r)) + "</span></button>").join("") : '<p class="g">–</p>'));
+  sbody.dataset.k = "list";
+  sbody.querySelectorAll("[data-t]").forEach(b => b.addEventListener("click", () => { listAll = b.dataset.t === "1"; sfx.key(); if (listAll) subAll(); renderList(); }));
+  sbody.querySelectorAll(".li").forEach(b => b.addEventListener("click", () => { const r = (mine.get(b.dataset.r) || allDocs.get(b.dataset.r)); if (r) { follow = false; if (mapReady) map.flyTo({ center: [r.lng, r.lat], zoom: 15.8, duration: 800 }); openReport(r); } }));
+}
 $("blist").addEventListener("click", () => {
   if (sheet.classList.contains("open") && sbody.dataset.k === "list") { closeSheet(); return; }
-  const arr = [...mine.values()].sort((a, b) => b.seq - a.seq);
-  openSheet(arr.length ? arr.map(r => '<button class="li" data-r="' + esc(r.rid) + '"><span>' + ldot(r) + esc(r.rid) + " " +
-    vg(r) + " " + TG[r.type] + '</span><span class="g">' + esc(fmtT(r)) + "</span></button>").join("") : '<p class="g">–</p>');
-  sbody.dataset.k = "list";
-  sbody.querySelectorAll(".li").forEach(b => b.addEventListener("click", () => { const r = mine.get(b.dataset.r); if (r) { follow = false; if (mapReady) map.flyTo({ center: [r.lng, r.lat], zoom: 15.8, duration: 800 }); openReport(r); } }));
+  if (listAll) subAll(); renderList(); sfx.open();
 });
 
 function openReport(r) {
@@ -1227,7 +1241,8 @@ $("bset").addEventListener("click", () => {
 });
 
 const HELP = [["◎", "type an intention · the machine places a point"], ["➤", "arrow up = straight on"], ["✕", "hold to end"],
-  ["◉", "menu · tap the map to hide everything"], ["● ● ●", "calm · strange · uncanny, then ✓ ✕ ⌀"], ["⊕", "all agents"], ["≡", "your reports"], ["⚙", "settings"]];
+  ["◉", "menu · tap the map to hide everything"], ["● ● ●", "calm · strange · uncanny, then ✓ ✕ ⌀"], ["▶ ■", "there: go on from here with the same intention, or end"],
+  ["⊕", "everyone's reports on the map"], ["≡", "reports: yours · everyone's"], ["⚙", "settings"]];
 function openHelp() {
   if (sheet.classList.contains("open") && sbody.dataset.k === "help") { closeSheet(); return; }
   openSheet(HELP.map(h => '<div class="st hp"><span style="font-size:20px;min-width:3.6em">' + esc(h[0]) + "</span><span>" + esc(h[1]) + "</span></div>").join(""));
@@ -1250,7 +1265,7 @@ function boot(user) {
   try { walk = JSON.parse(store.get("tm.walk" + agent) || "[]"); if (!Array.isArray(walk)) walk = []; } catch { walk = []; }
   $("open").classList.add("out");
   setTimeout(() => {
-    $("open").hidden = true; $("open").classList.remove("out"); $("app").hidden = false; $("mid").textContent = agent + " · 1";
+    $("open").hidden = true; $("open").classList.remove("out"); $("app").hidden = false; $("mid").textContent = agent;
     initMap(); startGeo(); subMine(); route(); tickLoop();
     if (!store.get("tm.spun")) $("bspin").classList.add("pulse1");
   }, reduced ? 0 : 480);
