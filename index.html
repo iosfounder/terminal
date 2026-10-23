@@ -54,6 +54,7 @@ button:active{transform:scale(.94)}
 .maplibregl-canvas{outline:0}
 .maplibregl-ctrl-attrib{background:transparent!important;color:var(--g)!important;font:10px/1.3 ui-monospace,monospace!important;text-transform:lowercase;margin:0 4px calc(var(--sab) + 4px)!important}
 .maplibregl-ctrl-attrib a{color:var(--g)!important}
+body:not([data-map="1"]) .maplibregl-ctrl-attrib{opacity:0}      /* the credits sit folded away from the first frame */
 .maplibregl-ctrl-attrib-button{background-color:transparent!important;filter:invert(.5)}
 .maplibregl-ctrl-bottom-right{z-index:600}
 .maplibregl-marker{will-change:transform}
@@ -63,6 +64,15 @@ button:active{transform:scale(.94)}
 @keyframes gridin{from{clip-path:circle(0 at 50% 50%)}to{clip-path:circle(150% at 50% 50%)}}
 #rcv{position:fixed;inset:0;z-index:610;pointer-events:none;width:100%;height:100%}
 #fx{position:fixed;inset:0;z-index:620;pointer-events:none}
+/* film: bars slide in for the big moments; the map goes soft behind a sheet; a title card on launch */
+.lb{position:fixed;left:0;right:0;height:0;background:#000;z-index:695;pointer-events:none;transition:height 1.1s var(--ease)}
+#lbt{top:0}#lbb{bottom:0}
+body[data-lb="1"] .lb{height:8vh}
+#map,#rcv{transition:filter .8s ease}
+body[data-sheet="1"] #map,body[data-sheet="1"] #rcv{filter:blur(3px) brightness(.5)}
+#title{position:fixed;inset:0;z-index:890;display:grid;place-items:center;font-family:"Dotsies",ui-monospace,monospace;font-size:min(12vw,64px);text-indent:.4em;color:#fff;pointer-events:none;opacity:0;text-shadow:0 0 26px rgba(79,243,255,.55)}
+#title.go{animation:title 3.4s ease both}
+@keyframes title{0%{opacity:0;letter-spacing:.12em;filter:blur(10px)}28%{opacity:1;letter-spacing:.4em;filter:blur(0)}62%{opacity:1;letter-spacing:.46em}100%{opacity:0;letter-spacing:1em;filter:blur(12px)}}
 #dim{position:fixed;inset:0;z-index:690;pointer-events:none;background:rgba(0,0,0,.55);opacity:0;transition:opacity .5s ease}
 body[data-st="intent"] #dim{opacity:1}
 #tint{position:fixed;inset:0;z-index:860;pointer-events:none;opacity:0;background:radial-gradient(circle at 50% 55%,rgba(var(--tc,255,255,255),0) 25%,rgba(var(--tc,255,255,255),.38) 100%)}
@@ -253,6 +263,9 @@ body[data-lite="1"] #grain{display:none}
 <div id="grain" aria-hidden="true"></div>
 <div id="scan" aria-hidden="true"></div>
 
+<div id="lbt" class="lb" aria-hidden="true"></div><div id="lbb" class="lb" aria-hidden="true"></div>
+<div id="title" aria-hidden="true">locator</div>
+
 <section id="open">
   <div id="boxes"><i></i><i></i><i></i><i></i></div>
   <div id="orow">
@@ -357,7 +370,7 @@ const pad4 = n => String(n).padStart(4, "0");
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
 
-const BUILD = "v7.5";
+const BUILD = "v7.6";
 const R = 1000, N = 500, G = 12, ARR = 30, HOME_PITCH = 50;
 const TG = { attractor:"◉", void:"◌", anomaly:"◈" };
 const LV = ["calm", "strange", "uncanny"];
@@ -600,7 +613,7 @@ const scaleSize = (s, k) => {                    // zoom expressions can't be wr
 };
 function restyle(st) {                           // black, white, a little cyan/indigo; dotted roads; real 3D buildings; Dots-ready labels
   st.glyphs = location.origin + "/fonts/{fontstack}/{range}.pbf"; delete st.sprite;
-  st.sky = { "sky-color": "#000000", "horizon-color": "#05050c", "fog-color": "#000000", "sky-horizon-blend": .6, "horizon-fog-blend": .9, "fog-ground-blend": .55 };
+  st.sky = { "sky-color": "#000000", "horizon-color": "#14143a", "fog-color": "#05050f", "sky-horizon-blend": .7, "horizon-fog-blend": .95, "fog-ground-blend": .6 };
   const out = [];
   for (const l of st.layers) {
     const L0 = l.layout || (l.layout = {}), P = l.paint || (l.paint = {}), id = l.id;
@@ -678,7 +691,7 @@ async function initMap() {
     map.addLayer({ id: "lit2", type: "circle", source: "walk", paint: { "circle-radius": mR(60), "circle-color": "#8ff3ff", "circle-opacity": .09, "circle-blur": 1, "circle-pitch-alignment": "map", "circle-pitch-scale": "map" } }, b);
     setWalk();
     const ab = document.querySelector(".maplibregl-ctrl-attrib"); if (ab) { ab.classList.remove("maplibregl-compact-show"); ab.removeAttribute("open"); }
-    mapReady = true; applyDots(); drawMine(); drawAll(); setTarget(); paintRoute();
+    document.body.dataset.map = "1"; mapReady = true; applyDots(); drawMine(); drawAll(); setTarget(); paintRoute();
     if (pos) { ensureMe(); establish(); }
     setTimeout(fpsCheck, 7000);
   } catch (e) { console.error(e); map = null; mapReady = false; note("map ✕", true); }
@@ -816,6 +829,25 @@ function paintRoute() {
 { const c = document.createElement("canvas"); c.width = c.height = 160; const x = c.getContext("2d"), d = x.createImageData(160, 160);
   for (let i = 0; i < d.data.length; i += 4) { const v = Math.random() * 255 | 0; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
   x.putImageData(d, 0, 0); $("grain").style.backgroundImage = "url(" + c.toDataURL() + ")"; }
+function lb(ms) {                                // letterbox: thin black bars frame the moment, then slide away
+  if (reduced) return; const b = document.body; b.dataset.lb = "1"; clearTimeout(lb.t); lb.t = setTimeout(() => { b.dataset.lb = "0"; }, ms);
+}
+function titleCard() {
+  if (reduced) return; try { if (sessionStorage.getItem("tm.title")) return; sessionStorage.setItem("tm.title", "1"); } catch {}
+  const t = $("title"); t.classList.remove("go"); void t.offsetWidth; t.classList.add("go"); lb(3600);
+}
+let bed = null;                                  // a very quiet low drone while you walk; it swells as you close in
+function setBed(g) {
+  const a = AC; if (!a) return; if (muted || document.hidden) g = 0;
+  if (!bed) {
+    if (g <= 0) return;
+    const o1 = a.createOscillator(), o2 = a.createOscillator(), lf = a.createOscillator(), lg = a.createGain(), v = a.createGain();
+    o1.type = o2.type = lf.type = "sine"; o1.frequency.value = 55; o2.frequency.value = 82.5; lf.frequency.value = .07; lg.gain.value = 5;
+    lf.connect(lg); lg.connect(o2.frequency); v.gain.value = 0; o1.connect(v); o2.connect(v); v.connect(a.destination); o1.start(); o2.start(); lf.start(); bed = v;
+  }
+  bed.gain.setTargetAtTime(g, a.currentTime, 1.4);
+}
+document.addEventListener("visibilitychange", () => { if (document.hidden) setBed(0); });
 function scanSweep() { if (reduced) return; const s = $("scan"); s.classList.remove("go"); void s.offsetWidth; s.classList.add("go"); }
 function fpsCheck() {                            // phones that struggle lose the extras: grain, glow
   let n = 0; const t0 = performance.now();
@@ -837,7 +869,7 @@ function establish() {                           // the opening shot: down from 
   if (seen) { map.jumpTo({ center, zoom: 12.8 }); map.flyTo({ center, zoom: 15.6, pitch: HOME_PITCH, duration: 1000, essential: true }); }
   else {
     map.jumpTo({ center: [pos.lng + .7, pos.lat + .35], zoom: 5, pitch: 62, bearing: -28 });
-    scanSweep(); whoosh(2.8, 160, 1700, .04);
+    scanSweep(); whoosh(2.8, 160, 1700, .04); lb(4200);
     map.flyTo({ center, zoom: 15.6, pitch: HOME_PITCH, bearing: 0, duration: 3600, curve: 1.5, essential: true });
   }
   map.once("moveend", () => { flying = false; });   // registered after the jump, so only the flight's end clears it
@@ -978,12 +1010,12 @@ function playSpin(g) {
 const nextSeq = () => [...mine.values()].reduce((m, r) => Math.max(m, r.seq || 0), 0) + 1;
 async function runSpin(text, jid) {              // the intention is set; only now does the machine place a point (jid: the journey this continues)
   if (spinning || active) return;
-  spinning = true; route(); sfx.spin(); scanSweep(); $("bspin").classList.remove("pulse1"); store.set("tm.spun", "1");
+  spinning = true; route(); sfx.spin(); scanSweep(); lb(9000); $("bspin").classList.remove("pulse1"); store.set("tm.spun", "1");
   setTimeout(() => { if (spinning && !active) { spinning = false; route(); } }, 9000);          // safety: never get stuck
   const c = { lat: pos.lat, lng: pos.lng };
   if (mapReady) { map.stop(); map.easeTo({ center: [c.lng, c.lat], zoom: 13.2, pitch: 0, bearing: 0, padding: PAD0, duration: 800 }); await sleep(900); }
   const g = await generate(c); g.from = c;
-  await playSpin(g);
+  await playSpin(g); lb(1200);
   const n = nextSeq(), rid = agent + "-" + pad4(n);
   const data = { uid, agent, seq: n, rid, type: g.type, src: g.src, lat: g.lat, lng: g.lng, journey: jid || rid,
     intention: text, blind: { text: "", img: "" }, level: 0, status: "pending", verdict: 0, found: "", photo: "", at: serverTimestamp() };
@@ -1071,7 +1103,7 @@ function setDist(d) {                            // numbers glide instead of jum
 }
 function arrive() {
   if (!active || arriving === active.rid) return;
-  arriving = active.rid; sfx.arrive(); buzz(400); flash(1000, "79,243,255"); setHide(false); scanSweep(); document.body.dataset.near = "0";
+  arriving = active.rid; sfx.arrive(); buzz(400); lb(2600); flash(1000, "79,243,255"); setHide(false); scanSweep(); document.body.dataset.near = "0";
   if (mapReady && !reduced) map.easeTo({ center: [active.lng, active.lat], pitch: 28, bearing: 0, zoom: 17.2, padding: { top: 0, bottom: 150, left: 0, right: 0 }, duration: 1100 });   // settle over the point
   updateDoc(doc(db, "reports", active.rid), { status: "arrived", arrivedAt: serverTimestamp() }).catch(() => { arriving = null; });
 }
@@ -1082,6 +1114,7 @@ function updateTravel() {
   const pace = routeMode === "car" ? 9 : 1.25;                          // m/s, used when the route service is unreachable
   $("rinfo").textContent = rr ? Math.max(1, Math.round(rr.rem / rt.dist * rt.dur / 60)) + " min" : "~" + Math.max(1, Math.round(d * 1.25 / pace / 60)) + " min";
   document.body.dataset.near = d <= 100 ? "1" : "0";                    // the edges close in a notch near the point
+  setBed(.012 + .03 * Math.max(0, 1 - d / 400));
   if (d <= 100 && near100 !== active.rid) { near100 = active.rid; buzz([60, 80, 60]); sfx.near(); }
   if (d <= 100) { if (!nearSince) nearSince = Date.now(); } else nearSince = 0;
   $("bhere").hidden = !(nearSince && Date.now() - nearSince > 120000);   // bad GPS must never block a report
@@ -1170,7 +1203,7 @@ function route() {
   const st = typing ? "intent" : spinning ? "spin" : pend ? "travel" : arr ? "rep" : choose ? "choose" : "home";
   $("nx").hidden = st !== "choose";
   document.body.dataset.st = st; if (st !== "home") { setHide(false); if (mn.classList.contains("open")) menu(false); }
-  if (st !== "travel") document.body.dataset.near = "0";
+  if (st !== "travel") { document.body.dataset.near = "0"; setBed(0); }
   $("hud").hidden = st !== "travel"; $("tfoot").hidden = st !== "travel"; $("rep").hidden = st !== "rep";
   $("dockhome").hidden = st !== "home"; wakeOn(st === "travel");
   if (!pend) { rt = null; drawRoute(); }
@@ -1231,9 +1264,9 @@ $("bglobal").addEventListener("click", () => {
 /* ---------- sheets ---------- */
 const sheet = $("sheet"), sbody = $("sbody");
 let pushed = false;                              // phone back button closes a sheet instead of leaving the app
-const openSheet = html => { sbody.innerHTML = html; sheet.classList.add("open"); if (!pushed) { try { history.pushState({ sh: 1 }, ""); pushed = true; } catch {} } };
+const openSheet = html => { sbody.innerHTML = html; sheet.classList.add("open"); document.body.dataset.sheet = "1"; if (!pushed) { try { history.pushState({ sh: 1 }, ""); pushed = true; } catch {} } };
 function closeSheet(fromPop) {
-  sheet.classList.remove("open");
+  sheet.classList.remove("open"); document.body.dataset.sheet = "0";
   if (pushed) { pushed = false; if (fromPop !== true) { try { history.back(); } catch {} } }
 }
 addEventListener("popstate", () => { if (sheet.classList.contains("open")) closeSheet(true); });
@@ -1281,7 +1314,7 @@ $("bset").addEventListener("click", () => {
     '<div class="st g" style="border:0;justify-content:center"><span>' + BUILD + "</span></div>");
   sbody.dataset.k = "set"; sfx.open();
   $("sdots").addEventListener("click", e => { const v = document.documentElement.dataset.dots !== "1"; setDots(v); applyDots(); sfx.key(); e.currentTarget.classList.toggle("on", v); });
-  $("smute").addEventListener("click", e => { muted = !muted; store.set("tm.mute", muted ? "1" : "0"); e.currentTarget.classList.toggle("on", !muted); sfx.key(); });
+  $("smute").addEventListener("click", e => { muted = !muted; store.set("tm.mute", muted ? "1" : "0"); e.currentTarget.classList.toggle("on", !muted); if (muted) setBed(0); sfx.key(); });
   $("sunit").addEventListener("click", e => { units = units === "mi" ? "km" : "mi"; store.set("tm.units", units); e.currentTarget.textContent = units; sfx.key(); });
   $("smode").addEventListener("click", e => { routeMode = routeMode === "foot" ? "car" : "foot"; store.set("tm.mode", routeMode); e.currentTarget.textContent = routeMode === "car" ? "ⓓ" : "ⓦ"; rt = null; lastFetch = 0; sfx.key(); if (active) { fetchRoute(); } });
   $("sdm").addEventListener("click", () => { store.set("tm.dotmap", DOTMAP ? "0" : "1"); sfx.key(); location.reload(); });
@@ -1314,7 +1347,7 @@ function boot(user) {
   $("open").classList.add("out");
   setTimeout(() => {
     $("open").hidden = true; $("open").classList.remove("out"); $("app").hidden = false; $("mid").textContent = agent;
-    initMap(); startGeo(); subMine(); route(); tickLoop();
+    initMap(); startGeo(); subMine(); route(); tickLoop(); titleCard();
     if (!store.get("tm.spun")) $("bspin").classList.add("pulse1");
   }, reduced ? 0 : 480);
 }
