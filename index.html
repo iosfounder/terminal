@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/5.6.0/maplibre-gl.min.css">
 <style>
 @font-face{font-family:"Dotsies";src:url("DotsiesRect.ttf") format("truetype");font-display:swap}
 :root{--k:#000;--w:#fff;--g:#777;--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px)}
@@ -30,10 +30,13 @@ button:active,button.on{background:var(--w);color:var(--k)}
 /* map */
 #map{position:fixed;inset:0;background:var(--k);animation:wipe .6s steps(8) both}
 @keyframes wipe{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0)}}
-.leaflet-tile-pane{filter:grayscale(1) contrast(2.2) brightness(1.5)}
-.leaflet-container{background:var(--k);font:inherit}
-.leaflet-control-attribution{background:rgba(0,0,0,.7)!important;color:var(--g)!important;font-size:9px}
-.leaflet-control-attribution a{color:var(--g)!important}
+.maplibregl-map{background:var(--k);font:inherit}
+.maplibregl-canvas{outline:0}
+.maplibregl-ctrl-attrib{background:transparent!important;color:var(--g)!important;font:10px/1.3 ui-monospace,monospace!important;text-transform:lowercase;margin:0 4px calc(var(--sab) + 4px)!important}
+.maplibregl-ctrl-attrib a{color:var(--g)!important}
+.maplibregl-ctrl-attrib-button{background-color:transparent!important;filter:invert(.5)}
+.maplibregl-ctrl-bottom-right{z-index:600}
+.maplibregl-marker{will-change:transform}
 #grid{position:fixed;inset:0;z-index:400;pointer-events:none;opacity:.07;
   background:linear-gradient(var(--w) 1px,transparent 1px) 0 0/48px 48px,linear-gradient(90deg,var(--w) 1px,transparent 1px) 0 0/48px 48px;
   animation:gridin .9s steps(10) both}
@@ -42,7 +45,7 @@ button:active,button.on{background:var(--w);color:var(--k)}
 #flash{position:fixed;inset:0;z-index:900;background:var(--w);pointer-events:none}
 
 /* markers */
-.mkw{background:none!important;border:0!important}
+.mkw{background:none!important;border:0!important;width:0;height:0}
 .mk{display:block;width:24px;height:24px;margin:-12px 0 0 -12px;font-size:20px;line-height:24px;text-align:center;font-weight:400;text-shadow:0 0 3px #000,0 0 3px #000}
 .mk.o2{opacity:.65}
 .mk.drop{animation:drop .5s steps(5) both}
@@ -100,7 +103,7 @@ button:active,button.on{background:var(--w);color:var(--k)}
 /* hide to essentials */
 #top,#line,#cmph,#dockhome{transition:opacity .3s ease}
 body[data-hide="1"] #top,body[data-hide="1"] #line,body[data-hide="1"] #cmph,body[data-hide="1"] #dockhome{opacity:0;pointer-events:none}
-#dot{position:fixed;right:14px;bottom:calc(var(--sab) + 18px);z-index:710;width:36px;height:36px;font-size:14px;opacity:.7}
+#dot{position:fixed;right:14px;bottom:calc(var(--sab) + 44px);z-index:710;width:36px;height:36px;font-size:14px;opacity:.7}
 
 /* travel: everything at the top */
 body[data-st="travel"] #top,body[data-st="travel"] #line,body[data-st="travel"] #cmph{display:none}
@@ -116,7 +119,7 @@ body[data-st="travel"] #top,body[data-st="travel"] #line,body[data-st="travel"] 
 .hold::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--w);transform:scaleY(0);transform-origin:bottom;transition:transform .15s linear}
 .hold.press::before{transform:scaleY(1);transition:transform .9s linear}
 .hold.press{color:var(--k)}
-body[data-eyes="1"] #map,body[data-eyes="1"] #grid,body[data-eyes="1"] #fx{visibility:hidden}
+body[data-eyes="1"] #map,body[data-eyes="1"] #grid,body[data-eyes="1"] #fx{display:none}
 body[data-eyes="1"] #travel{bottom:0;flex-direction:column;justify-content:center;border-bottom:0;gap:20px;text-align:center}
 body[data-eyes="1"] #dist{font-size:22vw}
 body[data-eyes="1"] #travel .cmp{width:min(76vw,44vh);height:min(76vw,44vh)}
@@ -248,7 +251,7 @@ textarea::placeholder{color:var(--g)}
   <section id="sheet"><button id="sx" class="o x" type="button" aria-label="Close">✕</button><div id="sbody"></div></section>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/5.6.0/maplibre-gl.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence, inMemoryPersistence,
@@ -278,7 +281,7 @@ const pad4 = n => String(n).padStart(4, "0");
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
 
-const BUILD = "v5.1";
+const BUILD = "v6";
 const INTENT = "benefit of mankind";
 const R = 1000, N = 500, G = 12, ARR = 30;
 const TG = { attractor:"◉", void:"◌", anomaly:"◈" };
@@ -425,11 +428,11 @@ let uid = null, agent = "", map = null, pos = null, follow = true, heading = 0, 
 let mine = new Map(), active = null, draft = null, spinning = false, arriving = null;
 let showAll = false, allDocs = new Map(), unsubMine = null, unsubAll = null, newRid = null;
 const net = new Map(); // rid -> net rating (own reports, lazy)
-let gMine, gTrail, gAll, gRoute, meMk = null, tgMk = null, todayLine = "";
+let meMk = null, tgMk = null, todayLine = "";
 let rt = null, routing = false, lastFetch = 0, routeMode = store.get("tm.mode") === "car" ? "car" : "foot";
 let near100 = null, nearSince = 0, wake = null, tickT = null, lastTouch = Date.now(), eyesOffAt = 0, spd = 0, shownD = null, targetD = 0, dtw = false;
 const vg = r => r.status !== "done" ? "○" : r.verdict > 0 ? "●" : r.verdict < 0 ? "✕" : "⌀";
-const setEyes = v => { document.body.dataset.eyes = v ? "1" : "0"; if (!v) eyesOffAt = Date.now(); };
+const setEyes = v => { document.body.dataset.eyes = v ? "1" : "0"; if (!v) { eyesOffAt = Date.now(); setTimeout(() => { if (mapReady) map.resize(); }, 60); } };
 const setHide = v => { document.body.dataset.hide = v ? "1" : "0"; $("dot").hidden = !v; };
 $("dot").addEventListener("click", () => setHide(false));
 
@@ -470,44 +473,157 @@ function startCompass() {
     DeviceOrientationEvent.requestPermission().then(() => {}).catch(() => {});
 }
 
-/* ---------- map ---------- */
-function initMap() {
-  if (map) return;
-  map = L.map("map", { zoomControl: false, zoomSnap: .5, worldCopyJump: true }).setView([51.5, -0.12], 13);
-  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", { maxNativeZoom: 16, maxZoom: 19, attribution: "Esri · © OpenStreetMap" }).addTo(map);
-  gRoute = L.layerGroup().addTo(map); gTrail = L.layerGroup().addTo(map); gMine = L.layerGroup().addTo(map); gAll = L.layerGroup();
-  map.on("dragstart", () => { follow = false; });
-  map.on("click", () => {
-    if (sheet.classList.contains("open")) { closeSheet(); return; }
-    if (document.body.dataset.st === "home") setHide(document.body.dataset.hide !== "1");
-  });
+/* ---------- map (vector, MapLibre) ---------- */
+const FONT_MAIN = ["noto"], FONT_DOTS = ["dots"], DOTS_K = 3.2, MAIN_K = 1.2;
+const PAD0 = { top: 0, bottom: 0, left: 0, right: 0 }, PADT = { top: 250, bottom: 80, left: 0, right: 0 };
+let mapReady = false, labels = [], allMk = [], mineMk = [], routeAnimT = null, trailAnimT = null, routeBusy = false;
+const lineFC = c => ({ type: "FeatureCollection", features: c && c.length > 1 ? [{ type: "Feature", geometry: { type: "LineString", coordinates: c }, properties: {} }] : [] });
+const ptFC = c => ({ type: "FeatureCollection", features: c ? [{ type: "Feature", geometry: { type: "Point", coordinates: c }, properties: {} }] : [] });
+const src = n => map && mapReady && map.getSource(n);
+const scaleSize = (s, k) => {                    // zoom expressions can't be wrapped, so scale their output values in place
+  if (typeof s === "number") return s * k;
+  if (!Array.isArray(s)) return s;
+  if (s[0] === "interpolate") return s.map((v, i) => i >= 4 && i % 2 === 0 && typeof v === "number" ? v * k : v);
+  if (s[0] === "step") return s.map((v, i) => (i === 2 || (i >= 4 && i % 2 === 0)) && typeof v === "number" ? v * k : v);
+  return s;
+};
+
+function restyle(st) {                           // one fixed look: black, white, a few greys; Dots-ready labels; 3D buildings
+  st.glyphs = location.origin + "/fonts/{fontstack}/{range}.pbf"; delete st.sprite;
+  st.sky = { "sky-color": "#000000", "horizon-color": "#000000", "fog-color": "#000000", "sky-horizon-blend": .6, "horizon-fog-blend": .9, "fog-ground-blend": .55 };
+  const out = [];
+  for (const l of st.layers) {
+    const L0 = l.layout || (l.layout = {}), P = l.paint || (l.paint = {}), id = l.id;
+    if (l.type === "symbol" && !L0["text-field"]) continue;              // icon-only layers (one-way arrows)
+    for (const k of Object.keys(L0)) if (k.startsWith("icon-")) delete L0[k];
+    for (const k of Object.keys(P)) if (k.startsWith("icon-") || k.endsWith("-pattern")) delete P[k];
+    if (id === "background") P["background-color"] = "#090909";
+    else if (id === "water") P["fill-color"] = "#000000";
+    else if (id === "landuse_park") P["fill-color"] = "#111111";
+    else if (id === "landcover_wood") P["fill-color"] = "#0e0e0e";
+    else if (id === "landuse_residential") P["fill-color"] = "#0b0b0b";
+    else if (id === "building") { P["fill-color"] = "#151515"; P["fill-outline-color"] = "#2e2e2e"; }
+    else if (l.type === "line" && /^(highway|road|railway|aeroway)/.test(id)) {
+      P["line-color"] = /casing/.test(id) ? "#000000" : /motorway/.test(id) ? "#ffffff" : /major/.test(id) ? "#b4b4b4"
+        : /path|pier/.test(id) ? "#6a6a6a" : /rail|transit/.test(id) ? "#3c3c3c" : "#555555";
+      P["line-opacity"] = 1; if (/path/.test(id)) P["line-dasharray"] = [1, 1.6];
+    }
+    if (l.type === "symbol") {
+      const road = /highway_name/.test(id), water = /water/.test(id);
+      P["text-color"] = road ? "#9a9a9a" : water ? "#8c8c8c" : "#d6d6d6"; P["text-halo-color"] = "#000000"; P["text-halo-width"] = 1.6; P["text-halo-blur"] = 0;
+      labels.push({ id, size: L0["text-size"] == null ? 12 : L0["text-size"], tt: L0["text-transform"] || "none", line: L0["symbol-placement"] === "line" ? (L0["symbol-spacing"] || 250) : 0 });
+      L0["text-font"] = FONT_MAIN; L0["text-size"] = scaleSize(L0["text-size"] == null ? 12 : L0["text-size"], MAIN_K);
+    }
+    out.push(l);
+    if (id === "building") out.push({ id: "building3d", type: "fill-extrusion", source: "openmaptiles", "source-layer": "building", minzoom: 14.5,
+      paint: { "fill-extrusion-color": "#1d1d1d", "fill-extrusion-height": ["coalesce", ["get", "render_height"], 7], "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0], "fill-extrusion-opacity": .92 } });
+  }
+  st.layers = out; return st;
 }
-const mkIcon = (r, mineFlag) => {
-  const g = vg(r);
-  const cls = "mk" + (mineFlag ? "" : " o2") + (r.rid === newRid ? " drop" : "");
-  return L.divIcon({ className: "mkw", html: '<b class="' + cls + '">' + g + "</b>", iconSize: [0, 0] });
+function applyDots() {                           // names on the map in the Dots font, instantly, no reload
+  if (!mapReady) return; const on = document.documentElement.dataset.dots === "1";
+  for (const l of labels) {
+    try {
+      map.setLayoutProperty(l.id, "text-font", on ? FONT_DOTS : FONT_MAIN);
+      map.setLayoutProperty(l.id, "text-size", scaleSize(l.size, on ? DOTS_K : MAIN_K));
+      map.setLayoutProperty(l.id, "text-transform", on ? "lowercase" : l.tt);
+      map.setLayoutProperty(l.id, "text-letter-spacing", on ? .25 : 0);
+      if (l.line) map.setLayoutProperty(l.id, "symbol-spacing", on ? l.line * 2.2 : l.line);       // fewer repeats along a road in Dots
+    } catch {}
+  }
+}
+async function initMap() {
+  if (map) return;
+  try {
+    const st = restyle(await (await fetch("map-style.json")).json());
+    map = new maplibregl.Map({ container: "map", style: st, center: [-0.12, 51.5], zoom: 11, attributionControl: false, dragRotate: false, pitchWithRotate: false,
+      maxPitch: 62, fadeDuration: 120, renderWorldCopies: false, cooperativeGestures: false });
+    window.tmMap = map; map.touchZoomRotate.disableRotation(); map.keyboard.disable();
+    map.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: "OpenFreeMap · OpenMapTiles · OpenStreetMap" }), "bottom-right");
+    map.on("dragstart", () => { follow = false; });
+    map.on("click", () => {
+      if (sheet.classList.contains("open")) { closeSheet(); return; }
+      if (document.body.dataset.st === "home") setHide(document.body.dataset.hide !== "1");
+    });
+    map.on("error", e => { if (!mapReady && e && e.error && /WebGL|webgl/.test(String(e.error.message))) note("map ✕", false); });
+    await new Promise(res => map.once("load", res));          // no give-up timer: a backgrounded tab simply loads when it is shown
+    const first = map.getStyle().layers.find(l => l.type === "symbol");
+    const E = { type: "FeatureCollection", features: [] }, b = first && first.id;
+    for (const n of ["trail", "rtail", "rt", "head"]) map.addSource(n, { type: "geojson", data: E });
+    map.addLayer({ id: "trail", type: "line", source: "trail", layout: { "line-cap": "round" }, paint: { "line-color": "#fff", "line-width": 1.8, "line-dasharray": [1, 2.6], "line-opacity": .9 } }, b);
+    map.addLayer({ id: "rtail", type: "line", source: "rtail", layout: { "line-cap": "round" }, paint: { "line-color": "#fff", "line-width": 3, "line-dasharray": [.1, 2.4] } }, b);
+    map.addLayer({ id: "rglow", type: "line", source: "rt", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#fff", "line-width": 14, "line-blur": 8, "line-opacity": .35 } }, b);
+    map.addLayer({ id: "rcase", type: "line", source: "rt", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#000", "line-width": 10 } }, b);
+    map.addLayer({ id: "rt", type: "line", source: "rt", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#fff", "line-width": 4 } }, b);
+    map.addLayer({ id: "head", type: "circle", source: "head", paint: { "circle-radius": 7, "circle-color": "#fff", "circle-blur": .6, "circle-opacity": .95 } }, b);
+    const ab = document.querySelector(".maplibregl-ctrl-attrib"); if (ab) { ab.classList.remove("maplibregl-compact-show"); ab.removeAttribute("open"); }
+    mapReady = true; applyDots(); drawMine(); drawAll(); drawRoute(); setTarget();
+    if (pos) { ensureMe(); map.jumpTo({ center: [pos.lng, pos.lat], zoom: 15.2 }); }
+  } catch (e) { console.error(e); map = null; mapReady = false; note("map ✕", false); }
+}
+const mkEl = html => { const el = document.createElement("div"); el.className = "mkw"; el.innerHTML = html; return el; };
+const mkAdd = (el, lng, lat) => new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat([lng, lat]).addTo(map);
+function reportMk(r, mineFlag) {
+  const g = vg(r), el = mkEl('<b class="mk' + (mineFlag ? "" : " o2") + (r.rid === newRid ? " drop" : "") + '">' + g + "</b>");
+  el.addEventListener("click", e => { e.stopPropagation(); openReport(r); });
+  return mkAdd(el, r.lng, r.lat);
+}
+const partial = (c, f) => {                      // first fraction f of a line, by length
+  if (f >= 1) return c; const seg = []; let tot = 0;
+  for (let i = 0; i < c.length - 1; i++) { const d = hav({ lat: c[i][1], lng: c[i][0] }, { lat: c[i + 1][1], lng: c[i + 1][0] }); seg.push(d); tot += d; }
+  let want = tot * f, out = [c[0]];
+  for (let i = 0; i < seg.length; i++) {
+    if (want >= seg[i]) { out.push(c[i + 1]); want -= seg[i]; }
+    else { const k = seg[i] ? want / seg[i] : 0; out.push([c[i][0] + (c[i + 1][0] - c[i][0]) * k, c[i][1] + (c[i + 1][1] - c[i][1]) * k]); break; }
+  }
+  return out;
 };
 function drawMine() {
-  if (!map) return;
-  gMine.clearLayers(); gTrail.clearLayers();
+  if (!mapReady) return;
+  mineMk.forEach(m => m.remove()); mineMk = [];
   const arr = [...mine.values()].sort((a, b) => a.seq - b.seq), done = arr.filter(r => r.status === "done");
-  for (let i = 1; i < done.length; i++) {
-    const last = i === done.length - 1 && done[i].rid === newRid;
-    L.polyline([[done[i - 1].lat, done[i - 1].lng], [done[i].lat, done[i].lng]],
-      { color: "#fff", weight: 1, dashArray: "3 7", opacity: .9, className: last ? "seg-new" : "" }).addTo(gTrail);
+  const segs = []; for (let i = 1; i < done.length; i++) segs.push([[done[i - 1].lng, done[i - 1].lat], [done[i].lng, done[i].lat]]);
+  const fresh = segs.length && done[done.length - 1].rid === newRid;
+  const solid = fresh ? segs.slice(0, -1) : segs, mls = c => ({ type: "FeatureCollection", features: c.map(g => ({ type: "Feature", geometry: { type: "LineString", coordinates: g }, properties: {} })) });
+  clearInterval(trailAnimT); src("trail").setData(mls(solid));
+  if (fresh) {                                   // the new leg draws itself from the last report to this one
+    if (reduced) src("trail").setData(mls(segs));
+    else { const t0 = Date.now(), last = segs[segs.length - 1]; trailAnimT = setInterval(() => { const f = Math.min(1, (Date.now() - t0) / 900), e = 1 - (1 - f) ** 3;
+      src("trail").setData(mls([...solid, partial(last, e)])); if (f >= 1) clearInterval(trailAnimT); }, 40); }
   }
-  arr.forEach(r => L.marker([r.lat, r.lng], { icon: mkIcon(r, true) }).on("click", () => openReport(r)).addTo(gMine));
+  arr.forEach(r => mineMk.push(reportMk(r, true)));
   newRid = null;
 }
 function drawAll() {
-  if (!map) return; gAll.clearLayers();
-  [...allDocs.values()].filter(r => r.uid !== uid).forEach(r =>
-    L.marker([r.lat, r.lng], { icon: mkIcon(r, false) }).on("click", () => openReport(r)).addTo(gAll));
+  if (!mapReady) return; allMk.forEach(m => m.remove()); allMk = [];
+  if (!showAll) return;
+  [...allDocs.values()].filter(r => r.uid !== uid).forEach(r => allMk.push(reportMk(r, false)));
 }
 function setTarget() {
-  if (tgMk) { map.removeLayer(tgMk); tgMk = null; }
-  if (active) tgMk = L.marker([active.lat, active.lng], { icon: L.divIcon({ className: "mkw", html: '<div class="tgm"><i></i><b></b></div>', iconSize: [0, 0] }), interactive: false }).addTo(map);
+  if (!mapReady) return;
+  if (tgMk) { tgMk.remove(); tgMk = null; }
+  if (active) tgMk = mkAdd(mkEl('<div class="tgm"><i></i><b></b></div>'), active.lng, active.lat);
 }
+function ensureMe() {
+  if (!mapReady || !pos || meMk) return;
+  meMk = mkAdd(mkEl("<b></b><i></i>"), pos.lng, pos.lat); meMk.getElement().classList.add("me");
+}
+const PADV = { top: 210, bottom: 120, left: 40, right: 40 };
+function overview(ms = 800, t = active) {         // you and the point in one frame, flat, north up
+  if (!mapReady || !pos || !t) return;
+  const w = Math.min(pos.lng, t.lng), e = Math.max(pos.lng, t.lng), s = Math.min(pos.lat, t.lat), n = Math.max(pos.lat, t.lat);
+  map.fitBounds([[w, s], [e, n]], { padding: PADV, maxZoom: 17, duration: ms, pitch: 0, bearing: 0 });
+}
+function flatCam(ms = 700) { if (mapReady) map.easeTo({ pitch: 0, bearing: 0, padding: PAD0, duration: ms }); }
+let camT = null;
+function camTick() {                             // the chase camera: tilts and turns with you, never faster than ~20°/s
+  if (!mapReady || !pos || spinning || document.hidden) return;
+  if (document.body.dataset.st !== "travel" || !follow || document.body.dataset.eyes === "1") return;
+  const cur = map.getBearing(), gh = hasCompass ? heading : (spd > 1 ? heading : cur);
+  let d = nrm(gh - cur); if (Math.abs(d) < 4) d = 0; d = Math.max(-14, Math.min(14, d));
+  map.easeTo({ center: [pos.lng, pos.lat], bearing: cur + d, pitch: 56, zoom: 17, padding: PADT, duration: 700, easing: t => t });
+}
+camT = setInterval(camTick, 650);
 
 /* ---------- location ---------- */
 let watchId = null;
@@ -532,10 +648,12 @@ function onPos(p) {
   }
   pos = { lat, lng, acc, t };
   if (!hasCompass && p.coords.heading != null && !isNaN(p.coords.heading) && p.coords.speed > 1) { heading = p.coords.heading; }
-  if (!meMk) meMk = L.marker([pos.lat, pos.lng], { icon: L.divIcon({ className: "mkw me", html: "<b></b><i></i>", iconSize: [0, 0] }), interactive: false, zIndexOffset: 1000 }).addTo(map);
-  else meMk.setLatLng([pos.lat, pos.lng]);
-  if (first) { map.setView([pos.lat, pos.lng], 16, { animate: false }); if ($("line").textContent.startsWith("locat")) { $("line").textContent = todayLine; $("line").classList.add("dim"); } }
-  else if (follow && !spinning) map.panTo([pos.lat, pos.lng], { animate: true, duration: .4 });
+  if (mapReady) {
+    if (!meMk) ensureMe(); else meMk.setLngLat([pos.lng, pos.lat]);
+    if (first) map.jumpTo({ center: [pos.lng, pos.lat], zoom: 15.2 });
+    else if (follow && !spinning && document.body.dataset.st === "home") map.easeTo({ center: [pos.lng, pos.lat], duration: 400 });
+  }
+  if (first && $("line").textContent.startsWith("locat")) { $("line").textContent = todayLine; $("line").classList.add("dim"); }
   if (active && active.status === "pending") {
     if (!rt || rt.rid !== active.rid || rt.mode !== routeMode) fetchRoute();
     else { const r = routeRemain(); if (r && r.bd > 40) fetchRoute(); }       // left the route: ask again
@@ -544,7 +662,7 @@ function onPos(p) {
   }
   updateTravel(); drawCompass();
 }
-$("brec").addEventListener("click", () => { follow = true; if (!pos) startGeo(true); if (pos) map.flyTo([pos.lat, pos.lng], Math.max(map.getZoom(), 15), { duration: .5 }); });
+$("brec").addEventListener("click", () => { follow = true; if (!pos) startGeo(true); if (pos && mapReady) map.flyTo({ center: [pos.lng, pos.lat], zoom: Math.max(map.getZoom(), 15), duration: 600 }); });
 
 /* ---------- spin (randonautica method) ---------- */
 async function rand16(n) {
@@ -578,8 +696,9 @@ function playSpin(g) {
   return new Promise(res => {
     if (reduced) { res(); return; }
     const cv = $("fx"), x = cv.getContext("2d"); cv.width = innerWidth; cv.height = innerHeight; cv.hidden = false;
-    const P = g.pts.map(p => { const q = map.latLngToContainerPoint([p.lat, p.lng]); return { x: q.x, y: q.y, keep: p.c === g.cell }; });
-    const T = map.latLngToContainerPoint([g.lat, g.lng]), t0 = performance.now(); let locked = false;
+    if (!mapReady) { res(); return; }
+    const P = g.pts.map(p => { const q = map.project([p.lng, p.lat]); return { x: q.x, y: q.y, keep: p.c === g.cell }; });
+    const T = map.project([g.lng, g.lat]), t0 = performance.now(); let locked = false;
     const f = now => {
       const t = now - t0; x.clearRect(0, 0, cv.width, cv.height); x.fillStyle = "#fff"; x.strokeStyle = "#fff";
       const show = Math.min(P.length, Math.floor(t / 350 * P.length));
@@ -606,7 +725,7 @@ async function spin() {
   if (!pos) { startGeo(true); note("locating…", false); return; }
   spinning = true; startCompass(); ac(); sfx.spin(); flash(80); $("bspin").classList.remove("pulse1"); store.set("tm.spun", "1");
   const c = { lat: pos.lat, lng: pos.lng };
-  map.setView([c.lat, c.lng], 14.5, { animate: false });
+  if (mapReady) { map.stop(); map.jumpTo({ center: [c.lng, c.lat], zoom: 13.2, pitch: 0, bearing: 0, padding: PAD0 }); await sleep(180); }
   const g = await generate(c); g.from = c;
   await playSpin(g);
   draft = g; spinning = false; route();
@@ -636,8 +755,8 @@ $("pgo").addEventListener("click", () => {
   draft = null; sfx.lock(); rt = null; lastFetch = 0; shownD = null; near100 = null; nearSince = 0;
   setDoc(doc(db, "reports", rid), data).catch(() => note("sync ✕", false));
   follow = false;                                  // overview first: you and the point, with the route between
-  map.flyToBounds(L.latLngBounds([[pos.lat, pos.lng], [d.lat, d.lng]]), { paddingTopLeft: [40, 210], paddingBottomRight: [40, 120], duration: .8, maxZoom: 17 });
-  route();
+  overview(900, d); route();
+  setTimeout(() => { if (active && active.rid === rid && document.body.dataset.st === "travel") follow = true; }, 2600);   // then the camera swoops in behind you
 });
 
 /* ---------- travel ---------- */
@@ -664,22 +783,22 @@ async function fetchRoute() {
   } catch {} finally { routing = false; }
 }
 function drawRoute(anim) {                       // thick white line with a black edge along the route, dashed for the last stretch
-  if (!map) return; gRoute.clearLayers();
-  if (!active || active.status !== "pending" || !pos) return;
+  if (!mapReady) return;
+  if (!active || active.status !== "pending" || !pos) { clearInterval(routeAnimT); routeBusy = false; src("rt").setData(lineFC(null)); src("rtail").setData(lineFC(null)); src("head").setData(ptFC(null)); return; }
   const T = [active.lat, active.lng], P = [pos.lat, pos.lng], rr = routeRemain();
   let pts = null, tail = [P, T];
   if (rr) { pts = [P, ...rt.c.slice(rr.bi)]; const e = pts[pts.length - 1]; tail = seg(e, T) > 12 ? [e, T] : null; }
-  if (pts) {
-    L.polyline(pts, { color: "#000", weight: 10, opacity: 1, lineCap: "round", lineJoin: "round", interactive: false }).addTo(gRoute);
-    const ln = L.polyline(pts, { color: "#fff", weight: 4, opacity: 1, lineCap: "round", lineJoin: "round", interactive: false }).addTo(gRoute);
-    const el = anim && !reduced && ln.getElement && ln.getElement();
-    if (el && el.getTotalLength) {
-      const len = el.getTotalLength(); el.style.strokeDasharray = len; el.style.strokeDashoffset = len; el.getBoundingClientRect();
-      el.style.transition = "stroke-dashoffset .7s ease-out"; el.style.strokeDashoffset = 0;
-      setTimeout(() => { el.style.strokeDasharray = ""; el.style.transition = ""; }, 800);
-    }
-  }
-  if (tail) L.polyline(tail, { color: "#fff", weight: 3, dashArray: "1 9", lineCap: "round", opacity: .95, interactive: false }).addTo(gRoute);
+  src("rtail").setData(lineFC(tail && tail.map(q => [q[1], q[0]])));
+  if (!pts) { src("rt").setData(lineFC(null)); return; }
+  const full = pts.map(q => [q[1], q[0]]);
+  if (anim && !reduced) {                        // the trace: a bright head runs along the road, drawing it
+    clearInterval(routeAnimT); routeBusy = true; const t0 = Date.now(), ms = 900;
+    routeAnimT = setInterval(() => {
+      const f = Math.min(1, (Date.now() - t0) / ms), e = 1 - (1 - f) ** 3, c = partial(full, e);
+      src("rt").setData(lineFC(c)); src("head").setData(ptFC(f < 1 ? c[c.length - 1] : null));
+      if (f >= 1) { clearInterval(routeAnimT); routeBusy = false; }
+    }, 33);
+  } else if (!routeBusy) { src("rt").setData(lineFC(full)); src("head").setData(ptFC(null)); }
 }
 function setDist(d) {                            // numbers glide instead of jumping
   targetD = d;
@@ -722,8 +841,8 @@ function abortNow() {
 }
 $("brec2").addEventListener("click", () => {     // overview of you + the point  <->  follow me
   if (!pos || !active) return;
-  if (follow) { follow = false; map.flyToBounds(L.latLngBounds([[pos.lat, pos.lng], [active.lat, active.lng]]), { paddingTopLeft: [40, 210], paddingBottomRight: [40, 120], duration: .6, maxZoom: 17 }); }
-  else { follow = true; map.flyTo([pos.lat, pos.lng], 17, { duration: .6 }); }
+  if (follow) { follow = false; overview(700); }
+  else { follow = true; camTick(); }
 });
 $("travel").addEventListener("click", e => { if (!e.target.closest("button")) setEyes(document.body.dataset.eyes !== "1"); });
 addEventListener("pointerdown", () => { lastTouch = Date.now(); }, true);
@@ -783,7 +902,9 @@ function route() {
   document.body.dataset.st = st; if (st !== "home") setHide(false); if (st !== "travel") setEyes(0);
   $("pad").hidden = !draft; $("rep").hidden = !(arr && !draft); $("travel").hidden = !(pend && !draft); $("tfoot").hidden = st !== "travel";
   $("dockhome").hidden = !!(draft || active); wakeOn(st === "travel");
-  if (!pend) { rt = null; gRoute && gRoute.clearLayers(); }
+  if (!pend) { rt = null; drawRoute(); }
+  if (route.prev === "travel" && st !== "travel") flatCam(900);        // leaving the chase: back to a flat, north-up map
+  route.prev = st;
   if (draft && $("pad").dataset.o !== "1") { $("pad").dataset.o = "1"; openPad(); }
   if (!draft) $("pad").dataset.o = "0";
   if (arr && $("rep").dataset.r !== active.rid) { $("rep").dataset.r = active.rid; fillRep(); }
@@ -791,7 +912,7 @@ function route() {
   const rid = active ? active.rid : null;
   if (rid !== lastRid) {
     lastRid = rid; arriving = null; shownD = null; near100 = null; nearSince = 0; setTarget();
-    if (pend && pos && map && follow) { follow = false; map.flyToBounds(L.latLngBounds([[pos.lat, pos.lng], [active.lat, active.lng]]), { paddingTopLeft: [40, 210], paddingBottomRight: [40, 120], duration: .6, maxZoom: 17 }); }
+    if (pend && pos && mapReady && follow) { follow = false; overview(700); setTimeout(() => { if (active && active.status === "pending") follow = true; }, 2200); }
   }
   if (pend) { fetchRoute(); drawRoute(); updateTravel(); }
   drawCompass();
@@ -835,7 +956,7 @@ function subAll() {
 }
 $("bglobal").addEventListener("click", () => {
   showAll = !showAll; $("bglobal").classList.toggle("on", showAll); sfx.key();
-  if (showAll) { subAll(); gAll.addTo(map); } else map.removeLayer(gAll);
+  if (showAll) subAll(); drawAll();
 });
 
 /* ---------- sheets ---------- */
@@ -855,7 +976,7 @@ $("blist").addEventListener("click", () => {
   openSheet(arr.length ? arr.map(r => '<button class="li" data-r="' + esc(r.rid) + '"><span>' + esc(r.rid) + " " +
     vg(r) + " " + TG[r.type] + '</span><span class="g">' + esc(fmtT(r)) + "</span></button>").join("") : '<p class="g">–</p>');
   sbody.dataset.k = "list";
-  sbody.querySelectorAll(".li").forEach(b => b.addEventListener("click", () => { const r = mine.get(b.dataset.r); if (r) { map.flyTo([r.lat, r.lng], 16, { duration: .5 }); openReport(r); } }));
+  sbody.querySelectorAll(".li").forEach(b => b.addEventListener("click", () => { const r = mine.get(b.dataset.r); if (r) { follow = false; if (mapReady) map.flyTo({ center: [r.lng, r.lat], zoom: 15.5, duration: 700 }); openReport(r); } }));
 });
 
 async function openReport(r) {
@@ -891,7 +1012,7 @@ $("bset").addEventListener("click", () => {
     '<div class="st"><span>⏻</span><button id="sout" class="o" type="button">⏻</button></div>' +
     '<div class="st g"><span>' + BUILD + "</span></div>");
   sbody.dataset.k = "set";
-  $("sdots").addEventListener("click", e => { const v = document.documentElement.dataset.dots !== "1"; setDots(v); e.currentTarget.classList.toggle("on", v); e.currentTarget.textContent = v ? "●" : "○"; });
+  $("sdots").addEventListener("click", e => { const v = document.documentElement.dataset.dots !== "1"; setDots(v); applyDots(); e.currentTarget.classList.toggle("on", v); e.currentTarget.textContent = v ? "●" : "○"; });
   $("smute").addEventListener("click", e => { muted = !muted; store.set("tm.mute", muted ? "1" : "0"); e.currentTarget.classList.toggle("on", !muted); e.currentTarget.textContent = !muted ? "●" : "○"; sfx.key(); });
   $("sout").addEventListener("click", () => { signOut(auth).then(() => location.reload()).catch(() => location.reload()); });
 });
@@ -933,7 +1054,7 @@ function boot(user) {
   setTimeout(() => {
     $("open").hidden = true; $("open").classList.remove("out"); $("app").hidden = false; $("me").textContent = agent;
     $("bmode").textContent = routeMode === "car" ? "ⓓ" : "ⓦ";
-    initMap(); map.invalidateSize(); startGeo(); subMine(); daily(); route(); tickLoop();
+    initMap(); startGeo(); subMine(); daily(); route(); tickLoop();
     if (!store.get("tm.help")) { store.set("tm.help", "1"); setTimeout(openHelp, 400); }
     else if (!store.get("tm.spun")) $("bspin").classList.add("pulse1");
   }, reduced ? 0 : 280);

@@ -1,4 +1,4 @@
-const V = "terminal-v5";
+const V = "terminal-v6";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "DotsiesRect.ttf",
   "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png", "icons/apple-touch-icon.png", "icons/favicon-32.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
@@ -16,7 +16,7 @@ self.addEventListener("fetch", e => {
   if (r.method !== "GET") return;
   const u = new URL(r.url);
   const own = u.origin === location.origin;
-  const lib = (u.hostname === "www.gstatic.com" && u.pathname.startsWith("/firebasejs/")) || (u.hostname === "cdnjs.cloudflare.com" && u.pathname.includes("/leaflet/"));
+  const lib = (u.hostname === "www.gstatic.com" && u.pathname.startsWith("/firebasejs/")) || (u.hostname === "cdnjs.cloudflare.com" && u.pathname.includes("/maplibre-gl/"));
   if (!own && !lib) return;
   if (r.mode === "navigate") {
     e.respondWith(fetch(r).then(res => { if (res.ok) { const cp = res.clone(); caches.open(V).then(c => c.put("index.html", cp)); } return res; })
