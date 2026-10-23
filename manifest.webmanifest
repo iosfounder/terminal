@@ -1,7 +1,7 @@
 {
-  "name": "on the run",
-  "short_name": "on the run",
-  "description": "walk somewhere real with someone on your heels",
+  "name": "tour",
+  "short_name": "tour",
+  "description": "a walking guide to the real places around you",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
