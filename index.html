@@ -5,8 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="locator">
 <meta name="mobile-web-app-capable" content="yes">
-<title>terminal</title>
+<title>locator</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -15,7 +17,7 @@
 @font-face{font-family:"Dotsies";src:url("DotsiesRect.ttf") format("truetype");font-display:swap}
 :root{--k:#000;--w:#fff;--g:#777;--c:#4ff3ff;--i:#8a7dff;--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);--ease:cubic-bezier(.2,.8,.2,1)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:var(--k);color:var(--w);overflow:hidden;overscroll-behavior:none;touch-action:manipulation;-webkit-text-size-adjust:100%;
+html,body{height:100%;height:100dvh;position:fixed;inset:0;width:100%;background:var(--k);color:var(--w);overflow:hidden;overscroll-behavior:none;touch-action:manipulation;-webkit-text-size-adjust:100%;
   font:16px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;text-transform:lowercase}
 html[data-dots="1"] body{font-family:"Dotsies",ui-monospace,monospace}
 button,input,textarea{font:inherit;color:inherit;background:none;border:0;outline:0;border-radius:0;text-transform:inherit}
@@ -321,7 +323,7 @@ const pad4 = n => String(n).padStart(4, "0");
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
 
-const BUILD = "v7";
+const BUILD = "v7.1";
 const R = 1000, N = 500, G = 12, ARR = 30, HOME_PITCH = 50;
 const TG = { attractor:"◉", void:"◌", anomaly:"◈" };
 const LV = ["calm", "strange", "uncanny"];
@@ -492,6 +494,7 @@ let uid = null, agent = "", map = null, pos = null, follow = true, heading = 0, 
 let mine = new Map(), active = null, spinning = false, typing = false, arriving = null;
 let showAll = false, allDocs = new Map(), unsubMine = null, unsubAll = null, newRid = null;
 let meMk = null, tgMk = null;
+let heat = null, crumbs = [], crumbLast = null, walk = [], walkLast = null;     // density heat, breadcrumb tail, remembered walking (fog of war)
 let rt = null, routing = false, lastFetch = 0, routeMode = store.get("tm.mode") === "car" ? "car" : "foot";
 let near100 = null, nearSince = 0, wake = null, tickT = null, spd = 0, shownD = null, targetD = 0, dtw = false, rankSeen = null;
 const vg = r => r.status !== "done" ? "○" : r.verdict > 0 ? "●" : r.verdict < 0 ? "✕" : "⌀";
@@ -527,7 +530,9 @@ function drawCompass() {
   c.classList.toggle("has", tb != null);
   if (tb != null) c.querySelector(".ar").setAttribute("transform", "rotate(" + rel.toFixed(1) + ")");
   if (rel != null && hasCompass && Math.abs(nrm(rel)) < 12 && Date.now() - lastAlign > 3500) { lastAlign = Date.now(); buzz(25); }
+  repaint();                                     // the heading beam follows the compass
 }
+setInterval(() => { const d = document.body.dataset; if (mapReady && (heat || (d.st === "travel" && d.lite !== "1"))) paintRoute(); }, 60);   // heat fade + ring pulse
 function oe(e) {
   let h = null;
   if (e.webkitCompassHeading != null) h = e.webkitCompassHeading;
@@ -628,12 +633,19 @@ async function initMap() {
     map.addSource("trail", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
     map.addLayer({ id: "trailglow", type: "line", source: "trail", layout: { "line-cap": "round" }, paint: { "line-color": "#8a7dff", "line-width": 9, "line-blur": 6, "line-opacity": .35 } }, b);
     map.addLayer({ id: "trail", type: "line", source: "trail", layout: { "line-cap": "round" }, paint: { "line-color": "#a79dff", "line-width": 2.4, "line-dasharray": [0.01, 2.2], "line-opacity": .95 } }, b);
+    // fog of war: ground you have walked stays softly lit; everything else stays dark
+    const mR = R => ["interpolate", ["exponential", 2], ["zoom"], 8, R * 256 / (78271.5 * .62), 20, R * 1048576 / (78271.5 * .62)];
+    map.addSource("walk", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+    map.addLayer({ id: "lit1", type: "circle", source: "walk", paint: { "circle-radius": mR(170), "circle-color": "#aab6ff", "circle-opacity": .075, "circle-blur": 1, "circle-pitch-alignment": "map", "circle-pitch-scale": "map" } }, b);
+    map.addLayer({ id: "lit2", type: "circle", source: "walk", paint: { "circle-radius": mR(60), "circle-color": "#8ff3ff", "circle-opacity": .09, "circle-blur": 1, "circle-pitch-alignment": "map", "circle-pitch-scale": "map" } }, b);
+    setWalk();
     const ab = document.querySelector(".maplibregl-ctrl-attrib"); if (ab) { ab.classList.remove("maplibregl-compact-show"); ab.removeAttribute("open"); }
     mapReady = true; applyDots(); drawMine(); drawAll(); setTarget(); paintRoute();
     if (pos) { ensureMe(); establish(); }
     setTimeout(fpsCheck, 7000);
   } catch (e) { console.error(e); map = null; mapReady = false; note("map ✕", true); }
 }
+const setWalk = () => { const s = src("walk"); if (s) s.setData({ type: "FeatureCollection", features: walk.map(p => ({ type: "Feature", geometry: { type: "Point", coordinates: p }, properties: {} })) }); };
 const mkEl = html => { const el = document.createElement("div"); el.className = "mkw"; el.innerHTML = html; return el; };
 const mkAdd = (el, lng, lat) => new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat([lng, lat]).addTo(map);
 function reportMk(r, mineFlag, delay) {
@@ -707,13 +719,52 @@ setInterval(camTick, 650);
 let rPts = null, rHead = null, rTail = null, routeAnimT = null, routeBusy = false, painted = false;
 function sizeRcv() { const c = $("rcv"), d = Math.min(devicePixelRatio || 1, 2); c.width = Math.round(innerWidth * d); c.height = Math.round(innerHeight * d); }
 sizeRcv(); addEventListener("resize", () => { sizeRcv(); paintRoute(); });
+const gp = (c, dx, dy) => [c.lng + dx / (111320 * Math.cos(rad(c.lat))), c.lat + dy / 111320];   // metres east/north of a point -> [lng,lat]
+const ringPts = (c, r, n = 56) => { const o = []; for (let i = 0; i <= n; i++) { const a = i / n * 2 * Math.PI; o.push(gp(c, r * Math.sin(a), r * Math.cos(a))); } return o; };
+let pq = false;
+const repaint = () => { if (pq) return; pq = true; requestAnimationFrame(() => { pq = false; paintRoute(); }); };
 function paintRoute() {
-  const c = $("rcv"), x = c.getContext("2d"), has = (rPts && rPts.length > 1) || (rTail && rTail.length > 1);
-  if (!has) { if (painted) { x.clearRect(0, 0, c.width, c.height); painted = false; } return; }
   if (!mapReady) return;
+  const c = $("rcv"), x = c.getContext("2d"), b = document.body.dataset, st = b.st, lite = b.lite === "1", now = Date.now();
+  const trav = active && active.status === "pending" && pos && st === "travel";
+  const beam = hasCompass && pos && (st === "home" || st === "travel") && b.hide !== "1" && !flying;
+  if (heat && now - heat.t0 > 7500) heat = null;
+  const has = (rPts && rPts.length > 1) || (rTail && rTail.length > 1) || trav || beam || heat;
+  if (!has) { if (painted) { x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height); painted = false; } return; }
   painted = true; const d = c.width / innerWidth; x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, innerWidth, innerHeight);
-  x.lineCap = x.lineJoin = "round"; const lite = document.body.dataset.lite === "1";
+  x.lineCap = x.lineJoin = "round";
   const path = pts => { x.beginPath(); pts.forEach((p, i) => { const q = map.project(p); i ? x.lineTo(q.x, q.y) : x.moveTo(q.x, q.y); }); };
+  if (heat) {                                    // density heat: the search cells, brighter where more points fell; the chosen cell is outlined
+    const t = now - heat.t0, env = Math.min(1, t / 500) * Math.min(1, Math.max(0, (7500 - t) / 2000));
+    for (const cl of heat.cells) {
+      path(cl.poly); x.closePath(); const v = cl.n / heat.max;
+      x.fillStyle = "rgba(" + Math.round(138 - 59 * v) + "," + Math.round(125 + 118 * v) + ",255," + (.07 + v * .38) * env + ")"; x.fill();
+      if (cl.k === heat.best) { x.strokeStyle = "rgba(79,243,255," + env + ")"; x.lineWidth = 2; x.stroke(); }
+    }
+  }
+  if (trav) {                                    // rings around the target; ones you've crossed dim, a pulse keeps drawing in
+    const T = { lat: active.lat, lng: active.lng }, dist = hav(pos, T);
+    x.setLineDash([2, 7]); x.lineWidth = 1.6;
+    for (const r of [250, 100, 50]) { x.strokeStyle = "rgba(79,243,255," + (dist < r ? .16 : r === 50 ? .6 : r === 100 ? .45 : .3) + ")"; path(ringPts(T, r)); x.stroke(); }
+    x.setLineDash([]);
+    if (!lite && dist > 60) { const k = (now % 3200) / 3200, r = 250 * (1 - k); x.strokeStyle = "rgba(79,243,255," + .5 * Math.sin(k * Math.PI) + ")"; x.lineWidth = 2; path(ringPts(T, Math.max(r, 20))); x.stroke(); }
+  }
+  if (beam) {                                    // heading beam: a faint cone on the ground in the direction you face
+    const h = rad(heading), tip = [], me = { lat: pos.lat, lng: pos.lng }, L = 85;
+    for (let i = -6; i <= 6; i++) { const a = h + rad(i * 4); tip.push(gp(me, L * Math.sin(a), L * Math.cos(a))); }
+    const m0 = map.project([me.lng, me.lat]), m1 = map.project(gp(me, L * Math.sin(h), L * Math.cos(h)));
+    const g = x.createLinearGradient(m0.x, m0.y, m1.x, m1.y); g.addColorStop(0, "rgba(79,243,255,.34)"); g.addColorStop(1, "rgba(79,243,255,0)");
+    path([[me.lng, me.lat], ...tip]); x.closePath(); x.fillStyle = g; x.fill();
+  }
+  if (trav && crumbs.length > 1) {               // breadcrumb tail: where you actually walked, fading behind you
+    const n = crumbs.length;
+    for (let i = Math.max(1, n - 60); i < n; i++) {
+      const f = (i - (n - 60)) / 60; x.strokeStyle = "rgba(79,243,255," + (Math.max(0, f) ** 1.4 * .85) + ")"; x.lineWidth = 2 + 3 * Math.max(0, f);
+      if (!lite) { x.shadowColor = "#4ff3ff"; x.shadowBlur = 12 * Math.max(0, f); }
+      path([crumbs[i - 1], crumbs[i]]); x.stroke();
+    }
+    x.shadowBlur = 0;
+  }
   if (rPts && rPts.length > 1) {
     path(rPts); x.strokeStyle = "rgba(138,125,255,.55)"; x.lineWidth = 15; if (!lite) { x.shadowColor = "#8a7dff"; x.shadowBlur = 20; } x.stroke(); x.shadowBlur = 0;
     path(rPts); x.strokeStyle = "rgba(0,0,10,.7)"; x.lineWidth = 8; x.stroke();
@@ -794,6 +845,14 @@ function onPos(p) {
   pos = { lat, lng, acc, t };
   if (!hasCompass && p.coords.heading != null && !isNaN(p.coords.heading) && p.coords.speed > 1) { heading = p.coords.heading; }
   if (first) note("");
+  if (!walkLast || hav(walkLast, pos) > 25) {      // remember where you've been (kept on this device)
+    walkLast = { lat: pos.lat, lng: pos.lng }; walk.push([+pos.lng.toFixed(5), +pos.lat.toFixed(5)]);
+    if (walk.length > 1500) walk.splice(0, walk.length - 1500);
+    store.set("tm.walk" + agent, JSON.stringify(walk)); setWalk();
+  }
+  if (active && active.status === "pending" && (!crumbLast || hav(crumbLast, pos) > 4)) {      // the glowing tail behind you
+    crumbLast = { lat: pos.lat, lng: pos.lng }; crumbs.push([pos.lng, pos.lat]); if (crumbs.length > 300) crumbs.shift();
+  }
   if (mapReady) {
     if (!meMk) ensureMe(); else meMk.setLngLat([pos.lng, pos.lat]);
     if (first) establish();
@@ -834,8 +893,10 @@ async function generate(c) {
   if (type !== 1 && mem.length && cnt[best] >= mean) { tx = mem.reduce((s, p) => s + p.x, 0) / mem.length; ty = mem.reduce((s, p) => s + p.y, 0) / mem.length; }
   else { const q = ctr(best); tx = q.x; ty = q.y; }
   const ll = (x, y) => ({ lat: c.lat + y / 111320, lng: c.lng + x / (111320 * Math.cos(rad(c.lat))) });
-  const t = ll(tx, ty);
-  return { type: ["attractor", "void", "anomaly"][type], src, lat: t.lat, lng: t.lng, cell: best, pts: pts.map(p => ({ ...ll(p.x, p.y), c: p.c })), dist: hav(c, t) };
+  const t = ll(tx, ty), hs = cs / 2;
+  const cells = valid.map(k => { const q = ctr(k);       // each search cell as a ground square, for the density heat shown after the spin
+    return { k, n: cnt[k], poly: [[q.x - hs, q.y - hs], [q.x + hs, q.y - hs], [q.x + hs, q.y + hs], [q.x - hs, q.y + hs]].map(([a, b]) => { const p = ll(a, b); return [p.lng, p.lat]; }) }; });
+  return { type: ["attractor", "void", "anomaly"][type], src, lat: t.lat, lng: t.lng, cell: best, cells, max: Math.max(1, ...cnt), pts: pts.map(p => ({ ...ll(p.x, p.y), c: p.c })), dist: hav(c, t) };
 }
 function playSpin(g) {
   return new Promise(res => {
@@ -845,7 +906,7 @@ function playSpin(g) {
     const T = map.project([g.lng, g.lat]), t0 = performance.now(); let locked = false, dived = false;
     const C = map.project([g.from.lng, g.from.lat]), E = map.project([g.from.lng + 1000 / (111320 * Math.cos(rad(g.from.lat))), g.from.lat]), rpx = Math.abs(E.x - C.x);
     const f = now => {
-      const t = now - t0; x.clearRect(0, 0, cv.width, cv.height); x.fillStyle = "#fff"; x.strokeStyle = "#4ff3ff";
+      const t = Math.max(0, now - t0); x.clearRect(0, 0, cv.width, cv.height); x.fillStyle = "#fff"; x.strokeStyle = "#4ff3ff";   // the frame clock can start slightly behind t0
       if (t < 1000) {                            // the search circle opens around you, then fades as the points arrive
         x.globalAlpha = Math.max(0, 1 - (t - 500) / 500); x.lineWidth = 1.4; x.beginPath(); x.arc(C.x, C.y, rpx * Math.min(1, t / 500), 0, 7); x.stroke(); x.globalAlpha = 1;
       }
@@ -882,6 +943,7 @@ async function runSpin(text) {                   // the intention is set; only n
   const data = { uid, agent, seq: n, rid, type: g.type, src: g.src, lat: g.lat, lng: g.lng, fromLat: c.lat, fromLng: c.lng,
     intention: text, blind: { text: "", img: "" }, level: 0, status: "pending", verdict: 0, found: "", photo: "", at: serverTimestamp() };
   rt = null; lastFetch = 0; shownD = null; near100 = null; nearSince = 0;
+  heat = { cells: g.cells, best: g.cell, max: g.max, t0: Date.now() };       // why the machine chose that spot
   setDoc(doc(db, "reports", rid), data).catch(() => note("sync ✕"));
   follow = false; overview(900, g); sfx.trace(); scanSweep();
   setTimeout(() => { if (active && active.rid === rid && document.body.dataset.st === "travel") follow = true; }, 2800);   // then the camera swoops in behind you
@@ -1061,7 +1123,7 @@ function route() {
   if (!arr) $("rep").dataset.r = "";
   const rid = active ? active.rid : null;
   if (rid !== lastRid) {
-    lastRid = rid; arriving = null; shownD = null; near100 = null; nearSince = 0; setTarget();
+    lastRid = rid; arriving = null; shownD = null; near100 = null; nearSince = 0; crumbs = []; crumbLast = null; setTarget();
     if (pend && pos && mapReady && follow) { follow = false; overview(700); setTimeout(() => { if (active && active.status === "pending") follow = true; }, 2400); }
   }
   if (pend) { fetchRoute(); drawRoute(); updateTravel(); }
@@ -1185,6 +1247,7 @@ function boot(user) {
   uid = user.uid; agent = user.displayName || pendingId || store.get("tm.id") || "";
   if (!/^\d{4}$/.test(agent)) { signOut(auth); return; }
   store.set("tm.id", agent);
+  try { walk = JSON.parse(store.get("tm.walk" + agent) || "[]"); if (!Array.isArray(walk)) walk = []; } catch { walk = []; }
   $("open").classList.add("out");
   setTimeout(() => {
     $("open").hidden = true; $("open").classList.remove("out"); $("app").hidden = false; $("mid").textContent = agent + " · 1";
