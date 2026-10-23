@@ -1,286 +1,202 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>terminal</title>
-<meta name="theme-color" content="#05070a">
-<meta name="color-scheme" content="dark">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="terminal">
+<title>terminal</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="preload" href="DotsiesRect.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
 @font-face{font-family:"Dotsies";src:url("DotsiesRect.ttf") format("truetype");font-display:swap}
-@property --a{syntax:"<angle>";inherits:false;initial-value:0deg}
-:root{
-  --bg:#05070a; --panel:rgba(11,15,21,.72); --line:rgba(110,190,255,.14); --fg:#e6f4ff; --dim:#6b7f90;
-  --accent:#49e6ff; --glow:rgba(73,230,255,.35); --fs:28px; --r:12px;
-  --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
-  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-}
+:root{--k:#000;--w:#fff;--g:#777;--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
-  font-family:"Dotsies",var(--mono);font-size:22px;line-height:1.4}
-button,input,textarea{font:inherit;color:inherit;background:none;border:0;outline:0}
-button{cursor:pointer}
-::selection{background:var(--accent);color:#000}
-:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+html,body{height:100%;background:var(--k);color:var(--w);overflow:hidden;overscroll-behavior:none;
+  font:14px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;text-transform:lowercase}
+html[data-dots="1"] body{font-family:"Dotsies",ui-monospace,monospace}
+button,input,textarea{font:inherit;color:inherit;background:none;border:0;outline:0;border-radius:0;text-transform:inherit}
+button{cursor:pointer;border:1px solid var(--w);user-select:none;-webkit-user-select:none}
+button:active,button.on{background:var(--w);color:var(--k)}
+:focus-visible{outline:1px solid var(--w);outline-offset:2px}
 [hidden]{display:none!important}
+.o{width:44px;height:44px;border-radius:50%;font-size:20px;line-height:1;display:grid;place-items:center}
+.o.xl{width:80px;height:80px;font-size:34px;border-width:2px}
+.g{color:var(--g)}
 
-/* ambient layers */
-#fx{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
-.grid{position:fixed;inset:-50%;z-index:0;pointer-events:none;opacity:.5;
-  background:linear-gradient(var(--line) 1px,transparent 1px) 0 0/48px 48px,linear-gradient(90deg,var(--line) 1px,transparent 1px) 0 0/48px 48px;
-  -webkit-mask:radial-gradient(closest-side,#000 10%,transparent 70%);mask:radial-gradient(closest-side,#000 10%,transparent 70%);
-  animation:pan 40s linear infinite}
-@keyframes pan{to{transform:translate(48px,48px)}}
-.glow{position:fixed;z-index:0;pointer-events:none;width:60vmax;height:60vmax;left:50%;top:-20vmax;transform:translateX(-50%);
-  background:radial-gradient(circle,var(--glow),transparent 60%);opacity:.22;animation:breathe 7s ease-in-out infinite}
-@keyframes breathe{50%{opacity:.4;transform:translateX(-50%) scale(1.08)}}
-.scan{position:fixed;inset:0;z-index:50;pointer-events:none;mix-blend-mode:overlay;opacity:.5;
-  background:repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 3px)}
-.scan::after{content:"";position:absolute;left:0;right:0;height:18vh;top:-18vh;
-  background:linear-gradient(transparent,rgba(73,230,255,.07),transparent);animation:sweep 6.5s linear infinite}
-@keyframes sweep{to{top:100%}}
+/* map */
+#map{position:fixed;inset:0;background:var(--k);animation:wipe .6s steps(8) both}
+@keyframes wipe{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0)}}
+.leaflet-tile-pane{filter:grayscale(1) contrast(2.2) brightness(1.5)}
+.leaflet-container{background:var(--k);font:inherit}
+.leaflet-control-attribution{background:rgba(0,0,0,.7)!important;color:var(--g)!important;font-size:9px}
+.leaflet-control-attribution a{color:var(--g)!important}
+#grid{position:fixed;inset:0;z-index:400;pointer-events:none;opacity:.07;
+  background:linear-gradient(var(--w) 1px,transparent 1px) 0 0/48px 48px,linear-gradient(90deg,var(--w) 1px,transparent 1px) 0 0/48px 48px;
+  animation:gridin .9s steps(10) both}
+@keyframes gridin{from{clip-path:circle(0 at 50% 50%)}to{clip-path:circle(150% at 50% 50%)}}
+#fx{position:fixed;inset:0;z-index:600;pointer-events:none}
+#flash{position:fixed;inset:0;z-index:900;background:var(--w);pointer-events:none}
 
-/* forming letters (shared) */
-.l{display:inline-block}
-.anim .l{animation:form .7s cubic-bezier(.2,.9,.3,1.25) both;animation-delay:var(--d)}
-@keyframes form{from{opacity:0;transform:translate(var(--x),var(--y)) scale(.15);filter:blur(3px)}60%{opacity:1}to{opacity:1;transform:none;filter:none}}
+/* markers */
+.mkw{background:none!important;border:0!important}
+.mk{display:block;width:24px;height:24px;margin:-12px 0 0 -12px;font-size:20px;line-height:24px;text-align:center;font-weight:400;text-shadow:0 0 3px #000,0 0 3px #000}
+.mk.o2{opacity:.65}
+.mk.drop{animation:drop .5s steps(5) both}
+@keyframes drop{from{transform:translateY(-30px);opacity:0}to{transform:none;opacity:1}}
+.me i,.tgm i{position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-radius:50%;background:var(--w)}
+.me b,.tgm b{position:absolute;left:-14px;top:-14px;width:28px;height:28px;border:1px solid var(--w);border-radius:50%;animation:pulse 2s steps(5) infinite}
+.tgm i{background:none;border:1px solid var(--w);width:14px;height:14px;left:-7px;top:-7px}
+@keyframes pulse{from{transform:scale(.4);opacity:1}to{transform:scale(1.5);opacity:0}}
+.seg-new{animation:flick .9s steps(1) 1}
+@keyframes flick{0%,40%,80%{opacity:0}20%,60%,100%{opacity:1}}
 
-/* auth */
-#auth{position:relative;z-index:1;height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;padding:24px;text-align:center}
-#word{font-size:clamp(56px,14vw,104px);line-height:1;display:flex;align-items:center;justify-content:center;animation:glitch 7s infinite 3s}
-#word .caret{margin-left:.12em}
-.caret{display:inline-block;width:.42em;height:.9em;background:var(--accent);box-shadow:0 0 18px var(--accent);animation:blink 1s steps(1) infinite}
+/* open */
+#open{position:fixed;inset:0;z-index:800;background:var(--k);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:36px}
+#boxes{display:flex;gap:12px;position:relative}
+#boxes i{width:52px;height:72px;border:1px solid var(--w);display:grid;place-items:center;font-style:normal;font-size:40px}
+#boxes i.cur::after{content:"_";animation:blink 1s steps(1) infinite}
+#boxes.busy i{animation:blink .4s steps(1) infinite}
+#boxes.inv i{background:var(--w);color:var(--k)}
+#boxes.shake{animation:shake .3s steps(3)}
 @keyframes blink{50%{opacity:0}}
-@keyframes glitch{0%,92%,100%{transform:none;text-shadow:none}93%{transform:translate(-3px,1px);text-shadow:3px 0 #ff3d7f,-3px 0 var(--accent)}95%{transform:translate(3px,-1px);text-shadow:-3px 0 #ff3d7f,3px 0 var(--accent)}97%{transform:none}}
-.boot{color:var(--dim);font-size:18px;min-height:1.4em}
-.fadein{animation:fadeup .8s cubic-bezier(.2,.8,.2,1) both;animation-delay:var(--d,0s)}
-@keyframes fadeup{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-.card{position:relative;display:flex;flex-direction:column;align-items:center;gap:16px;width:min(380px,100%);padding:22px;border-radius:16px;background:var(--panel);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
-.card::before,.panel::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;pointer-events:none;
-  background:conic-gradient(from var(--a),rgba(110,190,255,.12) 0 55%,var(--accent) 80%,rgba(110,190,255,.12));
-  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;
-  animation:spin 7s linear infinite}
-@keyframes spin{to{--a:360deg}}
-#code{width:100%;text-align:center;padding:14px 10px;border:1px solid var(--line);border-radius:var(--r);background:rgba(0,0,0,.35);
-  font:600 20px var(--mono);letter-spacing:.18em;text-transform:uppercase;transition:border-color .2s,box-shadow .2s}
-#code:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow)}
-#code::placeholder{color:var(--dim);letter-spacing:.18em}
-.row{display:flex;gap:10px;width:100%}
-.btn{position:relative;flex:1;overflow:hidden;padding:13px 16px;border:1px solid var(--line);border-radius:var(--r);font-size:24px;color:var(--fg);background:rgba(255,255,255,.02);transition:border-color .2s,box-shadow .2s,transform .1s}
-.btn::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.18) 50%,transparent 65%);transform:translateX(-120%);transition:transform .6s}
-.btn:hover,.btn:focus-visible{border-color:var(--accent);box-shadow:0 0 22px var(--glow)}
-.btn:hover::after{transform:translateX(120%)}
-.btn:active{transform:scale(.97)}
-.btn.pri{background:var(--accent);color:#001318;border-color:var(--accent)}
-.plain{font:12px/1.5 var(--mono);color:var(--dim);max-width:340px}
-#err{font:12px/1.4 var(--mono);color:#ff7a90;max-width:340px;min-height:1.4em}
-.shake{animation:shake .4s}
-@keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
-#codebox{width:100%;padding:16px 8px;border:1px dashed var(--accent);border-radius:var(--r);font:700 24px var(--mono);letter-spacing:.14em;color:var(--accent);text-shadow:0 0 14px var(--glow);user-select:all;word-break:break-all}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+#idin{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;text-align:center;caret-color:transparent}
+#oerr{min-height:1.4em;color:var(--g)}
 
-/* main */
-#main{position:relative;z-index:1;height:100dvh;display:grid;grid-template-rows:auto 1fr}
-#hud{display:flex;align-items:center;gap:14px;padding:calc(10px + var(--sat)) 16px 6px}
-#brand{font-size:30px;display:flex;align-items:center;line-height:1}
-#brand .caret{width:.38em;height:.8em;margin-left:.15em}
-#hud .sp{flex:1}
-#clock,#aid{color:var(--dim);font-size:20px}
-#net{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:breathe2 2.4s ease-in-out infinite}
-#net.off{background:#ff5d5d;box-shadow:0 0 10px #ff5d5d}
-@keyframes breathe2{50%{opacity:.4}}
-#body{min-height:0;display:grid;grid-template-columns:minmax(260px,320px) 1fr;gap:12px;padding:6px 12px calc(12px + var(--sab))}
-.panel{position:relative;display:flex;flex-direction:column;min-height:0;min-width:0;border-radius:16px;background:var(--panel);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);animation:rise .8s cubic-bezier(.2,.8,.2,1) both}
-.panel>*{position:relative}
-#edit{animation-delay:.12s}
-.panel::before{opacity:.55;transition:opacity .3s}
-#edit:focus-within::before{opacity:1}
-@keyframes rise{from{opacity:0;transform:translateY(22px) scale(.98)}to{opacity:1;transform:none}}
-.bar{display:flex;align-items:center;gap:6px;padding:10px;border-bottom:1px solid var(--line);flex:none}
-#q{flex:1;min-width:0;padding:8px 12px;border:1px solid var(--line);border-radius:var(--r);font-size:22px;background:rgba(0,0,0,.25);transition:border-color .2s,box-shadow .2s}
-#q:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow)}
-#q::placeholder{color:var(--dim)}
-.ib{width:40px;height:40px;flex:none;display:grid;place-items:center;border-radius:var(--r);color:var(--dim);transition:color .15s,background .15s,box-shadow .2s,transform .1s}
-.ib:hover,.ib:focus-visible{color:var(--accent);background:rgba(73,230,255,.08);box-shadow:0 0 16px var(--glow)}
-.ib:active{transform:scale(.88)}
-.ib.on{color:var(--accent)}
-.ib.arm{background:var(--accent);color:#001318;box-shadow:0 0 18px var(--glow)}
-.ib svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.ib.on svg.fillable{fill:currentColor}
-#list{flex:1;min-height:0;overflow-y:auto;list-style:none;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
-#list li{position:relative;display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--line);cursor:pointer;overflow:hidden;transition:background .2s}
-#list li::before{content:"";position:absolute;left:0;top:50%;width:3px;height:0;background:var(--accent);box-shadow:0 0 12px var(--accent);transform:translateY(-50%);transition:height .25s}
-#list li:hover{background:rgba(73,230,255,.05)}
-#list li.sel{background:rgba(73,230,255,.09)}
-#list li.sel::before{height:70%}
-#list li.fresh{animation:slidein .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--n,0)*35ms)}
-@keyframes slidein{from{opacity:0;transform:translateX(-26px)}to{opacity:1;transform:none}}
-#list .t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;font-size:22px}
-#list .d{flex:none;color:var(--dim);font-size:16px}
-#list .pin{flex:none;width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
-#empty{padding:24px 14px;color:var(--dim);font-size:20px}
-.foot{display:flex;align-items:center;gap:6px;padding:8px 10px;border-top:1px solid var(--line);flex:none}
-.foot input[type=range]{flex:1;min-width:0;accent-color:var(--accent);height:24px}
-.foot .ib{width:34px;height:34px}
-#cnt{color:var(--dim);font-size:16px;min-width:2ch;text-align:right}
+/* top */
+#top{position:fixed;top:0;left:0;right:0;z-index:700;background:var(--k);border-bottom:1px solid var(--w);
+  padding:calc(var(--sat) + 8px) 12px 8px;display:flex;align-items:center;gap:8px}
+#top .sp{flex:1}
+#me{font-size:20px;letter-spacing:.08em}
+#rk{text-transform:none;font-size:18px;min-width:2.2em;text-align:center;border:1px solid var(--w);padding:0 6px}
+#rk.flick{animation:inv .9s steps(1) 1}
+@keyframes inv{0%,34%,67%{background:var(--w);color:var(--k)}17%,50%,84%,100%{background:none;color:var(--w)}}
+#line{position:fixed;top:calc(var(--sat) + 62px);left:12px;right:12px;z-index:650;pointer-events:none;color:var(--w);text-shadow:0 0 3px #000,0 0 3px #000}
+#line.dim{color:var(--g)}
 
-#edit .bar{border-bottom:1px solid var(--line)}
-#back{display:none}
-#sp{flex:1}
-#sync{position:relative;width:10px;height:10px;border-radius:50%;border:2px solid var(--accent);margin:0 8px;flex:none}
-#sync.ok{background:var(--accent);box-shadow:0 0 10px var(--accent)}
-#sync.ping::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--accent);animation:ping .7s ease-out forwards}
-@keyframes ping{from{opacity:.9;transform:scale(.4)}to{opacity:0;transform:scale(1.8)}}
-#ta{flex:1;min-height:0;width:100%;resize:none;padding:18px 22px;font-size:var(--fs);line-height:1.7;caret-color:var(--accent);overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
-#ta::placeholder{color:var(--dim)}
-#none{flex:1;display:grid;place-items:center;color:var(--dim);font-size:26px}
-#edit.wipe #ta,#edit.wipe #rd{animation:wipe .55s cubic-bezier(.3,.8,.2,1) both}
-@keyframes wipe{from{clip-path:inset(0 100% 0 0);opacity:.2}to{clip-path:inset(0);opacity:1}}
+/* dock */
+#dockhome{position:fixed;left:0;right:0;bottom:calc(var(--sab) + 22px);z-index:700;display:flex;align-items:center;justify-content:space-between;padding:0 20px;pointer-events:none}
+#dockhome>*{pointer-events:auto}
+#dockhome .cmp{width:80px;height:80px;background:var(--k);border-radius:50%}
+.cmp svg{width:100%;height:100%;display:block}
+.cmp .tg{display:none}.cmp.has .tg{display:block}
 
-/* read view */
-#rd{flex:1;min-height:0;overflow-y:auto;padding:18px 22px;font-size:var(--fs);line-height:1.9;white-space:pre-wrap;word-break:break-word;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
-#rd .w{cursor:pointer;border-radius:4px;padding:2px 3px;margin:0 -1px;transition:background .15s,color .15s,box-shadow .2s}
-#rd .w:hover{box-shadow:0 0 0 1px var(--dim)}
-#rd .w.g{background:#3ddc84;color:#06140c;box-shadow:0 0 14px rgba(61,220,132,.45)}
-#rd .w.b{background:#4aa3ff;color:#06101c;box-shadow:0 0 14px rgba(74,163,255,.45)}
-#rd .w.y{background:#ffd23f;color:#1a1500;box-shadow:0 0 14px rgba(255,210,63,.4)}
-#rd .w.r{background:#ff5d5d;color:#1c0707;box-shadow:0 0 14px rgba(255,93,93,.45)}
-#rd .w.k{background:#000;color:#000;box-shadow:0 0 0 1px #2c3440}
-#rd .w.k:hover,#rd .w.k:active{color:var(--fg)}
-#rd .w.say{box-shadow:0 0 0 2px var(--accent),0 0 22px var(--accent);background:var(--accent);color:#000}
-#dock{display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 10px;border-top:1px solid var(--line);flex:none}
-#dock button{width:42px;height:42px;border-radius:var(--r);border:2px solid transparent;display:grid;place-items:center;transition:transform .15s,border-color .15s}
-#dock button:hover{transform:translateY(-3px)}
-#dock button i{width:24px;height:24px;border-radius:5px;display:block}
-#dock button.on{border-color:var(--fg)}
-#dock [data-c=g] i{background:#3ddc84}#dock [data-c=b] i{background:#4aa3ff}
-#dock [data-c=y] i{background:#ffd23f}#dock [data-c=r] i{background:#ff5d5d}
-#dock [data-c=k] i{background:#000;border:2px solid var(--dim)}
-#dock [data-c=x] i{background:none;border:2px solid var(--dim);position:relative}
-#dock [data-c=x] i::after{content:"";position:absolute;left:-2px;right:-2px;top:9px;border-top:2px solid var(--dim);transform:rotate(-45deg)}
-#mic.rec{background:var(--accent);color:#001318;animation:pulse 1.2s infinite}
-@keyframes pulse{50%{opacity:.55}}
+/* travel */
+#travel{position:fixed;left:0;right:0;bottom:0;z-index:700;background:var(--k);border-top:1px solid var(--w);
+  padding:16px 20px calc(var(--sab) + 16px);display:flex;align-items:center;justify-content:space-between;gap:12px}
+#dist{font-size:44px;line-height:1}
+#travel .cmp{width:150px;height:150px}
+#travel .cmp .ring{animation:blink var(--bd,2s) steps(1) infinite}
 
-/* lock */
-#lock{position:fixed;inset:0;z-index:40;background:rgba(5,7,10,.94);backdrop-filter:blur(18px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;animation:fadeup .4s both}
-#lock .rings{position:absolute;width:260px;height:260px;border-radius:50%;border:1px solid var(--accent);animation:ring 3s ease-out infinite;opacity:0;pointer-events:none}
-#lock .rings:nth-child(2){animation-delay:1s}#lock .rings:nth-child(3){animation-delay:2s}
-@keyframes ring{from{opacity:.7;transform:scale(.3)}to{opacity:0;transform:scale(2.4)}}
-#lock input{position:relative;width:220px;text-align:center;padding:12px;border:1px solid var(--line);border-radius:var(--r);font-size:30px;letter-spacing:.2em;background:rgba(0,0,0,.4)}
-#lock input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow)}
-#lock p{position:relative;color:var(--dim);font-size:22px}
+/* pad */
+#pad,#rep{position:fixed;inset:0;z-index:750;background:var(--k);display:flex;flex-direction:column;gap:12px;
+  padding:calc(var(--sat) + 14px) 16px calc(var(--sab) + 16px);overflow:auto}
+#tbar{height:2px;background:var(--g);margin:-14px -16px 0}
+#tbar i{display:block;height:100%;width:0;background:var(--w)}
+#tbar.run i{width:100%;transition:width 180s linear}
+.info{display:flex;justify-content:space-between;align-items:baseline;font-size:16px}
+.int{font-size:20px;text-align:center;letter-spacing:.04em;padding:6px 0}
+#cv{width:min(88vw,46vh);height:min(88vw,46vh);align-self:center;border:1px solid var(--w);touch-action:none;cursor:crosshair;background:var(--k)}
+textarea{width:100%;border:1px solid var(--w);padding:10px;resize:none;font-size:16px;min-height:64px}
+textarea::placeholder{color:var(--g)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:auto}
+.row.c{justify-content:center;gap:32px}
+#rep img,#sheet img{max-width:100%;max-height:34vh;display:block;border:1px solid var(--w)}
+#rep img.gray,#sheet img.gray{filter:grayscale(1) contrast(1.1)}
+#rep .pv{display:flex;gap:12px;align-items:flex-start}
+#rep .pv img{width:96px;height:96px;object-fit:cover}
 
-@media (max-width:760px){
-  #body{grid-template-columns:1fr;padding:4px 8px calc(8px + var(--sab))}
-  #side,#edit{grid-area:1/1}
-  body[data-view="list"] #edit{display:none}
-  body[data-view="edit"] #side{display:none}
-  #back{display:grid}
-  #clock,#aid{display:none}
-  #ta,#rd{padding:14px 16px}
-}
-@media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
-  .anim .l{animation:none!important}
-}
+/* sheet */
+#sheet{position:fixed;left:0;right:0;bottom:0;z-index:720;max-height:72vh;overflow:auto;background:var(--k);border-top:1px solid var(--w);
+  padding:58px 16px calc(var(--sab) + 18px);transform:translateY(105%);transition:transform .2s steps(4)}
+#sheet.open{transform:none}
+#sheet .x{position:absolute;right:10px;top:8px}
+#sheet h2{font-size:18px;font-weight:400;margin-bottom:10px}
+#sheet .li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #333;cursor:pointer;width:100%;border-left:0;border-right:0;border-bottom:0;text-align:left}
+#sheet .li:active{background:var(--w);color:var(--k)}
+#sheet .bl{display:flex;flex-direction:column;gap:10px}
+#sheet .rt{display:flex;gap:12px;align-items:center}
+#sheet p{white-space:pre-wrap;word-break:break-word}
+#sheet .st{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid #333}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
-<body data-view="list">
-<canvas id="fx" aria-hidden="true"></canvas>
-<div class="grid" aria-hidden="true"></div>
-<div class="glow" aria-hidden="true"></div>
-<div class="scan" aria-hidden="true"></div>
+<body>
+<div id="map"></div>
+<div id="grid" aria-hidden="true"></div>
+<canvas id="fx" hidden aria-hidden="true"></canvas>
+<div id="flash" hidden></div>
 
-<section id="auth" hidden>
-  <h1 id="word" aria-label="terminal"></h1>
-  <p class="boot" id="boot" aria-hidden="true"></p>
-  <div class="card fadein" id="login" style="--d:1.3s">
-    <input id="code" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="14" placeholder="AGENT-CODE" aria-label="Agent code">
-    <div class="row">
-      <button id="enter" class="btn pri" type="button" aria-label="Enter">enter</button>
-      <button id="signup" class="btn" type="button" aria-label="New agent">new agent</button>
-    </div>
-    <p id="err" role="alert"></p>
-  </div>
-  <div class="card" id="reveal" hidden>
-    <div id="codebox"></div>
-    <p class="plain">your agent code. shown once. no recovery. store it now.</p>
-    <div class="row">
-      <button id="copy" class="btn" type="button" aria-label="Copy">copy</button>
-      <button id="stored" class="btn pri" type="button" aria-label="Stored">stored</button>
-    </div>
-  </div>
+<section id="open">
+  <div id="boxes"><i></i><i></i><i></i><i></i><input id="idin" type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" aria-label="ID"></div>
+  <button id="dice" class="o" type="button" aria-label="Random ID">⟳</button>
+  <p id="oerr" role="alert"></p>
 </section>
 
-<div id="main" hidden>
-  <header id="hud">
-    <div id="brand" aria-label="terminal"></div>
+<div id="app" hidden>
+  <header id="top">
+    <span id="me"></span><span id="rk">I</span>
     <span class="sp"></span>
-    <span id="clock"></span>
-    <span id="aid"></span>
-    <span id="net" title="Connection"></span>
+    <button id="bglobal" class="o" type="button" aria-label="All agents">⊕</button>
+    <button id="blist" class="o" type="button" aria-label="Reports">≡</button>
+    <button id="bset" class="o" type="button" aria-label="Settings">⚙</button>
   </header>
-  <div id="body">
-    <aside id="side" class="panel">
-      <div class="bar">
-        <input id="q" type="search" placeholder="search" autocomplete="off" spellcheck="false" aria-label="Search">
-        <button id="new" class="ib" type="button" title="New note (Alt+N)" aria-label="New note"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
-      </div>
-      <ul id="list" role="listbox" aria-label="Notes"></ul>
-      <div id="empty" hidden>no notes</div>
-      <div class="foot">
-        <input id="size" type="range" min="18" max="56" step="1" aria-label="Text size">
-        <span id="cnt">0</span>
-        <button id="exp" class="ib" type="button" title="Export all as .md" aria-label="Export all"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></button>
-        <button id="lockbtn" class="ib" type="button" title="Lock (Alt+L)" aria-label="Lock"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></button>
-        <button id="out" class="ib" type="button" title="Sign out" aria-label="Sign out"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg></button>
-      </div>
-    </aside>
-    <section id="edit" class="panel">
-      <div class="bar" id="ebar" hidden>
-        <button id="back" class="ib" type="button" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-        <span id="sp"></span>
-        <span id="sync" title="Sync status"></span>
-        <button id="mic" class="ib" type="button" title="Dictate" aria-label="Dictate"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
-        <button id="spk" class="ib" type="button" title="Read aloud" aria-label="Read aloud" hidden><svg viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4zM15.500 8.500a5 5 0 0 1 0 7M18.500 5.500a9 9 0 0 1 0 13"/></svg></button>
-        <button id="mode" class="ib" type="button" title="Edit / colour view" aria-label="Toggle view"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
-        <button id="pin" class="ib" type="button" title="Pin" aria-label="Pin"><svg class="fillable" viewBox="0 0 24 24"><path d="M12 17v5M9 3h6l-1 7 3 3v2H7v-2l3-3z"/></svg></button>
-        <button id="del" class="ib" type="button" title="Delete (press twice)" aria-label="Delete"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
-      </div>
-      <textarea id="ta" hidden spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="write" aria-label="Note"></textarea>
-      <div id="rd" hidden tabindex="0" aria-label="Note colour view"></div>
-      <div id="dock" hidden>
-        <button type="button" data-c="g" aria-label="Green"><i></i></button>
-        <button type="button" data-c="b" aria-label="Blue"><i></i></button>
-        <button type="button" data-c="y" aria-label="Yellow"><i></i></button>
-        <button type="button" data-c="r" aria-label="Red"><i></i></button>
-        <button type="button" data-c="k" aria-label="Redact"><i></i></button>
-        <button type="button" data-c="x" aria-label="Erase"><i></i></button>
-      </div>
-      <div id="none">terminal</div>
-    </section>
+  <p id="line" class="dim"></p>
+
+  <div id="dockhome">
+    <button id="brec" class="o" type="button" aria-label="Centre">⌖</button>
+    <button id="bspin" class="o xl" type="button" aria-label="Spin">◎</button>
+    <div class="cmp" id="cmph"></div>
   </div>
+
+  <section id="travel" hidden>
+    <div>
+      <div id="dist">–</div>
+      <div id="ttype" class="g"></div>
+      <button id="babort" class="o" type="button" aria-label="Abort" style="margin-top:14px">✕</button>
+    </div>
+    <div class="cmp" id="cmpt"></div>
+  </section>
+
+  <section id="pad" hidden>
+    <div id="tbar"><i></i></div>
+    <div class="info"><span id="pinfo"></span><span id="psrc" class="g"></span></div>
+    <div class="int">evolution of mankind</div>
+    <canvas id="cv" width="256" height="256"></canvas>
+    <textarea id="btxt" rows="2" maxlength="1000" placeholder="…" spellcheck="false" autocapitalize="off"></textarea>
+    <div class="row">
+      <button id="pcancel" class="o" type="button" aria-label="Cancel">✕</button>
+      <button id="pgo" class="o xl" type="button" aria-label="Go">▶</button>
+    </div>
+  </section>
+
+  <section id="rep" hidden>
+    <div class="info"><span id="rid"></span><span id="rtype"></span></div>
+    <div class="pv"><img id="rblind" alt=""><p id="rbtxt" class="g" style="white-space:pre-wrap"></p></div>
+    <textarea id="found" rows="3" maxlength="2000" placeholder="…" spellcheck="false" autocapitalize="off"></textarea>
+    <div class="pv"><button id="bphoto" class="o" type="button" aria-label="Photo">◫</button><img id="pprev" class="gray" alt="" hidden></div>
+    <input id="pfile" type="file" accept="image/*" capture="environment" hidden>
+    <div class="row c">
+      <button id="bno" class="o xl" type="button" aria-label="Deny">✕</button>
+      <button id="byes" class="o xl" type="button" aria-label="Confirm">✓</button>
+    </div>
+  </section>
+
+  <section id="sheet"><button id="sx" class="o x" type="button" aria-label="Close">✕</button><div id="sbody"></div></section>
 </div>
 
-<div id="lock" hidden>
-  <i class="rings"></i><i class="rings"></i><i class="rings"></i>
-  <p id="lkmsg">enter pin</p>
-  <input id="pinin" type="password" inputmode="numeric" autocomplete="off" aria-label="PIN">
-  <button id="lkout" class="ib" type="button" title="Sign out (clears PIN)" aria-label="Sign out"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg></button>
-</div>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut }
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, setDoc, deleteDoc, onSnapshot }
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc, setDoc, updateDoc, deleteDoc,
+  collection, query, where, limit, onSnapshot, getDocs, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -291,477 +207,487 @@ const firebaseConfig = {
   messagingSenderId: "13022361485",
   appId: "1:13022361485:web:a9cd9dc612c9efd583efc4"
 };
-const COLL = "terminal"; // users/{uid}/terminal/{noteId}
 
 const $ = id => document.getElementById(id);
-const el = { auth:$("auth"), main:$("main"), err:$("err"), q:$("q"), list:$("list"), empty:$("empty"), cnt:$("cnt"),
-  size:$("size"), ta:$("ta"), none:$("none"), ebar:$("ebar"), sync:$("sync"), pin:$("pin"), del:$("del"),
-  rd:$("rd"), dock:$("dock"), mic:$("mic"), spk:$("spk"), mode:$("mode"), edit:$("edit") };
-
 const store = {
   get(k){ try{ return localStorage.getItem(k) }catch{ return null } },
   set(k,v){ try{ localStorage.setItem(k,v) }catch{} }
 };
 const reduced = matchMedia("(prefers-reduced-motion:reduce)").matches;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const pad4 = n => String(n).padStart(4, "0");
+const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
 
-/* ---------- size ---------- */
-const setSize = n => { document.documentElement.style.setProperty("--fs", n + "px"); };
-const savedSize = parseInt(store.get("tm.size"), 10) || 28;
-el.size.value = savedSize; setSize(savedSize);
-el.size.addEventListener("input", () => { setSize(el.size.value); store.set("tm.size", el.size.value); });
+const INTENT = "evolution of mankind";
+const R = 1000, N = 500, G = 12, ARR = 30;
+const TG = { attractor:"◉", void:"◌", anomaly:"◈" };
+const LINES = ["go.","report.","spin.","hold it.","see first.","walk.","the machine is ready.","no maps. no names.","trust the pull.",
+  "confirm or deny.","again.","go now.","intention first.","draw before you move.","night counts.","rain counts.","short or far.",
+  "do not decide.","arrive.","write what is there.","one more.","the point is waiting.","begin.","evolve."];
 
-/* ---------- ambient background ---------- */
-(function () {
-  const c = $("fx"), x = c.getContext("2d"), cell = 24;
-  const accent = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#49e6ff";
-  let cols = [], H = 0, W = 0;
-  const size = () => {
-    W = c.width = innerWidth; H = c.height = innerHeight;
-    cols = Array.from({ length: Math.ceil(W / cell) }, () => ({ y: Math.random() * H / cell, v: .03 + Math.random() * .12, n: 3 + (Math.random() * 9 | 0), on: Math.random() < .3 }));
-  };
-  size(); addEventListener("resize", size);
-  const draw = () => {
-    x.clearRect(0, 0, W, H); x.fillStyle = accent;
-    cols.forEach((col, i) => {
-      if (!col.on) { if (Math.random() < .002) { col.on = true; col.y = -col.n; } return; }
-      for (let k = 0; k < col.n; k++) {
-        x.globalAlpha = (1 - k / col.n) * .17;
-        x.fillRect(i * cell + 8, (col.y - k) * cell + 8, 8, 8);
-      }
-      col.y += col.v;
-      if (col.y - col.n > H / cell) { col.on = Math.random() < .6; col.y = -col.n; col.v = .03 + Math.random() * .12; }
-    });
-    x.globalAlpha = 1;
-  };
-  if (reduced) { draw(); return; }
-  (function loop() { if (!document.hidden) draw(); requestAnimationFrame(loop); })();
-})();
-
-/* ---------- text forming ---------- */
-function forming(node, text, base = 0, step = 60, caret = false) {
-  node.classList.add("anim"); node.replaceChildren();
-  [...text].forEach((ch, i) => {
-    const l = document.createElement("span"); l.className = "l"; l.textContent = ch === " " ? " " : ch;
-    l.style.cssText = "--d:" + ((base + i * step + Math.random() * 120) | 0) + "ms;--x:" + ((Math.random() * 80 - 40) | 0) + "px;--y:" + ((Math.random() * 90 - 60) | 0) + "px";
-    node.appendChild(l);
-  });
-  if (caret) { const c = document.createElement("i"); c.className = "caret"; node.appendChild(c); }
+/* ---------- sound ---------- */
+let AC = null, muted = store.get("tm.mute") === "1";
+const ac = () => { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch {} } if (AC && AC.state === "suspended") AC.resume(); return AC; };
+function tone(f, d = .12, type = "square", g = .05, at = 0, f2) {
+  if (muted) return; const a = ac(); if (!a) return; const t = a.currentTime + at;
+  const o = a.createOscillator(), v = a.createGain(); o.type = type; o.frequency.setValueAtTime(f, t);
+  if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d);
+  v.gain.setValueAtTime(g, t); v.gain.exponentialRampToValueAtTime(.0001, t + d);
+  o.connect(v).connect(a.destination); o.start(t); o.stop(t + d + .02);
 }
+const sfx = {
+  key: () => tone(800, .03, "square", .03),
+  spin: () => tone(110, .8, "sawtooth", .06, 0, 40),
+  lock: () => { tone(1200, .05); tone(600, .08, "square", .05, .06); },
+  arrive: () => { tone(660, .15); tone(990, .28, "square", .05, .16); },
+  ok: () => { tone(520, .1); tone(780, .2, "square", .05, .1); },
+  no: () => { tone(300, .12); tone(160, .28, "square", .05, .12); }
+};
+addEventListener("pointerdown", () => { ac(); startCompass(); }, { once: true });
+
+/* ---------- dots ---------- */
+const setDots = on => { document.documentElement.dataset.dots = on ? "1" : "0"; store.set("tm.dots", on ? "1" : "0"); };
+setDots(store.get("tm.dots") === "1");
 
 /* ---------- firebase ---------- */
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 let db;
-try {
-  db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
-} catch { db = initializeFirestore(app, {}); }
+try { db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
+catch { db = initializeFirestore(app, {}); }
 
-/* ---------- agent code auth ---------- */
-const ALPHA = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+/* ---------- open: 4-digit ID ---------- */
 const hex = async s => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))].map(b => b.toString(16).padStart(2, "0")).join("");
-const clean = s => (s || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
-const newCode = () => {
-  const a = new Uint32Array(12); crypto.getRandomValues(a);
-  const s = [...a].map(v => ALPHA[v % ALPHA.length]).join("");
-  return s.slice(0, 4) + "-" + s.slice(4, 8) + "-" + s.slice(8);
-};
-const creds = async code => {
-  const c = clean(code);
-  return { email: (await hex("id:" + c)).slice(0, 24) + "@terminal.iosci.org", password: await hex("pw:" + c) };
-};
-const showErr = m => { el.err.textContent = m || ""; };
-const shake = () => { const c = $("login"); c.classList.remove("shake"); void c.offsetWidth; c.classList.add("shake"); };
-let revealing = false;
+const creds = async id => ({ email: (await hex("id:" + id)).slice(0, 24) + "@terminal.iosci.org", password: await hex("pw:" + id) });
+const boxes = [...document.querySelectorAll("#boxes i")];
+const idin = $("idin");
+let busy = false, pendingId = null;
 
-const codeIn = $("code");
-codeIn.addEventListener("input", () => {
-  const c = clean(codeIn.value).slice(0, 12);
-  codeIn.value = c.match(/.{1,4}/g)?.join("-") || "";
+const setDigits = s => {
+  boxes.forEach((b, i) => { b.textContent = s[i] || ""; b.classList.toggle("cur", i === s.length && s.length < 4); });
+};
+setDigits("");
+idin.addEventListener("input", () => {
+  const s = idin.value.replace(/\D/g, "").slice(0, 4); idin.value = s; setDigits(s); sfx.key();
+  $("oerr").textContent = "";
+  if (s.length === 4) submit(s);
 });
-codeIn.addEventListener("keydown", e => { if (e.key === "Enter") doEnter(); });
+$("open").addEventListener("pointerdown", e => { if (e.target.id !== "dice") setTimeout(() => idin.focus(), 0); });
 
-async function doEnter() {
-  showErr("");
-  if (clean(codeIn.value).length !== 12) { shake(); showErr("code is 12 characters"); return; }
-  try {
-    const { email, password } = await creds(codeIn.value);
-    await signInWithEmailAndPassword(auth, email, password);
-    codeIn.value = "";
-  } catch (e) { shake(); showErr(authMsg(e)); }
-}
-function authMsg(e) {
-  const c = e && e.code || "";
-  if (["auth/invalid-credential", "auth/user-not-found", "auth/wrong-password", "auth/invalid-email"].includes(c)) return "denied";
-  if (c === "auth/operation-not-allowed") return "email/password sign-in is not enabled in the firebase console";
-  if (c === "auth/network-request-failed") return "no connection";
-  if (c === "auth/too-many-requests") return "too many attempts. wait and retry";
-  return c || (e && e.message) || "error";
-}
-async function doSignup() {
-  showErr(""); revealing = true;
-  for (let t = 0; t < 4; t++) {
-    const code = newCode();
+const errText = e => {
+  const c = (e && e.code) || "";
+  if (c === "auth/network-request-failed") return "no net";
+  if (c === "auth/too-many-requests") return "wait";
+  return "✕";
+};
+async function enter(id) {
+  const { email, password } = await creds(id);
+  pendingId = id;
+  try { await signInWithEmailAndPassword(auth, email, password); }
+  catch (e) {
+    if (!["auth/invalid-credential", "auth/user-not-found", "auth/invalid-login-credentials"].includes(e.code)) throw e;
     try {
-      const { email, password } = await creds(code);
       await createUserWithEmailAndPassword(auth, email, password);
-      $("codebox").textContent = code; $("login").hidden = true; $("reveal").hidden = false;
-      return;
-    } catch (e) {
-      if (e.code === "auth/email-already-in-use") continue;
-      revealing = false; shake(); showErr(authMsg(e)); return;
+      updateProfile(auth.currentUser, { displayName: id }).catch(() => {});
+      setDoc(doc(db, "agents", id), { uid: auth.currentUser.uid, at: serverTimestamp() }).catch(() => {});
+    } catch (e2) {
+      if (e2.code === "auth/email-already-in-use") await signInWithEmailAndPassword(auth, email, password);
+      else throw e2;
     }
   }
-  revealing = false; showErr("could not issue a code. retry");
 }
-$("enter").addEventListener("click", doEnter);
-$("signup").addEventListener("click", doSignup);
-$("copy").addEventListener("click", async () => {
-  try { await navigator.clipboard.writeText($("codebox").textContent); $("copy").textContent = "copied"; } catch { showErr("copy failed. select and copy manually"); }
-});
-$("stored").addEventListener("click", () => {
-  revealing = false; $("reveal").hidden = true; $("login").hidden = false; $("codebox").textContent = "";
-  onUser(auth.currentUser);
-});
-
-const doOut = () => { try { localStorage.removeItem("tm.pin"); } catch {} lockEl.hidden = true; signOut(auth); };
-$("out").addEventListener("click", doOut);
-$("lkout").addEventListener("click", doOut);
-
-function showAuth() {
-  el.main.hidden = true; el.auth.hidden = false;
-  $("login").hidden = false; $("reveal").hidden = true; $("copy").textContent = "copy";
-  forming($("word"), "terminal", 150, 85, true);
-  forming($("boot"), "secure channel open. awaiting agent.", 1000, 26);
+async function submit(id) {
+  if (busy) return; busy = true; $("boxes").classList.add("busy"); idin.blur();
+  try { await enter(id); $("boxes").classList.remove("busy"); $("boxes").classList.add("inv"); sfx.lock(); }
+  catch (e) {
+    busy = false; $("boxes").classList.remove("busy"); $("oerr").textContent = errText(e);
+    const b = $("boxes"); b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake"); sfx.no();
+    idin.value = ""; setDigits("");
+  }
 }
+$("dice").addEventListener("click", async () => {
+  if (busy) return; busy = true; $("oerr").textContent = ""; idin.blur();
+  let id = pad4(rnd(10000));
+  for (let t = 0; t < 8; t++) {
+    id = pad4(rnd(10000));
+    try { if (!(await getDoc(doc(db, "agents", id))).exists()) break; } catch { break; }
+  }
+  const t0 = performance.now();
+  while (performance.now() - t0 < 600) { setDigits(pad4(rnd(10000))); sfx.key(); await sleep(60); }
+  setDigits(id); idin.value = id; sfx.lock(); await sleep(900);
+  busy = false; submit(id);
+});
 
-/* ---------- hud ---------- */
-const pad2 = x => String(x).padStart(2, "0");
-const tick = () => { const d = new Date(); $("clock").textContent = pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + ":" + pad2(d.getSeconds()); };
-setInterval(() => { if (!document.hidden && !el.main.hidden) tick(); }, 1000);
-const netSync = () => $("net").classList.toggle("off", !navigator.onLine);
-addEventListener("online", netSync); addEventListener("offline", netSync); netSync();
+/* ---------- geometry ---------- */
+const rad = d => d * Math.PI / 180;
+function hav(a, b) {
+  const dLa = rad(b.lat - a.lat), dLo = rad(b.lng - a.lng);
+  const h = Math.sin(dLa / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLo / 2) ** 2;
+  return 2 * 6371000 * Math.asin(Math.sqrt(h));
+}
+function brg(a, b) {
+  const y = Math.sin(rad(b.lng - a.lng)) * Math.cos(rad(b.lat));
+  const x = Math.cos(rad(a.lat)) * Math.sin(rad(b.lat)) - Math.sin(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.cos(rad(b.lng - a.lng));
+  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+}
+const fmtD = m => m < 1000 ? Math.round(m) + " m" : (m / 1000).toFixed(1) + " km";
+const fmtT = r => { const t = r.at && r.at.toMillis ? r.at.toMillis() : Date.now();
+  return new Date(t).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }); };
 
 /* ---------- state ---------- */
-let uid = null, unsub = null;
-let notes = new Map();         // id -> {id,text,pinned,updatedAt}
-let curId = null, dirty = false, timer = null, armTimer = null;
-let mode = store.get("tm.mode") === "read" ? "read" : "edit", brush = store.get("tm.brush") || "y";
-const mobile = () => matchMedia("(max-width:760px)").matches;
-const view = v => { document.body.dataset.view = v; };
+let uid = null, agent = "", map = null, pos = null, follow = true, heading = 0, hasCompass = false, compassOn = false;
+let mine = new Map(), active = null, draft = null, spinning = false, arriving = null;
+let showAll = false, allDocs = new Map(), unsubMine = null, unsubAll = null, newRid = null;
+const net = new Map(); // rid -> net rating (own reports, lazy)
+let gMine, gTrail, gAll, meMk = null, tgMk = null;
 
-const colRef = () => collection(db, "users", uid, COLL);
-const docRef = id => doc(db, "users", uid, COLL, id);
-const title = t => (t.split("\n").find(l => l.trim()) || "").trim().slice(0, 80);
-const fmt = ts => {
-  const d = new Date(ts), n = new Date();
-  const p = x => String(x).padStart(2, "0");
-  return d.toDateString() === n.toDateString() ? p(d.getHours()) + ":" + p(d.getMinutes()) : p(d.getDate()) + "/" + p(d.getMonth() + 1);
+const flash = (ms = 100) => { if (reduced) return; const f = $("flash"); f.hidden = false; setTimeout(() => { f.hidden = true; }, ms); };
+const note = (t, dim = true) => { const l = $("line"); l.textContent = t; l.classList.toggle("dim", dim); };
+
+/* ---------- compass ---------- */
+const CMP = '<svg viewBox="-50 -50 100 100"><g class="ring"><circle r="44" fill="none" stroke="#fff" stroke-width="1"/>' +
+  '<path d="M0-44V-33" stroke="#fff" stroke-width="3"/><path d="M0 44V40M44 0H40M-44 0H-40" stroke="#fff" stroke-width="1"/>' +
+  '<g class="tg"><path d="M0-31L7-17H-7Z" fill="#fff"/></g></g><circle r="2" fill="#fff"/></svg>';
+$("cmph").innerHTML = CMP; $("cmpt").innerHTML = CMP;
+function drawCompass() {
+  const tb = active && pos ? brg(pos, active) : null;
+  document.querySelectorAll(".cmp").forEach(c => {
+    c.querySelector(".ring").setAttribute("transform", "rotate(" + (-heading).toFixed(1) + ")");
+    const t = c.querySelector(".tg"); c.classList.toggle("has", tb != null);
+    if (tb != null) t.setAttribute("transform", "rotate(" + tb.toFixed(1) + ")");
+  });
+}
+function oe(e) {
+  let h = null;
+  if (e.webkitCompassHeading != null) h = e.webkitCompassHeading;
+  else if (e.absolute && e.alpha != null) h = 360 - e.alpha;
+  else if (e.type === "deviceorientationabsolute" && e.alpha != null) h = 360 - e.alpha;
+  if (h == null) return; hasCompass = true; heading = h; drawCompass();
+}
+function startCompass() {
+  if (compassOn) return; compassOn = true;
+  const attach = () => { addEventListener("deviceorientationabsolute", oe, true); addEventListener("deviceorientation", oe, true); };
+  if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function")
+    DeviceOrientationEvent.requestPermission().then(r => { if (r === "granted") attach(); }).catch(() => {});
+  else attach();
+}
+
+/* ---------- map ---------- */
+function initMap() {
+  if (map) return;
+  map = L.map("map", { zoomControl: false, zoomSnap: .5, worldCopyJump: true }).setView([51.5, -0.12], 13);
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", { maxNativeZoom: 16, maxZoom: 19, attribution: "Esri · © OpenStreetMap" }).addTo(map);
+  gTrail = L.layerGroup().addTo(map); gMine = L.layerGroup().addTo(map); gAll = L.layerGroup();
+  map.on("dragstart", () => { follow = false; });
+  map.on("click", closeSheet);
+}
+const mkIcon = (r, mineFlag) => {
+  const g = r.status !== "done" ? "○" : r.verdict > 0 ? "●" : "✕";
+  const cls = "mk" + (mineFlag ? "" : " o2") + (r.rid === newRid ? " drop" : "");
+  return L.divIcon({ className: "mkw", html: '<b class="' + cls + '">' + g + "</b>", iconSize: [0, 0] });
 };
-
-function onUser(user) {
-  if (unsub) { unsub(); unsub = null; }
-  notes = new Map(); curId = null; uid = null; seen.clear();
-  if (!user) { showAuth(); return; }
-  uid = user.uid; el.auth.hidden = true; el.main.hidden = false; showErr("");
-  forming($("brand"), "terminal", 200, 70, true);
-  $("aid").textContent = user.uid.slice(0, 6).toLowerCase(); tick();
-  openNote(null);
-  unsub = onSnapshot(colRef(), snap => {
-    snap.docChanges().forEach(ch => {
-      if (ch.type === "removed") notes.delete(ch.doc.id);
-      else notes.set(ch.doc.id, { id: ch.doc.id, ...ch.doc.data() });
-    });
-    el.sync.classList.toggle("ok", !snap.metadata.hasPendingWrites);
-    const cur = notes.get(curId);
-    if (curId && !cur) openNote(null);
-    else if (cur && !dirty && el.ta.value !== cur.text) {
-      const s = el.ta.selectionStart; el.ta.value = cur.text; try { el.ta.setSelectionRange(s, s); } catch {}
-    }
-    if (cur) syncPin(cur);
-    if (cur && mode === "read" && !el.rd.hidden && !dirty) renderRead(false);
-    renderList();
-  }, e => console.error(e));
-  if (!mobile()) view("list");
-}
-onAuthStateChanged(auth, u => { if (revealing) return; onUser(u); });
-const seen = new Set();
-
-/* ---------- list ---------- */
-function visible() {
-  const q = el.q.value.trim().toLowerCase();
-  return [...notes.values()]
-    .filter(n => !q || (n.text || "").toLowerCase().includes(q))
-    .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || (b.updatedAt || 0) - (a.updatedAt || 0));
-}
-function renderList() {
-  const items = visible();
-  el.cnt.textContent = notes.size;
-  el.empty.hidden = items.length > 0;
-  const frag = document.createDocumentFragment();
-  let fresh = 0;
-  for (const n of items) {
-    const li = document.createElement("li");
-    li.dataset.id = n.id; li.setAttribute("role", "option");
-    if (!seen.has(n.id)) { seen.add(n.id); li.classList.add("fresh"); li.style.setProperty("--n", Math.min(fresh++, 12)); }
-    if (n.id === curId) { li.classList.add("sel"); li.setAttribute("aria-selected", "true"); }
-    if (n.pinned) { const p = document.createElement("span"); p.className = "pin"; li.appendChild(p); }
-    const t = document.createElement("span"); t.className = "t"; t.textContent = title(n.text || "") || "…"; li.appendChild(t);
-    const d = document.createElement("span"); d.className = "d"; d.textContent = fmt(n.updatedAt || Date.now()); li.appendChild(d);
-    frag.appendChild(li);
+function drawMine() {
+  if (!map) return;
+  gMine.clearLayers(); gTrail.clearLayers();
+  const arr = [...mine.values()].sort((a, b) => a.seq - b.seq), done = arr.filter(r => r.status === "done");
+  for (let i = 1; i < done.length; i++) {
+    const last = i === done.length - 1 && done[i].rid === newRid;
+    L.polyline([[done[i - 1].lat, done[i - 1].lng], [done[i].lat, done[i].lng]],
+      { color: "#fff", weight: 1, dashArray: "3 7", opacity: .9, className: last ? "seg-new" : "" }).addTo(gTrail);
   }
-  el.list.replaceChildren(frag);
+  arr.forEach(r => L.marker([r.lat, r.lng], { icon: mkIcon(r, true) }).on("click", () => openReport(r)).addTo(gMine));
+  newRid = null;
 }
-el.list.addEventListener("click", e => {
-  const li = e.target.closest("li"); if (li) openNote(li.dataset.id);
-});
-el.q.addEventListener("input", renderList);
-
-/* ---------- editor ---------- */
-async function flush() {
-  clearTimeout(timer); timer = null;
-  if (!dirty || !curId) return;
-  dirty = false;
-  const n = notes.get(curId); if (!n) return;
-  n.text = el.ta.value; n.updatedAt = Date.now();
-  el.sync.classList.remove("ok");
-  try { await setDoc(docRef(curId), { text: n.text, pinned: !!n.pinned, marks: n.marks || [], updatedAt: n.updatedAt }, { merge: true }); }
-  catch (e) { console.error(e); }
+function drawAll() {
+  if (!map) return; gAll.clearLayers();
+  [...allDocs.values()].filter(r => r.uid !== uid).forEach(r =>
+    L.marker([r.lat, r.lng], { icon: mkIcon(r, false) }).on("click", () => openReport(r)).addTo(gAll));
 }
-async function dropIfEmpty() {
-  const n = notes.get(curId);
-  if (n && !(el.ta.value || "").trim()) { notes.delete(curId); try { await deleteDoc(docRef(curId)); } catch {} }
+function setTarget() {
+  if (tgMk) { map.removeLayer(tgMk); tgMk = null; }
+  if (active) tgMk = L.marker([active.lat, active.lng], { icon: L.divIcon({ className: "mkw", html: '<div class="tgm"><i></i><b></b></div>', iconSize: [0, 0] }), interactive: false }).addTo(map);
 }
-async function openNote(id) {
-  await flush();
-  if (curId && curId !== id) await dropIfEmpty();
-  curId = id; disarm(); stopSpeech(); stopMic();
-  const n = id && notes.get(id);
-  el.ebar.hidden = !n; el.none.hidden = !!n;
-  if (n) { el.ta.value = n.text || ""; syncPin(n); view("edit"); if (!n.text) mode = "edit"; applyMode(true); if (!el.ta.hidden && (!mobile() || !n.text)) el.ta.focus(); }
-  else { el.ta.hidden = el.rd.hidden = el.dock.hidden = true; rdSig = ""; view("list"); }
-  renderList();
+
+/* ---------- location ---------- */
+function startGeo() {
+  if (!navigator.geolocation) { note("location off"); return; }
+  navigator.geolocation.watchPosition(onPos, () => note("location off"), { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 });
 }
-function syncPin(n) { el.pin.classList.toggle("on", !!n.pinned); }
-
-el.ta.addEventListener("input", () => {
-  dirty = true; const n = notes.get(curId);
-  if (n) { n.text = el.ta.value; n.updatedAt = Date.now(); }
-  el.sync.classList.remove("ok", "ping"); void el.sync.offsetWidth; el.sync.classList.add("ping");
-  clearTimeout(timer); timer = setTimeout(flush, 500);
-  renderList();
-});
-window.addEventListener("pagehide", flush);
-document.addEventListener("visibilitychange", () => { if (document.hidden) flush(); });
-
-async function newNote() {
-  await flush(); if (curId) await dropIfEmpty();
-  const ref = doc(colRef());
-  const n = { id: ref.id, text: "", pinned: false, updatedAt: Date.now() };
-  notes.set(n.id, n);
-  setDoc(ref, { text: "", pinned: false, updatedAt: n.updatedAt }).catch(console.error);
-  el.q.value = ""; curId = null;
-  await openNote(n.id); el.ta.focus();
+function onPos(p) {
+  const first = !pos;
+  pos = { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy };
+  if (!hasCompass && p.coords.heading != null && !isNaN(p.coords.heading) && p.coords.speed > 1) { heading = p.coords.heading; }
+  if (!meMk) meMk = L.marker([pos.lat, pos.lng], { icon: L.divIcon({ className: "mkw me", html: "<b></b><i></i>", iconSize: [0, 0] }), interactive: false, zIndexOffset: 1000 }).addTo(map);
+  else meMk.setLatLng([pos.lat, pos.lng]);
+  if (first) { map.setView([pos.lat, pos.lng], 16, { animate: false }); if ($("line").textContent === "location off") note(""); }
+  else if (follow && !spinning) map.panTo([pos.lat, pos.lng], { animate: true, duration: .4 });
+  updateTravel(); drawCompass();
 }
-$("new").addEventListener("click", newNote);
-$("back").addEventListener("click", () => openNote(null));
+$("brec").addEventListener("click", () => { follow = true; if (pos) map.flyTo([pos.lat, pos.lng], Math.max(map.getZoom(), 15), { duration: .5 }); });
 
-el.pin.addEventListener("click", async () => {
-  const n = notes.get(curId); if (!n) return;
-  n.pinned = !n.pinned; syncPin(n); renderList();
-  try { await setDoc(docRef(n.id), { pinned: n.pinned }, { merge: true }); } catch (e) { console.error(e); }
-});
-
-function disarm() { clearTimeout(armTimer); el.del.classList.remove("arm"); }
-el.del.addEventListener("click", async () => {
-  if (!el.del.classList.contains("arm")) { el.del.classList.add("arm"); armTimer = setTimeout(disarm, 2500); return; }
-  disarm();
-  const id = curId; if (!id) return;
-  dirty = false; clearTimeout(timer); notes.delete(id); curId = null;
-  await openNote(null);
-  try { await deleteDoc(docRef(id)); } catch (e) { console.error(e); }
-});
-
-/* ---------- colour view, animation, speech, dictation ---------- */
-const WORD = /\S+/g;
-const wordsOf = t => [...t.matchAll(WORD)].map(m => ({ w: m[0], at: m.index }));
-let rdSig = "";
-const sigOf = n => (n.text || "") + "\u0000" + JSON.stringify(n.marks || []);
-
-function reanchor(n) {
-  if (!n.marks || !n.marks.length) return false;
-  const toks = wordsOf(n.text || "").map(x => x.w), used = new Set(), out = [];
-  let changed = false;
-  for (const m of n.marks) {
-    let j = -1;
-    if (toks[m.i] === m.w && !used.has(m.i)) j = m.i;
-    else for (let d = 1; d <= 12 && j < 0; d++) for (const k of [m.i - d, m.i + d])
-      if (k >= 0 && toks[k] === m.w && !used.has(k)) { j = k; break; }
-    if (j < 0) { changed = true; continue; }
-    if (j !== m.i) changed = true;
-    used.add(j); out.push({ i: j, w: m.w, c: m.c });
+/* ---------- spin (randonautica method) ---------- */
+async function rand16(n) {
+  const a = new Uint16Array(n); crypto.getRandomValues(a);
+  return { arr: a, src: "L" };
+}
+async function generate(c) {
+  const { arr, src } = await rand16(2 * N + 2);
+  const pts = []; const cnt = new Array(G * G).fill(0);
+  const cs = 2 * R / G, cell = (x, y) => Math.min(G - 1, Math.floor((x + R) / (2 * R) * G)) + Math.min(G - 1, Math.floor((y + R) / (2 * R) * G)) * G;
+  for (let i = 0; i < N; i++) {
+    const r = R * Math.sqrt(arr[2 * i] / 65536), th = 2 * Math.PI * arr[2 * i + 1] / 65536;
+    const x = r * Math.cos(th), y = r * Math.sin(th), k = cell(x, y); cnt[k]++;
+    pts.push({ x, y, c: k });
   }
-  if (changed) n.marks = out;
-  return changed;
+  const mean = N * cs * cs / (Math.PI * R * R);
+  const valid = []; const ctr = k => ({ x: ((k % G) + .5) * cs - R, y: (Math.floor(k / G) + .5) * cs - R });
+  for (let k = 0; k < G * G; k++) { const q = ctr(k); if (Math.hypot(q.x, q.y) <= R) valid.push(k); }
+  const type = arr[2 * N] % 3, jit = () => rnd(1000) / 1e6;
+  const score = k => type === 0 ? cnt[k] : type === 1 ? -cnt[k] : Math.abs((cnt[k] - mean) / Math.sqrt(mean));
+  let best = valid[0], bs = -Infinity;
+  valid.forEach(k => { const s = score(k) + jit(); if (s > bs) { bs = s; best = k; } });
+  const mem = pts.filter(p => p.c === best); let tx, ty;
+  if (type !== 1 && mem.length && cnt[best] >= mean) { tx = mem.reduce((s, p) => s + p.x, 0) / mem.length; ty = mem.reduce((s, p) => s + p.y, 0) / mem.length; }
+  else { const q = ctr(best); tx = q.x; ty = q.y; }
+  const ll = (x, y) => ({ lat: c.lat + y / 111320, lng: c.lng + x / (111320 * Math.cos(rad(c.lat))) });
+  const t = ll(tx, ty);
+  return { type: ["attractor", "void", "anomaly"][type], src, lat: t.lat, lng: t.lng, cell: best, pts: pts.map(p => ({ ...ll(p.x, p.y), c: p.c })), dist: hav(c, t) };
 }
-
-function renderRead(animate) {
-  const n = notes.get(curId); if (!n) return;
-  const sig = sigOf(n);
-  if (!animate && sig === rdSig) return;
-  rdSig = sig;
-  const text = n.text || "", top = el.rd.scrollTop;
-  const mk = new Map((n.marks || []).map(m => [m.i, m.c]));
-  const fast = !animate || text.length > 2500 || reduced;
-  el.rd.classList.toggle("anim", !fast);
-  const frag = document.createDocumentFragment();
-  let last = 0, i = 0;
-  for (const m of text.matchAll(WORD)) {
-    if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
-    const s = document.createElement("span");
-    s.className = "w" + (mk.has(i) ? " " + mk.get(i) : ""); s.dataset.i = i;
-    if (fast) s.textContent = m[0];
-    else {
-      const base = Math.min(i * 22, 1400);
-      for (const ch of m[0]) {
-        const l = document.createElement("span"); l.className = "l"; l.textContent = ch;
-        l.style.cssText = "--d:" + ((base + Math.random() * 180) | 0) + "ms;--x:" + ((Math.random() * 80 - 40) | 0) + "px;--y:" + ((Math.random() * 80 - 60) | 0) + "px";
-        s.appendChild(l);
+function playSpin(g) {
+  return new Promise(res => {
+    if (reduced) { res(); return; }
+    const cv = $("fx"), x = cv.getContext("2d"); cv.width = innerWidth; cv.height = innerHeight; cv.hidden = false;
+    const P = g.pts.map(p => { const q = map.latLngToContainerPoint([p.lat, p.lng]); return { x: q.x, y: q.y, keep: p.c === g.cell }; });
+    const T = map.latLngToContainerPoint([g.lat, g.lng]), t0 = performance.now(); let locked = false;
+    const f = now => {
+      const t = now - t0; x.clearRect(0, 0, cv.width, cv.height); x.fillStyle = "#fff"; x.strokeStyle = "#fff";
+      const show = Math.min(P.length, Math.floor(t / 350 * P.length));
+      for (let i = 0; i < show; i++) {
+        const p = P[i]; let px = p.x, py = p.y;
+        if (t > 900) {
+          if (!p.keep) { if (t > 1400 || Math.random() < (t - 900) / 500) continue; }
+          else { const k = Math.min(1, Math.max(0, (t - 1300) / 500)); px = p.x + (T.x - p.x) * k; py = p.y + (T.y - p.y) * k; }
+        }
+        x.fillRect(px - 1, py - 1, 2, 2);
       }
-    }
-    frag.appendChild(s);
-    last = m.index + m[0].length; i++;
+      if (t > 1800) {
+        if (!locked) { locked = true; sfx.lock(); }
+        x.lineWidth = 1; x.beginPath(); x.arc(T.x, T.y, Math.min(70, (t - 1800) / 400 * 70), 0, 7); x.stroke();
+      }
+      if (t < 2300) requestAnimationFrame(f); else { x.clearRect(0, 0, cv.width, cv.height); cv.hidden = true; res(); }
+    };
+    requestAnimationFrame(f);
+  });
+}
+async function spin() {
+  if (spinning || draft || active) return;
+  if (!pos) { note("location off", false); return; }
+  spinning = true; startCompass(); ac(); sfx.spin(); flash(80);
+  const c = { lat: pos.lat, lng: pos.lng };
+  map.setView([c.lat, c.lng], 14.5, { animate: false });
+  const g = await generate(c); g.from = c;
+  await playSpin(g);
+  draft = g; spinning = false; route();
+}
+$("bspin").addEventListener("click", spin);
+
+/* ---------- blind view pad ---------- */
+const cv = $("cv"), cx = cv.getContext("2d");
+let drawing = false, lx = 0, ly = 0, inked = false;
+const cp = e => { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * 256, y: (e.clientY - r.top) / r.height * 256 }; };
+cv.addEventListener("pointerdown", e => { drawing = true; const p = cp(e); lx = p.x; ly = p.y; cv.setPointerCapture(e.pointerId); cx.fillStyle = "#fff"; cx.fillRect(lx - 1, ly - 1, 2, 2); inked = true; });
+cv.addEventListener("pointermove", e => { if (!drawing) return; const p = cp(e); cx.strokeStyle = "#fff"; cx.lineWidth = 2; cx.lineCap = "round"; cx.beginPath(); cx.moveTo(lx, ly); cx.lineTo(p.x, p.y); cx.stroke(); lx = p.x; ly = p.y; });
+const endDraw = () => { drawing = false; };
+cv.addEventListener("pointerup", endDraw); cv.addEventListener("pointercancel", endDraw);
+function openPad() {
+  cx.fillStyle = "#000"; cx.fillRect(0, 0, 256, 256); inked = false; $("btxt").value = "";
+  $("pinfo").textContent = TG[draft.type] + " " + draft.type + " · " + fmtD(draft.dist); $("psrc").textContent = draft.src;
+  const b = $("tbar"); b.classList.remove("run"); void b.offsetWidth; b.classList.add("run");
+}
+$("pcancel").addEventListener("click", () => { draft = null; sfx.no(); route(); });
+const nextSeq = () => [...mine.values()].reduce((m, r) => Math.max(m, r.seq || 0), 0) + 1;
+$("pgo").addEventListener("click", () => {
+  if (!draft) return; const n = nextSeq(), rid = agent + "-" + pad4(n), d = draft;
+  const data = { uid, agent, seq: n, rid, type: d.type, src: d.src, lat: d.lat, lng: d.lng, fromLat: d.from.lat, fromLng: d.from.lng,
+    intention: INTENT, blind: { text: $("btxt").value.trim().slice(0, 1000), img: inked ? cv.toDataURL("image/png") : "" },
+    status: "pending", verdict: 0, found: "", photo: "", at: serverTimestamp() };
+  draft = null; sfx.lock();
+  setDoc(doc(db, "reports", rid), data).catch(() => note("sync ✕", false));
+  route();
+});
+
+/* ---------- travel ---------- */
+function updateTravel() {
+  if (!active || !pos || active.status !== "pending") return;
+  const d = hav(pos, active); $("dist").textContent = fmtD(d);
+  $("travel").querySelector(".cmp").style.setProperty("--bd", Math.max(.15, Math.min(2, d / 500)).toFixed(2) + "s");
+  if (d <= Math.max(ARR, Math.min(pos.acc || 0, 60)) && arriving !== active.rid) {
+    arriving = active.rid; sfx.arrive(); flash(180);
+    updateDoc(doc(db, "reports", active.rid), { status: "arrived", arrivedAt: serverTimestamp() }).catch(() => { arriving = null; });
   }
-  if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
-  el.rd.replaceChildren(frag); el.rd.scrollTop = top;
 }
-
-function applyMode(animate) {
-  const n = notes.get(curId); if (!n) return;
-  if (mode === "read" && !(n.text || "").trim()) mode = "edit";
-  const read = mode === "read";
-  el.ta.hidden = read; el.rd.hidden = el.dock.hidden = !read;
-  el.mic.hidden = read; el.spk.hidden = !read;
-  el.mode.classList.toggle("on", read);
-  if (read) {
-    if (reanchor(n)) { dirty = true; clearTimeout(timer); timer = setTimeout(flush, 500); }
-    stopMic(); renderRead(animate);
-  } else stopSpeech();
-}
-el.mode.addEventListener("click", async () => {
-  await flush(); mode = mode === "read" ? "edit" : "read"; store.set("tm.mode", mode);
-  wipe(); applyMode(true); if (mode === "edit") el.ta.focus();
-});
-function wipe() { if (reduced) return; el.edit.classList.remove("wipe"); void el.edit.offsetWidth; el.edit.classList.add("wipe"); }
-
-const syncDock = () => el.dock.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.c === brush));
-el.dock.addEventListener("click", e => {
-  const b = e.target.closest("button"); if (!b) return;
-  brush = b.dataset.c; store.set("tm.brush", brush); syncDock();
-});
-syncDock();
-el.rd.addEventListener("click", e => {
-  const s = e.target.closest(".w"); if (!s) return;
-  const n = notes.get(curId); if (!n) return;
-  const i = +s.dataset.i, had = (n.marks || []).find(m => m.i === i);
-  const marks = (n.marks || []).filter(m => m.i !== i);
-  const add = brush !== "x" && !(had && had.c === brush);
-  if (add) marks.push({ i, w: s.textContent, c: brush });
-  n.marks = marks.slice(0, 600); n.updatedAt = Date.now();
-  s.className = "w" + (add ? " " + brush : "");
-  rdSig = sigOf(n);
-  dirty = true; clearTimeout(timer); timer = setTimeout(flush, 400);
+$("babort").addEventListener("click", () => {
+  if (!active) return; sfx.no();
+  deleteDoc(doc(db, "reports", active.rid)).catch(() => {});
+  mine.delete(active.rid); active = null; setTarget(); drawMine(); route();
 });
 
-/* read aloud with word follow */
-const synth = window.speechSynthesis;
-let speaking = false;
-if (!synth) el.spk.remove();
-function stopSpeech() {
-  if (!speaking) return;
-  speaking = false; synth.cancel(); el.spk.classList.remove("on");
-  el.rd.querySelectorAll(".say").forEach(x => x.classList.remove("say"));
-}
-el.spk.addEventListener("click", () => {
-  if (speaking) { stopSpeech(); return; }
-  const n = notes.get(curId); if (!n || !(n.text || "").trim()) return;
-  const starts = wordsOf(n.text).map(x => x.at);
-  const u = new SpeechSynthesisUtterance(n.text); u.lang = navigator.language || "en-GB";
-  let prev = null;
-  u.onboundary = e => {
-    let k = starts.length - 1; while (k > 0 && starts[k] > e.charIndex) k--;
-    const s = el.rd.querySelector('.w[data-i="' + k + '"]');
-    if (prev) prev.classList.remove("say");
-    if (s) { s.classList.add("say"); s.scrollIntoView({ block: "nearest" }); }
-    prev = s;
+/* ---------- report ---------- */
+let photoData = "";
+$("bphoto").addEventListener("click", () => $("pfile").click());
+$("pfile").addEventListener("change", () => {
+  const f = $("pfile").files[0]; if (!f) return;
+  const img = new Image(), u = URL.createObjectURL(f);
+  img.onload = () => {
+    const s = Math.min(1, 720 / Math.max(img.width, img.height)), c = document.createElement("canvas");
+    c.width = Math.round(img.width * s); c.height = Math.round(img.height * s); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    photoData = c.toDataURL("image/jpeg", .55); URL.revokeObjectURL(u); $("pprev").src = photoData; $("pprev").hidden = false;
   };
-  u.onend = u.onerror = () => { speaking = false; el.spk.classList.remove("on"); if (prev) prev.classList.remove("say"); };
-  synth.cancel(); speaking = true; el.spk.classList.add("on"); synth.speak(u);
+  img.src = u; $("pfile").value = "";
 });
-
-/* dictation */
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-let rec = null;
-if (!SR) el.mic.remove();
-function stopMic() { if (rec) { try { rec.stop(); } catch {} } }
-el.mic.addEventListener("click", () => {
-  if (rec) { stopMic(); return; }
-  rec = new SR(); rec.lang = navigator.language || "en-GB"; rec.continuous = true; rec.interimResults = false;
-  rec.onresult = e => {
-    for (let k = e.resultIndex; k < e.results.length; k++) {
-      if (!e.results[k].isFinal) continue;
-      let t = e.results[k][0].transcript.trim(); if (!t) continue;
-      const a = el.ta, before = a.value.slice(0, a.selectionStart);
-      if (before && !/\s$/.test(before)) t = " " + t;
-      a.setRangeText(t, a.selectionStart, a.selectionEnd, "end");
-      a.dispatchEvent(new Event("input"));
-    }
-  };
-  rec.onend = rec.onerror = () => { rec = null; el.mic.classList.remove("rec"); };
-  try { rec.start(); el.mic.classList.add("rec"); } catch { rec = null; }
-});
-
-/* ---------- lock ---------- */
-const lockEl = $("lock"), pinIn = $("pinin"), lkMsg = $("lkmsg");
-const sha = async s => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode("dn:" + s)))].map(b => b.toString(16).padStart(2, "0")).join("");
-function lockNow() {
-  flush(); stopSpeech(); stopMic();
-  lockEl.hidden = false; pinIn.value = ""; lkMsg.textContent = store.get("tm.pin") ? "enter pin" : "set pin"; pinIn.focus();
+function fillRep() {
+  $("rid").textContent = active.rid; $("rtype").textContent = TG[active.type] + " " + active.type;
+  $("rblind").src = active.blind && active.blind.img || ""; $("rblind").hidden = !(active.blind && active.blind.img);
+  $("rbtxt").textContent = active.blind && active.blind.text || "";
 }
-pinIn.addEventListener("keydown", async e => {
-  if (e.key !== "Enter") return;
-  const v = pinIn.value.trim(); if (!v) return;
-  const h = await sha(v), saved = store.get("tm.pin");
-  if (!saved) { store.set("tm.pin", h); lockEl.hidden = true; }
-  else if (h === saved) lockEl.hidden = true;
-  else { lkMsg.textContent = "denied"; pinIn.value = ""; pinIn.classList.remove("shake"); void pinIn.offsetWidth; pinIn.classList.add("shake"); }
-});
-$("lockbtn").addEventListener("click", lockNow);
-let hiddenAt = 0, escAt = 0;
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) hiddenAt = Date.now();
-  else if (uid && store.get("tm.pin") && hiddenAt && Date.now() - hiddenAt > 60000) lockNow();
+function finish(v) {
+  if (!active) return; const rid = active.rid;
+  const data = { status: "done", verdict: v, found: $("found").value.trim().slice(0, 2000), photo: photoData, doneAt: serverTimestamp() };
+  newRid = rid; v > 0 ? sfx.ok() : sfx.no(); flash(60);
+  updateDoc(doc(db, "reports", rid), data).catch(() => note("sync ✕", false));
+  photoData = ""; $("found").value = ""; $("pprev").hidden = true;
+}
+$("byes").addEventListener("click", () => finish(1));
+$("bno").addEventListener("click", () => finish(-1));
+
+/* ---------- routing ---------- */
+let lastRid = null;
+function route() {
+  const pend = active && active.status === "pending", arr = active && active.status === "arrived";
+  $("pad").hidden = !draft; $("rep").hidden = !(arr && !draft); $("travel").hidden = !(pend && !draft);
+  $("dockhome").hidden = !!(draft || active);
+  if (draft && $("pad").dataset.o !== "1") { $("pad").dataset.o = "1"; openPad(); }
+  if (!draft) $("pad").dataset.o = "0";
+  if (arr && $("rep").dataset.r !== active.rid) { $("rep").dataset.r = active.rid; fillRep(); }
+  if (!arr) $("rep").dataset.r = "";
+  const rid = active ? active.rid : null; if (rid !== lastRid) { lastRid = rid; arriving = null; setTarget(); }
+  if (pend) updateTravel();
+  drawCompass();
+}
+
+/* ---------- reports data ---------- */
+const RANKS = ["I", "II", "III", "IV", "V"], TH = [0, 3, 8, 20, 50];
+let rankLvl = null;
+function score() {
+  const d = [...mine.values()].filter(r => r.status === "done");
+  return d.length + 2 * d.filter(r => r.verdict > 0).length + d.reduce((s, r) => s + (net.get(r.rid) || 0), 0);
+}
+function updateRank() {
+  const s = score(); let l = 0; TH.forEach((t, i) => { if (s >= t) l = i; });
+  $("rk").textContent = RANKS[l];
+  const saved = parseInt(store.get("tm.rank" + agent), 10);
+  if (!isNaN(saved) && l > saved) { const r = $("rk"); r.classList.remove("flick"); void r.offsetWidth; r.classList.add("flick"); sfx.ok(); }
+  if (isNaN(saved) || l > saved) store.set("tm.rank" + agent, String(l));
+  rankLvl = l;
+}
+async function loadNet() {
+  const done = [...mine.values()].filter(r => r.status === "done").sort((a, b) => b.seq - a.seq).slice(0, 20);
+  await Promise.all(done.map(async r => {
+    try { const s = await getDocs(collection(db, "reports", r.rid, "ratings")); let n = 0; s.forEach(d => { n += d.data().v || 0; }); net.set(r.rid, n); } catch {}
+  }));
+  updateRank();
+}
+function subMine() {
+  unsubMine = onSnapshot(query(collection(db, "reports"), where("uid", "==", uid)), snap => {
+    mine = new Map(); snap.forEach(d => mine.set(d.id, { ...d.data(), rid: d.id }));
+    const cur = [...mine.values()].filter(r => r.status === "pending" || r.status === "arrived").sort((a, b) => b.seq - a.seq)[0] || null;
+    active = cur; drawMine(); route(); updateRank();
+    if (!subMine.once) { subMine.once = true; loadNet(); }
+  }, e => console.error(e));
+}
+function subAll() {
+  if (unsubAll) return;
+  unsubAll = onSnapshot(query(collection(db, "reports"), where("status", "==", "done"), limit(400)), snap => {
+    allDocs = new Map(); snap.forEach(d => allDocs.set(d.id, { ...d.data(), rid: d.id })); drawAll();
+  }, e => console.error(e));
+}
+$("bglobal").addEventListener("click", () => {
+  showAll = !showAll; $("bglobal").classList.toggle("on", showAll); sfx.key();
+  if (showAll) { subAll(); gAll.addTo(map); } else map.removeLayer(gAll);
 });
 
-/* ---------- export ---------- */
-$("exp").addEventListener("click", async () => {
-  await flush();
-  const body = visible().map(n => n.text || "").join("\n\n---\n\n");
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([body], { type: "text/markdown" }));
-  a.download = "dotsies-notes-" + new Date().toISOString().slice(0, 10) + ".md";
-  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+/* ---------- sheets ---------- */
+const sheet = $("sheet"), sbody = $("sbody");
+const openSheet = html => { sbody.innerHTML = html; sheet.classList.add("open"); };
+function closeSheet() { sheet.classList.remove("open"); }
+$("sx").addEventListener("click", closeSheet);
+
+$("blist").addEventListener("click", () => {
+  if (sheet.classList.contains("open") && sbody.dataset.k === "list") { closeSheet(); return; }
+  const arr = [...mine.values()].sort((a, b) => b.seq - a.seq);
+  openSheet(arr.length ? arr.map(r => '<button class="li" data-r="' + esc(r.rid) + '"><span>' + esc(r.rid) + " " +
+    (r.status !== "done" ? "○" : r.verdict > 0 ? "●" : "✕") + " " + TG[r.type] + '</span><span class="g">' + esc(fmtT(r)) + "</span></button>").join("") : '<p class="g">–</p>');
+  sbody.dataset.k = "list";
+  sbody.querySelectorAll(".li").forEach(b => b.addEventListener("click", () => { const r = mine.get(b.dataset.r); if (r) { map.flyTo([r.lat, r.lng], 16, { duration: .5 }); openReport(r); } }));
 });
 
-/* ---------- shortcuts ---------- */
-addEventListener("keydown", e => {
-  if (e.altKey && e.key.toLowerCase() === "n") { e.preventDefault(); newNote(); }
-  else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); if (mobile()) openNote(null); el.q.focus(); el.q.select(); }
-  else if (e.altKey && e.key.toLowerCase() === "l") { e.preventDefault(); if (uid) lockNow(); }
-  else if (e.key === "Escape" && document.activeElement !== el.q && uid && store.get("tm.pin")) { if (Date.now() - escAt < 500) lockNow(); escAt = Date.now(); }
-  else if (e.key === "Escape" && document.activeElement === el.q) { el.q.value = ""; renderList(); el.q.blur(); }
+async function openReport(r) {
+  const own = r.uid === uid;
+  const head = "<h2>" + esc(r.rid) + " " + (r.status !== "done" ? "○" : r.verdict > 0 ? "●" : "✕") + " " + TG[r.type] + ' <span class="g">' + esc(fmtT(r)) + " · " + esc(r.src || "") + "</span></h2>";
+  let b = '<div class="bl">';
+  if (r.blind && r.blind.img) b += '<img src="' + esc(r.blind.img) + '" alt="">';
+  if (r.blind && r.blind.text) b += "<p>" + esc(r.blind.text) + "</p>";
+  if (r.found) b += '<p class="g">' + esc(r.found) + "</p>";
+  if (r.photo) b += '<img class="gray" src="' + esc(r.photo) + '" alt="">';
+  b += '<div class="rt" id="rt"></div></div>';
+  openSheet(head + b); sbody.dataset.k = "rep";
+  if (r.status !== "done") return;
+  try {
+    const s = await getDocs(collection(db, "reports", r.rid, "ratings")); let n = 0, my = 0;
+    s.forEach(d => { const v = d.data().v || 0; n += v; if (d.id === uid) my = v; });
+    if (own) net.set(r.rid, n);
+    const rt = $("rt"); if (!rt || sbody.dataset.k !== "rep") return;
+    rt.innerHTML = (own ? "" : '<button class="o' + (my > 0 ? " on" : "") + '" data-v="1" aria-label="Up">▲</button><button class="o' + (my < 0 ? " on" : "") + '" data-v="-1" aria-label="Down">▼</button>') + "<span>" + (n > 0 ? "+" : "") + n + "</span>";
+    rt.querySelectorAll("button").forEach(bt => bt.addEventListener("click", async () => {
+      const v = parseInt(bt.dataset.v, 10); sfx.key();
+      try { await setDoc(doc(db, "reports", r.rid, "ratings", uid), { uid, v }); } catch { note("sync ✕", false); return; }
+      openReport(r);
+    }));
+  } catch {}
+}
+
+$("bset").addEventListener("click", () => {
+  if (sheet.classList.contains("open") && sbody.dataset.k === "set") { closeSheet(); return; }
+  const on = document.documentElement.dataset.dots === "1";
+  openSheet('<div class="st"><span>dots</span><button id="sdots" class="o' + (on ? " on" : "") + '" type="button">' + (on ? "●" : "○") + '</button></div>' +
+    '<div class="st"><span>♪</span><button id="smute" class="o' + (!muted ? " on" : "") + '" type="button">' + (!muted ? "●" : "○") + '</button></div>' +
+    '<div class="st"><span>⏻</span><button id="sout" class="o" type="button">⏻</button></div>');
+  sbody.dataset.k = "set";
+  $("sdots").addEventListener("click", e => { const v = document.documentElement.dataset.dots !== "1"; setDots(v); e.currentTarget.classList.toggle("on", v); e.currentTarget.textContent = v ? "●" : "○"; });
+  $("smute").addEventListener("click", e => { muted = !muted; store.set("tm.mute", muted ? "1" : "0"); e.currentTarget.classList.toggle("on", !muted); e.currentTarget.textContent = !muted ? "●" : "○"; sfx.key(); });
+  $("sout").addEventListener("click", () => { signOut(auth).then(() => location.reload()).catch(() => location.reload()); });
 });
 
-/* ---------- PWA ---------- */
+/* ---------- daily line ---------- */
+function daily() {
+  const day = Math.floor(Date.now() / 864e5), t = LINES[day % LINES.length], l = $("line");
+  if (store.get("tm.day") === String(day) || reduced) { l.textContent = t; l.classList.add("dim"); return; }
+  store.set("tm.day", String(day)); l.classList.remove("dim"); l.textContent = "";
+  [...t].forEach((ch, i) => setTimeout(() => { l.textContent += ch; if (i % 2 === 0) sfx.key(); }, 700 + i * 55));
+  setTimeout(() => { if (!$("line").textContent.startsWith("location")) l.classList.add("dim"); }, 700 + t.length * 55 + 5000);
+}
+
+/* ---------- session ---------- */
+onAuthStateChanged(auth, user => {
+  if (!user) { $("app").hidden = true; $("open").hidden = false; busy = false; return; }
+  uid = user.uid; agent = user.displayName || pendingId || store.get("tm.id") || "????"; store.set("tm.id", agent);
+  setTimeout(() => {
+    $("open").hidden = true; $("app").hidden = false; $("me").textContent = agent;
+    initMap(); map.invalidateSize(); startGeo(); subMine(); daily(); route();
+  }, $("boxes").classList.contains("inv") ? 260 : 0);
+});
+
 if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(console.error));
 </script>
 </body>

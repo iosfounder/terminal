@@ -1,4 +1,16 @@
 // Add inside "match /databases/{database}/documents { ... }" in Firebase Console > Firestore > Rules, then Publish.
-match /users/{uid}/terminal/{noteId} {
-  allow read, write: if request.auth != null && request.auth.uid == uid;
+match /agents/{id} {
+  allow get: if true;
+  allow create: if request.auth != null && id.matches('^[0-9]{4}$') && request.resource.data.uid == request.auth.uid;
+}
+match /reports/{rid} {
+  allow read: if request.auth != null;
+  allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+  allow update, delete: if request.auth != null && resource.data.uid == request.auth.uid;
+  match /ratings/{aid} {
+    allow read: if request.auth != null;
+    allow create, update: if request.auth != null && aid == request.auth.uid && request.resource.data.uid == request.auth.uid
+      && request.resource.data.v in [1, -1]
+      && get(/databases/$(database)/documents/reports/$(rid)).data.uid != request.auth.uid;
+  }
 }
