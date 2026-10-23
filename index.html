@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="locator">
+<meta name="apple-mobile-web-app-title" content="on the run">
 <meta name="mobile-web-app-capable" content="yes">
-<title>locator</title>
+<title>on the run</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -85,6 +85,7 @@ body[data-st="intent"] #dim{opacity:1}
 .mk.l1{color:var(--i);text-shadow:0 0 8px var(--i),0 0 3px #000}
 .mk.l2{color:var(--c);text-shadow:0 0 9px var(--c),0 0 3px #000}
 .mk.o2{opacity:.7}
+.mk.lr{color:#ff3b4e;text-shadow:0 0 9px #ff3b4e,0 0 3px #000}
 .mk.drop{animation:drop .8s var(--ease) both}
 @keyframes drop{from{transform:translateY(-34px) scale(1.6);opacity:0}to{transform:none;opacity:1}}
 .me i,.tgm i{position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-radius:50%;background:var(--w);box-shadow:0 0 10px rgba(255,255,255,.8)}
@@ -180,60 +181,29 @@ body:not([data-st="travel"]) #hud,body:not([data-st="travel"]) #tfoot{display:no
 #open.out{animation:oout .5s var(--ease) forwards}
 @keyframes oout{to{opacity:0;transform:scale(1.2)}}
 
-/* intention: type, with our own keyboard */
-#int{position:fixed;left:0;right:0;bottom:0;z-index:760;padding:20px 12px calc(var(--sab) + 12px);background:linear-gradient(to bottom,rgba(0,0,0,0),#000 22%);transform:translateY(105%);transition:transform .55s var(--ease)}
-body[data-st="intent"] #int{transform:none}
-body[data-st="intent"] #itx{animation:grow .7s var(--ease) both}        /* the line opens out of the ◎ below it */
-body[data-st="intent"] .kr{animation:arrive .55s var(--ease) both}
-body[data-st="intent"] .kr:nth-child(2){animation-delay:.04s}body[data-st="intent"] .kr:nth-child(3){animation-delay:.08s}body[data-st="intent"] .kr:nth-child(4){animation-delay:.12s}body[data-st="intent"] .kr:nth-child(5){animation-delay:.16s}body[data-st="intent"] .kr:nth-child(n+6){animation-delay:.2s}
-@keyframes grow{from{clip-path:inset(0 50% 0 50%);opacity:0}to{clip-path:inset(0 0 0 0);opacity:1}}
-#icancel{position:absolute;right:14px;top:-4px;background:rgba(0,0,0,.6)}
-#itx{min-height:3.2em;padding:8px 52px 14px 6px;font-size:26px;line-height:1.25;word-break:break-word;border-bottom:1px solid #333;margin-bottom:12px}
-html[data-dots="1"] #itx{font-size:44px}
-#itx::after{content:"";display:inline-block;width:.5em;height:1px;border-bottom:2px solid var(--c);margin-left:2px;animation:blink 1.1s ease-in-out infinite}
-.kr{display:flex;gap:6px;justify-content:center;margin-bottom:7px}
-.kk{flex:1 1 0;max-width:42px;min-width:0;height:46px;border-radius:11px;font-size:20px;border:1px solid rgba(255,255,255,.22);
-  background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.02) 60%,rgba(0,0,0,.2));box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 6px 14px rgba(0,0,0,.5)}
-.kk:active{background:radial-gradient(circle at 50% 40%,rgba(79,243,255,.42),rgba(79,243,255,.06) 70%);color:#fff;border-color:var(--c);box-shadow:0 0 18px rgba(79,243,255,.45)}
-.kk.wide{max-width:none;flex:4 1 0}
-.kk.go{max-width:none;flex:2 1 0;border-color:var(--c);color:var(--c);font-size:24px}
-.kk.go:active{background:var(--c);color:var(--k)}
-.kk.sp{font-family:ui-monospace,monospace!important;font-size:18px}
-html[data-dots="1"] .kk{font-size:36px}
-html[data-dots="1"] .kk.go,html[data-dots="1"] .kk.sp{font-size:20px}
+/* starting a walk: distance and pursuer, as tiles */
+#sheet .sh{font-size:var(--t1);letter-spacing:.14em;color:var(--g);margin:4px 0 8px}
+#sheet .sg.four{grid-template-columns:repeat(4,1fr)}
+#sheet .sg .o small{display:block;font-size:10px;letter-spacing:.1em;opacity:.7;margin-top:2px}
+#sheet .sg .o{flex-direction:column;line-height:1.1}
+#sheet .sg .o[disabled]{opacity:.25;pointer-events:none}
+#sheet .go{width:100%;height:64px;border-radius:20px;margin-top:14px;border-color:var(--c);color:var(--c);font-size:26px}
 
-/* arrival: classify, then confirm */
-#rep{position:fixed;left:0;right:0;bottom:0;z-index:750;padding:22px 16px calc(var(--sab) + 20px);background:linear-gradient(to bottom,rgba(0,0,0,0),#000 24%);display:flex;flex-direction:column;gap:18px;align-items:center;animation:up .7s var(--ease) both}
+/* walking: how far behind it is */
+#gap{margin-top:6px;white-space:nowrap;font-size:var(--t2);letter-spacing:.06em;font-variant-numeric:tabular-nums;color:color-mix(in srgb,#ff3b4e calc(var(--hot,0) * 100%),#c9c9d6);text-shadow:0 0 8px #000,0 0 3px #000,0 0 calc(var(--hot,0) * 14px) #ff3b4e}
+.tgm u{position:absolute;left:50%;top:16px;transform:translateX(-50%);white-space:nowrap;text-decoration:none;font-size:11px;letter-spacing:.1em;color:#dcdce6;text-shadow:0 0 4px #000,0 0 4px #000}
+body[data-hot="1"] #vig{background:radial-gradient(ellipse at 50% 45%,transparent 34%,rgba(60,0,8,.85) 100%)}
+
+/* the end: escaped or caught */
+#res{position:fixed;left:0;right:0;bottom:0;z-index:750;padding:26px 16px calc(var(--sab) + 22px);background:linear-gradient(to bottom,rgba(0,0,0,0),#000 30%);display:flex;flex-direction:column;align-items:center;gap:14px;animation:up .8s var(--ease) both}
 @keyframes up{from{opacity:0;transform:translateY(40px)}}
-#rep .info{width:100%;display:flex;justify-content:space-between;font-size:15px;color:var(--g)}
-#lv{display:flex;gap:26px;justify-content:center}
-.lvb{border:0;display:flex;flex-direction:column;align-items:center;gap:8px;font-size:14px;color:#aaa;transition:transform .4s var(--ease),opacity .4s,filter .4s;opacity:.85}
-.lvb:active{background:none;color:inherit}
-.lvb i{width:66px;height:66px;border-radius:50%;border:2px solid var(--lc);box-shadow:0 0 18px color-mix(in srgb,var(--lc) 45%,transparent);transition:background .4s,box-shadow .4s}
-.lvb[data-l="0"]{--lc:#fff}.lvb[data-l="1"]{--lc:var(--i)}.lvb[data-l="2"]{--lc:var(--c)}
-#lv.chosen .lvb{opacity:.28;transform:scale(.85)}
-#lv.chosen .lvb.sel{opacity:1;transform:scale(1.18)}
-.lvb.sel i{background:var(--lc);box-shadow:0 0 34px var(--lc)}
-.lvb span{transition:transform .4s var(--ease)}
-#rep:not([hidden]) .lvb{animation:condense .9s var(--ease) backwards}          /* the target ring breaks into the three dots */
-#rep:not([hidden]) .lvb[data-l="0"]{animation-delay:.1s}#rep:not([hidden]) .lvb[data-l="2"]{animation-delay:.2s}
-@keyframes condense{from{opacity:0;transform:scale(2.4);filter:blur(6px)}}
-#rep.seal #vr{opacity:0;transition:opacity .3s}
-#rep.seal .lvb:not(.sel){opacity:0!important;transition:opacity .3s}
-#rep.seal .lvb.sel{transform:translateY(-140px) scale(.12)!important;opacity:0!important;transition:transform .7s cubic-bezier(.6,0,.4,1),opacity .7s ease-in}
-.lvb.sel span{transform:translateY(12px)}
-#vr{display:flex;gap:26px;align-items:center;justify-content:center;opacity:0;transform:translateY(12px);pointer-events:none;transition:opacity .6s var(--ease),transform .6s var(--ease)}   /* one decision at a time: the verdict appears once you have felt it */
-#vr.ready{opacity:1;transform:none;pointer-events:auto}
-#vr .o{width:60px;height:60px;font-size:26px}
-#rep .pv{display:flex;gap:12px;align-items:center}
-#rep .pv:not(.on){display:none}
-#rep img{width:60px;height:60px;object-fit:cover;border:1px solid var(--w);filter:grayscale(1) contrast(1.1)}
-#nx{position:fixed;left:0;right:0;bottom:0;z-index:750;padding:30px 16px calc(var(--sab) + 26px);background:linear-gradient(to bottom,rgba(0,0,0,0),#000 40%);display:flex;gap:44px;justify-content:center;animation:up .7s var(--ease) both}
-#nxgo{border-color:var(--c);color:var(--c);box-shadow:0 0 24px rgba(79,243,255,.25)}
-#nxgo:active{background:var(--c);color:var(--k)}
+#rbig{font-size:64px;line-height:1;text-shadow:0 0 26px currentColor}
+#res.ok #rbig{color:var(--c)}#res.no #rbig{color:#ff3b4e}
+#rname{font-size:var(--t1);letter-spacing:.14em;color:var(--g)}
+#rstats{display:flex;gap:18px;font-size:var(--t2);font-variant-numeric:tabular-nums}
+#rstats span{display:flex;flex-direction:column;align-items:center}
+#rstats small{font-size:10px;letter-spacing:.14em;color:var(--g)}
 #sheet img{max-width:100%;max-height:34vh;display:block;border:1px solid var(--w)}
-#sheet img.gray{filter:grayscale(1) contrast(1.1)}
-
 /* sheet */
 #sheet{position:fixed;left:0;right:0;bottom:0;z-index:740;max-height:72vh;overflow:auto;background:var(--k);border-top:1px solid #555;border-radius:18px 18px 0 0;
   padding:58px 16px calc(var(--sab) + 18px);transform:translateY(105%);transition:transform .5s var(--ease)}
@@ -252,7 +222,7 @@ html[data-dots="1"] .kk.go,html[data-dots="1"] .kk.sp{font-size:20px}
 #sheet .li>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 #sheet .li>span:last-child{flex:none;white-space:nowrap}
 .ld{display:inline-block;width:12px;height:12px;border-radius:50%;border:1.5px solid #fff;vertical-align:middle;margin-right:6px}
-.ld.l1{border-color:var(--i);background:var(--i)}.ld.l2{border-color:var(--c);background:var(--c)}
+.ld.l1{border-color:var(--i);background:var(--i)}.ld.l2{border-color:var(--c);background:var(--c)}.ld.lr{border-color:#ff3b4e;background:#ff3b4e}
 
 /* film look */
 #grain{position:fixed;inset:0;z-index:880;pointer-events:none;opacity:.07;mix-blend-mode:overlay;background-size:160px 160px}
@@ -278,7 +248,7 @@ body[data-lite="1"] #grain{display:none}
 <div id="scan" aria-hidden="true"></div>
 
 <div id="lbt" class="lb" aria-hidden="true"></div><div id="lbb" class="lb" aria-hidden="true"></div>
-<div id="title" aria-hidden="true">locator</div>
+<div id="title" aria-hidden="true">on the run</div>
 
 <section id="open">
   <div id="boxes"><i></i><i></i><i></i><i></i></div>
@@ -308,7 +278,7 @@ body[data-lite="1"] #grain{display:none}
 
   <div id="dockhome">
     <button id="brec" class="o sm" type="button" aria-label="Centre" hidden>⌖</button>
-    <button id="bspin" class="o xl" type="button" aria-label="Spin">◎</button>
+    <button id="bspin" class="o xl" type="button" aria-label="Start a walk">◎</button>
   </div>
   <p id="toast"></p>
 
@@ -316,6 +286,7 @@ body[data-lite="1"] #grain{display:none}
     <div class="cmp" id="cmpt"></div>
     <div id="dist">–</div>
     <div id="rinfo"></div>
+    <div id="gap"></div>
   </section>
   <div id="tfoot" hidden>
     <button id="babort" class="o hold" type="button" aria-label="Hold to end">✕</button>
@@ -324,33 +295,12 @@ body[data-lite="1"] #grain{display:none}
   </div>
   <div id="verd" hidden></div>
 
-  <section id="int">
-    <button id="icancel" class="o sm" type="button" aria-label="Cancel">✕</button>
-    <div id="itx"></div>
-    <div id="kb"></div>
+  <section id="res" hidden>
+    <div id="rbig"></div>
+    <div id="rname"></div>
+    <div id="rstats"></div>
+    <button id="rclose" class="o xl" type="button" aria-label="Close">■</button>
   </section>
-
-  <section id="rep" hidden>
-    <div class="info"><span id="rid"></span><span id="rtype"></span></div>
-    <div id="lv">
-      <button class="lvb" data-l="0" type="button" aria-label="Calm"><i></i><span>calm</span></button>
-      <button class="lvb" data-l="1" type="button" aria-label="Strange"><i></i><span>strange</span></button>
-      <button class="lvb" data-l="2" type="button" aria-label="Uncanny"><i></i><span>uncanny</span></button>
-    </div>
-    <div id="vr">
-      <button id="bno" class="o" type="button" aria-label="Deny">✕</button>
-      <button id="bnone" class="o" type="button" aria-label="Unreachable">⌀</button>
-      <button id="byes" class="o" type="button" aria-label="Confirm">✓</button>
-    </div>
-    <div class="pv"><button id="bphoto" class="o sm" type="button" aria-label="Photo">◫</button><img id="pprev" alt="" hidden></div>
-    <input id="pfile" type="file" accept="image/*" capture="environment" hidden>
-  </section>
-
-  <section id="nx" hidden>
-    <button id="nxend" class="o xl" type="button" aria-label="End">■</button>
-    <button id="nxgo" class="o xl" type="button" aria-label="Continue">▶</button>
-  </section>
-
   <section id="sheet"><button id="sx" class="o x" type="button" aria-label="Close">✕</button><div id="sbody"></div></section>
 </div>
 
@@ -384,10 +334,8 @@ const pad4 = n => String(n).padStart(4, "0");
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
 
-const BUILD = "v7.7";
-const R = 1000, N = 500, G = 12, ARR = 30, HOME_PITCH = 50;
-const TG = { attractor:"◉", void:"◌", anomaly:"◈" };
-const LV = ["calm", "strange", "uncanny"];
+const BUILD = "v8.0";
+const ARR = 30, HOME_PITCH = 50;
 
 /* ---------- sound ---------- */
 let AC = null, muted = store.get("tm.mute") === "1";
@@ -428,7 +376,10 @@ const sfx = {
   level: n => n === 0 ? (tone(196, .7, "sine", .08), tone(247, .7, "sine", .05, .02)) : n === 1 ? (tone(330, .8, "triangle", .07, 0, 290), tone(415, .8, "triangle", .05, .05, 380)) : (tone(1320, .6, "sine", .05), tone(1760, .7, "sine", .04, .08), whoosh(.7, 1500, 5000, .02)),
   ok: () => { tone(520, .12, "sine", .06); tone(780, .25, "sine", .05, .1); },
   neutral: () => tone(440, .3, "sine", .05),
-  no: () => { tone(300, .14, "sine", .06); tone(160, .3, "sine", .06, .12); }
+  no: () => { tone(300, .14, "sine", .06); tone(160, .3, "sine", .06, .12); },
+  free: () => { tone(98, 1.4, "sawtooth", .03, 0, 92); tone(147, 1.2, "sine", .05, .05); whoosh(1.2, 140, 600, .03); },   // the head start is over: it sets off
+  step: () => { tone(70, .09, "sine", .07, 0, 50); whoosh(.07, 900, 300, .012); },                                      // its footsteps, when it is close
+  caught: () => { tone(220, 1.2, "sawtooth", .04, 0, 55); tone(58, 1.6, "sine", .12); whoosh(1.4, 3000, 120, .05); }
 };
 // iPhone only unlocks sound and the compass from a finished tap (touchend / click), so keep trying on each one until both are awake
 const unlockEv = ["touchend", "click"];
@@ -477,8 +428,6 @@ addEventListener("keydown", e => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   if (!$("open").hidden && $("ack").hidden) {
     if (/^\d$/.test(e.key)) addDigit(e.key); else if (e.key === "Backspace") delDigit(); else if (e.key === "Enter") (omode === "in" ? doIn : doNew)();
-  } else if (document.body.dataset.st === "intent") {
-    if (e.key === "Backspace") kbKey("⌫"); else if (e.key === "Enter") kbKey("▶"); else if (e.key.length === 1) kbKey(e.key.toLowerCase());
   }
 });
 
@@ -554,13 +503,13 @@ const fmtT = r => { const t = r.at && r.at.toMillis ? r.at.toMillis() : Date.now
 
 /* ---------- state ---------- */
 let uid = null, agent = "", map = null, pos = null, follow = true, heading = 0, hasCompass = false, compassOn = false;
-let mine = new Map(), active = null, spinning = false, typing = false, arriving = null, choose = null;
+let mine = new Map(), active = null, spinning = false, arriving = null;
 let showAll = false, allDocs = new Map(), unsubMine = null, unsubAll = null, newRid = null;
 let meMk = null, tgMk = null, bornRid = null;
-let heat = null, crumbs = [], crumbLast = null, walk = [], walkLast = null;     // density heat, breadcrumb tail, remembered walking (fog of war)
+let crumbs = [], crumbLast = null, walk = [], walkLast = null;     // breadcrumb tail, remembered walking (fog of war)
 let rt = null, routing = false, lastFetch = 0, routeMode = store.get("tm.mode") === "car" ? "car" : "foot";
 let near100 = null, nearSince = 0, wake = null, tickT = null, spd = 0, shownD = null, targetD = 0, dtw = false;
-const vg = r => r.status !== "done" ? "○" : r.verdict > 0 ? "●" : r.verdict < 0 ? "✕" : "⌀";
+const vg = r => r.status !== "done" ? "○" : r.result === "escaped" ? "✓" : r.result === "caught" ? "✕" : "■";
 const setHide = v => {                           // tap the map: everything fades and the camera pulls back; tap again: it all returns
   const was = document.body.dataset.hide === "1"; if (v === was) return;
   document.body.dataset.hide = v ? "1" : "0"; v ? sfx.hide() : sfx.show();
@@ -595,7 +544,7 @@ function drawCompass() {
   if (rel != null && hasCompass && Math.abs(nrm(rel)) < 12 && Date.now() - lastAlign > 3500) { lastAlign = Date.now(); buzz(25); }
   repaint();                                     // the heading beam follows the compass
 }
-setInterval(() => { const d = document.body.dataset; if (mapReady && (heat || (beamA > 0 && beamA < .98) || (d.st === "travel" && d.lite !== "1"))) paintRoute(); }, 60);   // heat fade + ring pulse
+setInterval(() => { const d = document.body.dataset; if (mapReady && ((beamA > 0 && beamA < .98) || (d.st === "travel" && d.lite !== "1"))) paintRoute(); }, 60);   // beam fade, ring pulse, the one behind you
 function oe(e) {
   let h = null;
   if (e.webkitCompassHeading != null) h = e.webkitCompassHeading;
@@ -714,10 +663,10 @@ const setWalk = () => { const s = src("walk"); if (s) s.setData({ type: "Feature
 const mkEl = html => { const el = document.createElement("div"); el.className = "mkw"; el.innerHTML = html; return el; };
 const mkAdd = (el, lng, lat) => new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat([lng, lat]).addTo(map);
 function reportMk(r, mineFlag, delay) {
-  const lv = r.status === "done" && r.level > 0 ? " l" + r.level : "";
+  const lv = r.result === "escaped" ? " l2" : r.result === "caught" ? " lr" : "";
   const el = mkEl('<b class="mk' + lv + (mineFlag ? "" : " o2") + (r.rid === newRid ? " drop" : "") + (delay != null ? " rip" : "") + '"' +
     (delay != null ? ' style="--rd:' + delay + 'ms"' : "") + ">" + vg(r) + "</b>");
-  el.addEventListener("click", e => { e.stopPropagation(); follow = false; if (mapReady) map.easeTo({ center: [r.lng, r.lat], duration: 700 }); openReport(r); });
+  el.addEventListener("click", e => { e.stopPropagation(); if (document.body.dataset.st !== "home") return; openReport(r); });
   return mkAdd(el, r.lng, r.lat);
 }
 const partial = (c, f) => {                      // first fraction f of a line, by length
@@ -734,17 +683,10 @@ const src = n => map && mapReady && map.getSource(n);
 function drawMine() {
   if (!mapReady) return;
   mineMk.forEach(m => m.remove()); mineMk = [];
-  const arr = [...mine.values()].sort((a, b) => a.seq - b.seq), done = arr.filter(r => r.status === "done");
-  const segs = []; for (let i = 1; i < done.length; i++) segs.push([[done[i - 1].lng, done[i - 1].lat], [done[i].lng, done[i].lat]]);
-  const fresh = segs.length && done[done.length - 1].rid === newRid;
-  const solid = fresh ? segs.slice(0, -1) : segs, mls = c => ({ type: "FeatureCollection", features: c.map(g => ({ type: "Feature", geometry: { type: "LineString", coordinates: g }, properties: {} })) });
-  clearInterval(trailAnimT); src("trail").setData(mls(solid));
-  if (fresh) {                                   // the new leg draws itself from the last report to this one
-    if (reduced) src("trail").setData(mls(segs));
-    else { const t0 = Date.now(), last = segs[segs.length - 1]; trailAnimT = setInterval(() => { const f = Math.min(1, (Date.now() - t0) / 1100), e = 1 - (1 - f) ** 3;
-      src("trail").setData(mls([...solid, partial(last, e)])); if (f >= 1) clearInterval(trailAnimT); }, 40); }
-  }
-  arr.forEach(r => mineMk.push(reportMk(r, true)));
+  const done = [...mine.values()].filter(r => r.status === "done").sort((a, b) => a.seq - b.seq);
+  const paths = done.map(pathOf).filter(p => p.length > 1);      // every walk you've done stays on the map as a faint dotted line
+  src("trail").setData({ type: "FeatureCollection", features: paths.map(p => ({ type: "Feature", geometry: { type: "LineString", coordinates: p }, properties: {} })) });
+  done.forEach(r => mineMk.push(reportMk(r, true)));
   newRid = null;
 }
 function drawAll() {
@@ -758,7 +700,7 @@ function drawAll() {
 function setTarget() {
   if (!mapReady) return;
   if (tgMk) { tgMk.remove(); tgMk = null; }
-  if (active && active.status !== "done") tgMk = mkAdd(mkEl('<div class="tgm' + (active.rid === bornRid ? " born" : "") + '"><i></i><b></b></div>'), active.lng, active.lat);
+  if (active && active.status !== "done") tgMk = mkAdd(mkEl('<div class="tgm' + (active.rid === bornRid ? " born" : "") + '"><i></i><b></b><u>' + esc(active.name || "") + "</u></div>"), active.lng, active.lat);   // the finish, with its real name
   bornRid = null;
 }
 function ensureMe() {
@@ -768,6 +710,7 @@ function ensureMe() {
 const PADV = { top: 130, bottom: 130, left: 50, right: 50 };
 function overview(ms = 800, t = active) {         // you and the point in one frame, flat, north up
   if (!mapReady || !pos || !t) return;
+  map.setPadding(PAD0);
   const w = Math.min(pos.lng, t.lng), e = Math.max(pos.lng, t.lng), s = Math.min(pos.lat, t.lat), n = Math.max(pos.lat, t.lat);
   map.fitBounds([[w, s], [e, n]], { padding: PADV, maxZoom: 17, duration: ms, pitch: 30, bearing: 0 });
 }
@@ -797,27 +740,23 @@ function paintRoute() {
   const want = hasCompass && pos && (st === "home" || st === "travel") && b.hide !== "1" && !flying && !spinning;
   beamA += ((want ? 1 : 0) - beamA) * .12; if (beamA < .02) beamA = want ? .02 : 0;     // the beam fades in and out, never pops
   const beam = beamA > 0 && hasCompass && pos;
-  if (heat && now - heat.t0 > 7500) heat = null;
-  const has = (rPts && rPts.length > 1) || (rTail && rTail.length > 1) || trav || beam || heat;
+  const res = st === "res" && resV, ch = trav ? chase() : null;
+  const has = (rPts && rPts.length > 1) || (rTail && rTail.length > 1) || trav || beam || res;
   if (!has) { if (painted) { x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height); painted = false; } return; }
   painted = true; const d = c.width / innerWidth; x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, innerWidth, innerHeight);
   x.lineCap = x.lineJoin = "round";
   const path = pts => { x.beginPath(); pts.forEach((p, i) => { const q = map.project(p); i ? x.lineTo(q.x, q.y) : x.moveTo(q.x, q.y); }); };
-  if (heat) {                                    // density heat: soft glows where the points fell; it melts away as the camera tilts down to chase
-    const t = now - heat.t0, tilt = Math.max(0, 1 - (map.getPitch() - 22) / 14);
-    const env = Math.min(1, t / 600) * Math.min(1, Math.max(0, (7500 - t) / 2400)) * tilt;
-    if (env > .01) for (const cl of heat.cells) {
-      const v = cl.n / heat.max; if (v < .15 && cl.k !== heat.best) continue;
-      const cx = cl.poly.reduce((s, p) => s + p[0], 0) / cl.poly.length, cy = cl.poly.reduce((s, p) => s + p[1], 0) / cl.poly.length;
-      const q = map.project([cx, cy]), e = map.project(cl.poly[0]), r = Math.hypot(e.x - q.x, e.y - q.y) * 1.1;
-      if (!isFinite(r) || r > innerWidth || q.y < -r || q.y > innerHeight + r) continue;
-      const g = x.createRadialGradient(q.x, q.y, 0, q.x, q.y, r), a = (.05 + v * .3) * env;
-      g.addColorStop(0, "rgba(" + Math.round(138 - 59 * v) + "," + Math.round(125 + 118 * v) + ",255," + a + ")"); g.addColorStop(1, "rgba(138,125,255,0)");
-      x.fillStyle = g; x.beginPath(); x.arc(q.x, q.y, r, 0, 7); x.fill();
-      if (cl.k === heat.best) { x.strokeStyle = "rgba(79,243,255," + env * .9 + ")"; x.lineWidth = 1.5; x.beginPath(); x.arc(q.x, q.y, r * .45, 0, 7); x.stroke(); }
+  const dot = (p, r, col, glow) => { const q = map.project(p); x.fillStyle = col; if (!lite) { x.shadowColor = col; x.shadowBlur = glow; } x.beginPath(); x.arc(q.x, q.y, r, 0, 7); x.fill(); x.shadowBlur = 0; };
+  if (res) {                                     // the end: your whole line in cyan, the stretch they covered in red, the finish ring
+    const p = pathOf(resV);
+    if (p.length > 1) {
+      path(p); x.strokeStyle = "rgba(79,243,255,.9)"; x.lineWidth = 3.5; if (!lite) { x.shadowColor = "#4ff3ff"; x.shadowBlur = 10; } x.stroke(); x.shadowBlur = 0;
+      if (resV.reach > 0) { path(upto(p, resV.reach)); x.strokeStyle = "rgba(255,59,78,.9)"; x.lineWidth = 3.5; if (!lite) { x.shadowColor = "#ff3b4e"; x.shadowBlur = 12; } x.stroke(); x.shadowBlur = 0;
+        dot(along(p, resV.reach), 5, "#ff3b4e", 18); }
+      dot(p[0], 3.5, "#fff", 8);
     }
-  }
-  if (trav) {                                    // rings around the target; ones you've crossed dim, a pulse keeps drawing in
+    x.setLineDash([2, 6]); x.lineWidth = 1.6; x.strokeStyle = "rgba(79,243,255,.7)"; path(ringPts({ lat: resV.lat, lng: resV.lng }, 40)); x.stroke(); x.setLineDash([]);
+  }  if (trav) {                                    // rings around the target; ones you've crossed dim, a pulse keeps drawing in
     const T = { lat: active.lat, lng: active.lng }, dist = hav(pos, T);
     x.setLineDash([2, 7]); x.lineWidth = 1.6;
     for (const r of [250, 100, 50]) { x.strokeStyle = "rgba(79,243,255," + (dist < r ? .16 : r === 50 ? .6 : r === 100 ? .45 : .3) + ")"; path(ringPts(T, r)); x.stroke(); }
@@ -839,6 +778,10 @@ function paintRoute() {
       path([crumbs[i - 1], crumbs[i]]); x.stroke();
     }
     x.shadowBlur = 0;
+  }
+  if (ch && ch.free && wpath.length > 1) {        // the one behind you: walking your exact line, in red
+    const at = along(wpath, ch.pd); path(upto(wpath, ch.pd)); x.strokeStyle = "rgba(255,59,78,.35)"; x.lineWidth = 3; x.stroke();
+    const k = (now % 1100) / 1100; dot(at, 5 + 2 * Math.sin(k * Math.PI), "#ff3b4e", 22);
   }
   if (rPts && rPts.length > 1) {
     path(rPts); x.strokeStyle = "rgba(138,125,255,.55)"; x.lineWidth = 15; if (!lite) { x.shadowColor = "#8a7dff"; x.shadowBlur = 20; } x.stroke(); x.shadowBlur = 0;
@@ -960,6 +903,7 @@ function onPos(p) {
     else if (follow && !spinning && !flying && document.body.dataset.st === "home" && (!lastCtr || hav(lastCtr, pos) > 4)) { lastCtr = { lat: pos.lat, lng: pos.lng }; map.easeTo({ center: [pos.lng, pos.lat], duration: 600 }); }
   }
   if (active && active.status === "pending") {
+    stepW();
     if (!rt || rt.rid !== active.rid || rt.mode !== routeMode) fetchRoute();
     else { const r = routeRemain(); if (r && r.bd > 40) fetchRoute(); }       // left the route: ask again
     drawRoute();
@@ -969,114 +913,113 @@ function onPos(p) {
 $("brec").addEventListener("click", () => { follow = true; sfx.key(); if (!pos) startGeo(true); if (pos && mapReady) map.flyTo({ center: [pos.lng, pos.lat], zoom: Math.max(map.getZoom(), 15), pitch: HOME_PITCH, duration: 700 }); });
 setInterval(() => { $("brec").hidden = follow || document.body.dataset.st !== "home"; }, 400);
 
-/* ---------- spin (randonautica method) ---------- */
-async function rand16(n) {
-  const a = new Uint16Array(n); crypto.getRandomValues(a);
-  return { arr: a, src: "L" };
-}
-async function generate(c) {
-  const { arr, src } = await rand16(2 * N + 2);
-  const pts = []; const cnt = new Array(G * G).fill(0);
-  const cs = 2 * R / G, cell = (x, y) => Math.min(G - 1, Math.floor((x + R) / (2 * R) * G)) + Math.min(G - 1, Math.floor((y + R) / (2 * R) * G)) * G;
-  for (let i = 0; i < N; i++) {
-    const r = R * Math.sqrt(arr[2 * i] / 65536), th = 2 * Math.PI * arr[2 * i + 1] / 65536;
-    const x = r * Math.cos(th), y = r * Math.sin(th), k = cell(x, y); cnt[k]++;
-    pts.push({ x, y, c: k });
-  }
-  const mean = N * cs * cs / (Math.PI * R * R);
-  const valid = []; const ctr = k => ({ x: ((k % G) + .5) * cs - R, y: (Math.floor(k / G) + .5) * cs - R });
-  for (let k = 0; k < G * G; k++) { const q = ctr(k); if (Math.hypot(q.x, q.y) <= R) valid.push(k); }
-  const type = arr[2 * N] % 3, jit = () => rnd(1000) / 1e6;
-  const score = k => type === 0 ? cnt[k] : type === 1 ? -cnt[k] : Math.abs((cnt[k] - mean) / Math.sqrt(mean));
-  let best = valid[0], bs = -Infinity;
-  valid.forEach(k => { const s = score(k) + jit(); if (s > bs) { bs = s; best = k; } });
-  const mem = pts.filter(p => p.c === best); let tx, ty;
-  if (type !== 1 && mem.length && cnt[best] >= mean) { tx = mem.reduce((s, p) => s + p.x, 0) / mem.length; ty = mem.reduce((s, p) => s + p.y, 0) / mem.length; }
-  else { const q = ctr(best); tx = q.x; ty = q.y; }
-  const ll = (x, y) => ({ lat: c.lat + y / 111320, lng: c.lng + x / (111320 * Math.cos(rad(c.lat))) });
-  const t = ll(tx, ty), hs = cs / 2;
-  const cells = valid.map(k => { const q = ctr(k);       // each search cell as a ground square, for the density heat shown after the spin
-    return { k, n: cnt[k], poly: [[q.x - hs, q.y - hs], [q.x + hs, q.y - hs], [q.x + hs, q.y + hs], [q.x - hs, q.y + hs]].map(([a, b]) => { const p = ll(a, b); return [p.lng, p.lat]; }) }; });
-  return { type: ["attractor", "void", "anomaly"][type], src, lat: t.lat, lng: t.lng, cell: best, cells, max: Math.max(1, ...cnt), pts: pts.map(p => ({ ...ll(p.x, p.y), c: p.c })), dist: hav(c, t) };
-}
-function playSpin(g) {
-  return new Promise(res => {
-    if (reduced || !mapReady) { res(); return; }
-    const cv = $("fx"), x = cv.getContext("2d"); cv.width = innerWidth; cv.height = innerHeight; cv.hidden = false;
-    const P = g.pts.map(p => { const q = map.project([p.lng, p.lat]); return { x: q.x, y: q.y, keep: p.c === g.cell }; });
-    const T = map.project([g.lng, g.lat]), t0 = performance.now(); let locked = false, dived = false;
-    const C = map.project([g.from.lng, g.from.lat]), E = map.project([g.from.lng + 1000 / (111320 * Math.cos(rad(g.from.lat))), g.from.lat]), rpx = Math.abs(E.x - C.x);
-    const f = now => {
-      const t = Math.max(0, now - t0); x.clearRect(0, 0, cv.width, cv.height); x.fillStyle = "#fff"; x.strokeStyle = "#4ff3ff";   // the frame clock can start slightly behind t0
-      if (t < 1000) {                            // the search circle opens around you, then fades as the points arrive
-        x.globalAlpha = Math.max(0, 1 - (t - 500) / 500); x.lineWidth = 1.4; x.beginPath(); x.arc(C.x, C.y, rpx * Math.min(1, t / 500), 0, 7); x.stroke(); x.globalAlpha = 1;
-      }
-      if (t > 1750 && !dived) { dived = true; sfx.dive(); map.easeTo({ center: [g.lng, g.lat], zoom: 15.8, pitch: 40, duration: 700 }); }       // the dive toward the chosen cell
-      const show = Math.min(P.length, Math.floor(t / 350 * P.length));
-      for (let i = 0; i < show; i++) {
-        const p = P[i]; let px = p.x, py = p.y;
-        if (t > 900) {
-          if (!p.keep) { if (t > 1400 || Math.random() < (t - 900) / 500) continue; }
-          else { const k = Math.min(1, Math.max(0, (t - 1300) / 500)); px = p.x + (T.x - p.x) * k; py = p.y + (T.y - p.y) * k; }
-        }
-        x.fillRect(px - 1, py - 1, 2, 2);
-      }
-      if (t > 1800) {
-        if (!locked) { locked = true; sfx.lock(); sfx.type(g.type); }
-        const k = t - 1800, rr = k < 300 ? k / 300 * 70 : 70 + ((k - 300) / 400) ** 2 * Math.hypot(cv.width, cv.height) * .35;
-        x.globalAlpha = k < 300 ? 1 : Math.max(0, 1 - (k - 300) / 420); x.lineWidth = 1.6; x.beginPath(); x.arc(T.x, T.y, rr, 0, 7); x.stroke(); x.globalAlpha = 1;
-      }
-      if (t < 2500) requestAnimationFrame(f); else { x.clearRect(0, 0, cv.width, cv.height); cv.hidden = true; res(); }
-    };
-    requestAnimationFrame(f);
+/* ---------- starting a walk: a real named place as the finish, a real pace behind you ---------- */
+const DISTS = { km: [1000, 2000, 3000, 5000], mi: [804.7, 1609.3, 3218.7, 4828] }, MI_LBL = [.5, 1, 2, 3];
+const PACES = [1.25, 1.53, 1.81];                // m/s: 4.5, 5.5 and 6.5 km/h, an easy, a brisk and a fast walk
+const HEAD = 120;                                // seconds of head start before it sets off along your path
+const fmtPace = v => units === "km" ? (v * 3.6).toFixed(1) : (v * 2.237).toFixed(1);
+const paceU = () => units === "km" ? "km/h" : "mph";
+const mmss = s => { s = Math.max(0, Math.round(s)); const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, x = String(s % 60).padStart(2, "0"); return h ? h + ":" + String(m).padStart(2, "0") + ":" + x : m + ":" + x; };
+const ghostPace = () => {                        // your own best: the fastest walk you finished ahead of it
+  const w = [...mine.values()].filter(r => r.kind === "walk" && r.result === "escaped" && r.walked > 300 && r.dur > 60000).map(r => r.walked / (r.dur / 1000));
+  return w.length ? Math.max(...w) : null;
+};
+const pick = { d: Math.min(3, +(store.get("or.d") || 1)), p: store.get("or.p") || "1" };
+function openStart() {
+  if (sheet.classList.contains("open") && sbody.dataset.k === "start") { closeSheet(); return; }
+  const ds = DISTS[units === "km" ? "km" : "mi"], gp = ghostPace();
+  if (pick.p === "g" && !gp) pick.p = "1";
+  let h = '<div class="sh">↦</div><div class="sg four">' + ds.map((m, i) => '<button class="o' + (pick.d === i ? " on" : "") + '" data-d="' + i + '" type="button">' +
+    (units === "km" ? m / 1000 : MI_LBL[i]) + "<small>" + (units === "km" ? "km" : "mi") + "</small></button>").join("") + "</div>";
+  h += '<div class="sh">◀ ◷ ' + mmss(HEAD) + '</div><div class="sg four">' + PACES.map((v, i) => '<button class="o' + (pick.p === String(i) ? " on" : "") + '" data-p="' + i + '" type="button">' +
+    fmtPace(v) + "<small>" + paceU() + "</small></button>").join("") +
+    '<button class="o' + (pick.p === "g" ? " on" : "") + '" data-p="g" type="button" aria-label="Your best"' + (gp ? "" : " disabled") + ">◐<small>" + (gp ? fmtPace(gp) : "you") + "</small></button></div>";
+  h += '<button id="sgo" class="o go" type="button" aria-label="Go">▶</button>';
+  openSheet(h); sbody.dataset.k = "start"; sfx.open();
+  sbody.querySelectorAll("[data-d]").forEach(b => b.addEventListener("click", () => { pick.d = +b.dataset.d; store.set("or.d", pick.d); sfx.key(); sbody.querySelectorAll("[data-d]").forEach(x => x.classList.toggle("on", x === b)); }));
+  sbody.querySelectorAll("[data-p]").forEach(b => b.addEventListener("click", () => { pick.p = b.dataset.p; store.set("or.p", pick.p); sfx.key(); sbody.querySelectorAll("[data-p]").forEach(x => x.classList.toggle("on", x === b)); }));
+  $("sgo").addEventListener("click", () => {
+    const g = pick.p === "g"; closeSheet(); sfx.enter();
+    startWalk(DISTS[units === "km" ? "km" : "mi"][pick.d], g ? ghostPace() : PACES[+pick.p], g ? "ghost" : "pace");
   });
 }
-const nextSeq = () => [...mine.values()].reduce((m, r) => Math.max(m, r.seq || 0), 0) + 1;
-async function runSpin(text, jid) {              // the intention is set; only now does the machine place a point (jid: the journey this continues)
-  if (spinning || active) return;
+// the finish is always a real named place from OpenStreetMap, at about the right walking distance
+const LMK = { viewpoint: 9, peak: 9, castle: 8, ruins: 8, monument: 8, memorial: 7, attraction: 7, artwork: 6, park: 6, garden: 6, nature_reserve: 6, museum: 5, place_of_worship: 5, church: 5,
+  water: 5, lake: 5, fountain: 5, picnic_site: 4, campsite: 4, theatre: 4, library: 3, cafe: 2, pub: 2, playground: 2 };
+function landmarks(c, want) {
+  const out = [], seen = new Set(), s = want / 1.35;             // walking routes run about a third longer than the straight line
+  const add = (f, cls) => {
+    const pr = f.properties, nm = pr["name:latin"] || pr["name:en"] || pr.name, g = f.geometry; if (!nm || g.type !== "Point") return;
+    const [lng, lat] = g.coordinates, k = nm + "|" + lng.toFixed(3) + lat.toFixed(3); if (seen.has(k)) return; seen.add(k);
+    out.push({ name: nm, cls, lng, lat, d: hav(c, { lat, lng }) });
+  };
+  try {
+    map.querySourceFeatures("openmaptiles", { sourceLayer: "poi" }).forEach(f => { const p = f.properties; add(f, p.subclass === "viewpoint" ? "viewpoint" : LMK[p.subclass] ? p.subclass : p.class); });
+    map.querySourceFeatures("openmaptiles", { sourceLayer: "mountain_peak" }).forEach(f => add(f, "peak"));
+  } catch {}
+  const best = (lo, hi) => { let b = null, bs = -1e9; for (const o of out) { if (o.d < s * lo || o.d > s * hi) continue; const sc = (LMK[o.cls] || 1) * 10 - Math.abs(o.d - s) / s * 25 + rnd(100) / 100; if (sc > bs) { bs = sc; b = o; } } return b; };
+  return best(.6, 1.3) || best(.35, 1.8);
+}
+async function startWalk(want, pace, pur) {
+  if (spinning || active || resV || !pos || !pace) return;
   spinning = true; route(); sfx.spin(); scanSweep(); lb(9000); $("bspin").classList.remove("pulse1"); store.set("tm.spun", "1");
-  setTimeout(() => { if (spinning && !active) { spinning = false; route(); } }, 9000);          // safety: never get stuck
-  const c = { lat: pos.lat, lng: pos.lng };
-  if (mapReady) { map.stop(); map.easeTo({ center: [c.lng, c.lat], zoom: 13.2, pitch: 0, bearing: 0, padding: PAD0, duration: 800 }); await sleep(900); }
-  const g = await generate(c); g.from = c;
-  await playSpin(g); lb(1200);
-  const n = nextSeq(), rid = agent + "-" + pad4(n); bornRid = rid;
-  const data = { uid, agent, seq: n, rid, type: g.type, src: g.src, lat: g.lat, lng: g.lng, journey: jid || rid,
-    intention: text, blind: { text: "", img: "" }, level: 0, status: "pending", verdict: 0, found: "", photo: "", at: serverTimestamp() };
-  rt = null; lastFetch = 0; shownD = null; near100 = null; nearSince = 0;
-  heat = { cells: g.cells, best: g.cell, max: g.max, t0: Date.now() };       // why the machine chose that spot
+  setTimeout(() => { if (spinning && !active) { spinning = false; route(); } }, 15000);          // safety: never get stuck
+  const c = { lat: pos.lat, lng: pos.lng }; let lm = null;
+  if (mapReady) {                                // look over the ground at the right scale, so its named places are in the tiles
+    map.stop(); map.easeTo({ center: [c.lng, c.lat], zoom: Math.max(12, Math.min(15, 14.7 - Math.log2(want / 1000))), pitch: 0, bearing: 0, padding: PAD0, duration: 1200 });
+    const idle = ms => new Promise(r => { map.once("idle", r); map.triggerRepaint(); setTimeout(r, ms); });   // wait until the tiles at this scale are in
+    await sleep(1300); await idle(7000);
+    lm = landmarks(c, want);
+    if (!lm) { await idle(4000); lm = landmarks(c, want); }
+  }
+  if (!lm) { spinning = false; lb(0); route(); homeCam(900); sfx.no(); note("no named place on the map at that distance · try another"); return; }
+  sfx.lock();
+  const n = nextSeq(), rid = agent + "-w" + pad4(n); bornRid = rid;          // "w": walk IDs can never collide with the old locator reports
+  const data = { uid, agent, seq: n, rid, kind: "walk", lat: lm.lat, lng: lm.lng, name: lm.name, cls: lm.cls, want: Math.round(want), pace: +pace.toFixed(3), pur, head: HEAD,
+    status: "pending", t0: Date.now(), at: serverTimestamp() };
+  rt = null; lastFetch = 0; shownD = null; near100 = null; nearSince = 0; freed = null;
+  wpath = [[c.lng, c.lat]]; wlen = 0; saveW(rid);
   setDoc(doc(db, "reports", rid), data).catch(() => note("sync ✕"));
-  follow = false; overview(900, g); sfx.trace(); scanSweep();
+  follow = false; overview(900, data); sfx.trace(); scanSweep();
   setTimeout(() => { if (active && active.rid === rid && document.body.dataset.st === "travel") follow = true; }, 2800);   // then the camera swoops in behind you
 }
+const nextSeq = () => [...mine.values()].reduce((m, r) => Math.max(m, r.seq || 0), 0) + 1;
 $("bspin").addEventListener("click", () => {
-  if (spinning || typing || active) return;
+  if (spinning || active || resV) return;
   if (!pos) { startGeo(true); note("locating…"); sfx.no(); return; }
-  startCompass(); ac(); openIntent();
+  startCompass(); ac(); openStart();
 });
 
-/* ---------- the intention: typed on our own keyboard ---------- */
-let itxt = "";
-// Dots keys follow the chart, which is the font's own shape order: single dots a-e, adjacent pairs f-i, gapped pairs j-o, then the 3-dot shapes p-z
-const QW = ["1234567890", "qwertyuiop", "asdfghjkl", "zxcvbnm"], DT = ["1234567890", "abcde", "fghi", "jklmno", "pqrstu", "vwxyz"];
-function buildKb() {
-  const rows = document.documentElement.dataset.dots === "1" ? DT : QW; let h = "";
-  rows.forEach(r => { h += '<div class="kr">' + [...r].map(k => '<button class="kk" type="button" data-k="' + k + '">' + k + "</button>").join("") + "</div>"; });
-  h += '<div class="kr"><button class="kk wide sp" type="button" data-k=" " aria-label="Space">␣</button><button class="kk sp" type="button" data-k="⌫" aria-label="Delete">⌫</button><button class="kk go" type="button" data-k="▶" aria-label="Go">▶</button></div>';
-  $("kb").innerHTML = h;
-  $("kb").querySelectorAll(".kk").forEach(b => b.addEventListener("pointerdown", e => { e.preventDefault(); kbKey(b.dataset.k); }));
+/* ---------- your path, and the one walking it behind you ---------- */
+let wpath = [], wlen = 0, wsaveT = 0, freed = null;   // wpath: [lng, lat] every few metres you actually walk
+const saveW = rid => store.set("or.w." + rid, JSON.stringify(wpath));
+const plen = p => { let s = 0; for (let i = 1; i < p.length; i++) s += hav({ lat: p[i - 1][1], lng: p[i - 1][0] }, { lat: p[i][1], lng: p[i][0] }); return s; };
+function loadW(rid) { try { wpath = JSON.parse(store.get("or.w." + rid) || "[]"); if (!Array.isArray(wpath)) wpath = []; } catch { wpath = []; } wlen = plen(wpath); }
+function along(p, d) {                           // the point d metres along a path
+  if (!p.length) return null; let s = 0;
+  for (let i = 1; i < p.length; i++) {
+    const a = { lat: p[i - 1][1], lng: p[i - 1][0] }, b = { lat: p[i][1], lng: p[i][0] }, l = hav(a, b);
+    if (s + l >= d) { const k = l ? (d - s) / l : 0; return [a.lng + (b.lng - a.lng) * k, a.lat + (b.lat - a.lat) * k]; }
+    s += l;
+  }
+  return p[p.length - 1];
 }
-const renderI = () => { $("itx").textContent = itxt; };
-function kbKey(k) {
-  if (!typing) return;
-  if (k === "⌫") { itxt = itxt.slice(0, -1); sfx.del(); }
-  else if (k === "▶") { const t = itxt.trim(); if (!t) { sfx.no(); return; } sfx.enter(); closeIntent(); runSpin(t); return; }
-  else if (itxt.length < 120) { itxt += k; sfx.key(); }
-  renderI();
+const upto = (p, d) => { const o = [p[0]]; let s = 0; for (let i = 1; i < p.length; i++) { const l = hav({ lat: p[i - 1][1], lng: p[i - 1][0] }, { lat: p[i][1], lng: p[i][0] }); if (s + l >= d) { o.push(along(p, d)); return o; } s += l; o.push(p[i]); } return o; };
+function chase() {                               // where it is now: it sets off after the head start and walks your exact path at its pace, never stopping
+  if (!active || active.kind !== "walk" || active.status !== "pending") return null;
+  const el = (Date.now() - active.t0) / 1000, pd = Math.max(0, active.pace * (el - active.head));
+  return { el, pd, gap: wlen - pd, free: el >= active.head };
 }
-function openIntent() { typing = true; itxt = ""; renderI(); buildKb(); document.body.dataset.st = "intent"; sfx.hum(); route(); }
-function closeIntent() { typing = false; route(); }
-$("icancel").addEventListener("click", () => { sfx.close(); closeIntent(); });
+function stepW() {                               // called with each new position while walking
+  if (!active || active.kind !== "walk" || active.status !== "pending" || !pos) return;
+  const l = wpath[wpath.length - 1];
+  if (!l) { wpath.push([pos.lng, pos.lat]); return; }
+  const d = hav({ lat: l[1], lng: l[0] }, pos); if (d < 5) return;
+  wpath.push([+pos.lng.toFixed(6), +pos.lat.toFixed(6)]); wlen += d; wsaveT = 1;
+}
+const flushW = () => { if (wsaveT && active && active.kind === "walk") { wsaveT = 0; saveW(active.rid); } };   // your path survives a reload or a closed tab
+setInterval(() => { flushW(); if (document.body.dataset.st === "travel") updateTravel(); }, 1000);   // it keeps walking even when you stand still
+addEventListener("pagehide", flushW); document.addEventListener("visibilitychange", () => { if (document.hidden) flushW(); });
 
 /* ---------- travel ---------- */
 const seg = (a, b) => hav({ lat: a[0], lng: a[1] }, { lat: b[0], lng: b[1] });
@@ -1125,11 +1068,9 @@ function setDist(d) {                            // numbers glide instead of jum
   const step = () => { shownD += (targetD - shownD) * .3; if (Math.abs(targetD - shownD) < 1) { shownD = targetD; dtw = false; } $("dist").textContent = fmtD(shownD); if (dtw) setTimeout(step, 40); };
   step();
 }
-function arrive() {
+function arrive() {                             // you reached the finish ahead of it
   if (!active || arriving === active.rid) return;
-  arriving = active.rid; sfx.arrive(); buzz(400); lb(2600); flash(1000, "79,243,255"); setHide(false); scanSweep(); document.body.dataset.near = "0";
-  if (mapReady && !reduced) map.easeTo({ center: [active.lng, active.lat], pitch: 28, bearing: 0, zoom: 17.2, padding: { top: 0, bottom: 150, left: 0, right: 0 }, duration: 1100 });   // settle over the point
-  updateDoc(doc(db, "reports", active.rid), { status: "arrived", arrivedAt: serverTimestamp() }).catch(() => { arriving = null; });
+  arriving = active.rid; endWalk("escaped");
 }
 function updateTravel() {
   if (!active || !pos || active.status !== "pending") return;
@@ -1137,8 +1078,18 @@ function updateTravel() {
   const rr = routeRemain();
   const pace = routeMode === "car" ? 9 : 1.25;                          // m/s, used when the route service is unreachable
   $("rinfo").textContent = rr ? Math.max(1, Math.round(rr.rem / rt.dist * rt.dur / 60)) + " min" : "~" + Math.max(1, Math.round(d * 1.25 / pace / 60)) + " min";
-  document.body.dataset.near = d <= 100 ? "1" : "0";                    // the edges close in a notch near the point
-  setBed(.012 + .03 * Math.max(0, 1 - d / 400));
+  document.body.dataset.near = d <= 100 ? "1" : "0";                    // the edges close in a notch near the finish
+  const ch = chase();
+  if (ch) {                                      // how far behind it is, in metres and in seconds at its pace
+    const gs = ch.gap / active.pace, hot = ch.free ? Math.max(0, Math.min(1, 1 - gs / 120)) : 0;
+    document.body.style.setProperty("--hot", hot.toFixed(2));
+    $("gap").textContent = ch.free ? "◀ " + fmtD(Math.max(0, ch.gap)) + " · " + mmss(gs) : "◷ " + mmss(active.head - ch.el);
+    document.body.dataset.hot = ch.free && gs < 45 ? "1" : "0";
+    setBed(.012 + .05 * hot);
+    if (ch.free && freed !== active.rid) { freed = active.rid; sfx.free(); buzz([200, 100, 200]); lb(1800); flash(900, "255,59,78"); }   // it sets off
+    if (ch.free && gs < 20 && near100 !== active.rid) { document.body.dataset.lb = "1"; clearTimeout(lb.t); }
+    if (ch.free && ch.gap <= 0) { endWalk("caught"); return; }
+  }
   if (d <= 100 && near100 !== active.rid) { near100 = active.rid; buzz([60, 80, 60]); sfx.near(); document.body.dataset.lb = "1"; clearTimeout(lb.t); }   // bars ease in and stay until arrival
   if (d > 130 && near100 === active.rid) { near100 = null; document.body.dataset.lb = "0"; }   // walked away again
   if (d <= 100) { if (!nearSince) nearSince = Date.now(); } else nearSince = 0;
@@ -1147,7 +1098,9 @@ function updateTravel() {
 }
 $("bhere").addEventListener("click", arrive);
 function abortNow() {
-  if (!active) return; sfx.no(); buzz(80);
+  if (!active) return; buzz(80);
+  if (wlen > 50) { endWalk("left"); return; }   // a walk you actually started is kept, as stopped
+  sfx.no();
   deleteDoc(doc(db, "reports", active.rid)).catch(() => {});
   mine.delete(active.rid); active = null; rt = null; setTarget(); drawMine(); drawRoute(); route();
 }
@@ -1163,11 +1116,14 @@ $("brec2").addEventListener("click", () => {     // overview of you + the point 
   if (follow) { follow = false; overview(700); }
   else { follow = true; camTick(); }
 });
-function tickLoop() {                            // a heartbeat that quickens as you close in
+function tickLoop() {                            // silence while you are well ahead; a heartbeat as it closes, then its footsteps
   clearTimeout(tickT);
-  if (!(active && active.status === "pending" && pos) || muted || document.hidden) { tickT = setTimeout(tickLoop, 1500); return; }
-  const d = hav(pos, active); sfx.beat();
-  tickT = setTimeout(tickLoop, Math.max(600, Math.min(3200, 600 + (d - 30) * 2.6)));
+  const ch = chase();
+  if (!ch || !ch.free || muted || document.hidden) { tickT = setTimeout(tickLoop, 1000); return; }
+  const gs = ch.gap / active.pace;
+  if (gs > 150) { tickT = setTimeout(tickLoop, 1500); return; }
+  sfx.beat(); if (gs < 40) setTimeout(sfx.step, 260);
+  tickT = setTimeout(tickLoop, Math.max(420, Math.min(1700, 420 + gs * 9)));
 }
 async function wakeOn(on) {
   try {
@@ -1177,103 +1133,80 @@ async function wakeOn(on) {
 }
 document.addEventListener("visibilitychange", () => { if (!document.hidden && active && active.status === "pending") wakeOn(true); });
 
-/* ---------- at the point: how did it feel, then did it match ---------- */
-const setChoose = c => { choose = c; try { c ? store.set("tm.choose", JSON.stringify({ u: uid, ...c })) : store.set("tm.choose", ""); } catch {} };     // survives a reload
-let photoData = "", lvSel = null;
-$("bphoto").addEventListener("click", () => { sfx.key(); $("pfile").click(); });
-{ let pt = null;                                  // photos are rare: the button stays hidden until you press and hold the report ID
-  const on = () => { pt = setTimeout(() => { pt = null; $("bphoto").parentElement.classList.add("on"); sfx.open(); buzz(20); }, 700); }, off = () => { clearTimeout(pt); pt = null; };
-  $("rid").addEventListener("pointerdown", on); ["pointerup", "pointerleave", "pointercancel"].forEach(t => $("rid").addEventListener(t, off)); }
-$("pfile").addEventListener("change", () => {
-  const f = $("pfile").files[0]; if (!f) return;
-  const img = new Image(), u = URL.createObjectURL(f);
-  img.onload = () => {
-    const s = Math.min(1, 480 / Math.max(img.width, img.height)), c = document.createElement("canvas");
-    c.width = Math.round(img.width * s); c.height = Math.round(img.height * s); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-    photoData = c.toDataURL("image/jpeg", .5); URL.revokeObjectURL(u); $("pprev").src = photoData; $("pprev").hidden = false;
-  };
-  img.src = u; $("pfile").value = "";
-});
-document.querySelectorAll(".lvb").forEach(b => b.addEventListener("click", () => {
-  const n = +b.dataset.l; lvSel = n; sfx.level(n); buzz(30);
-  document.querySelectorAll(".lvb").forEach(x => x.classList.toggle("sel", x === b)); $("lv").classList.add("chosen"); $("vr").classList.add("ready");
-  flash(900, n === 0 ? "255,255,255" : n === 1 ? "138,125,255" : "79,243,255");
-}));
-function fillRep() {
-  $("rid").textContent = active.rid; $("rtype").textContent = TG[active.type] + " " + active.type;
-  lvSel = null; $("rep").classList.remove("seal"); document.querySelectorAll(".lvb").forEach(x => x.classList.remove("sel")); $("lv").classList.remove("chosen"); $("vr").classList.remove("ready");
+/* ---------- the end: escaped, caught, or stopped ---------- */
+let resV = null, ending = false;
+const thin = (p, n) => { if (p.length <= n) return p; const k = p.length / n, o = []; for (let i = 0; i < n; i++) o.push(p[Math.floor(i * k)]); o.push(p[p.length - 1]); return o; };
+const pathOf = r => { const p = [], f = r.path || []; for (let i = 0; i + 1 < f.length; i += 2) p.push([f[i], f[i + 1]]); return p; };
+function endWalk(result) {
+  if (!active || active.kind !== "walk" || ending) return; ending = true;
+  const r = active, ch = chase(), flat = [];
+  stepW(); thin(wpath, 500).forEach(q => flat.push(+(+q[0]).toFixed(5), +(+q[1]).toFixed(5)));
+  const data = { status: "done", result, walked: Math.round(wlen), dur: Date.now() - r.t0, gap: Math.round(ch ? ch.gap : 0), reach: Math.round(ch ? Math.min(ch.pd, wlen) : 0), path: flat, doneAt: serverTimestamp() };
+  if (result === "escaped") { sfx.arrive(); buzz(400); flash(1000, "79,243,255"); }
+  else if (result === "caught") { sfx.caught(); buzz([300, 120, 600]); flash(1200, "255,59,78"); }
+  else sfx.close();
+  lb(3400); scanSweep(); newRid = r.rid;
+  updateDoc(doc(db, "reports", r.rid), data).catch(() => note("sync ✕"));
+  store.set("or.w." + r.rid, "");
+  showRes({ ...r, ...data });
 }
-let sealing = false;
-function finish(v) {
-  if (!active || lvSel == null || sealing) return; const rid = active.rid;
-  sealing = true; $("rep").classList.add("seal");                              // the chosen dot sinks into the map before the panel goes
-  setChoose({ text: active.intention || "", jid: active.journey || rid });      // then: continue the journey from here, or end it
-  const data = { status: "done", verdict: v, level: lvSel, found: "", photo: photoData, doneAt: serverTimestamp() };
-  newRid = rid; v > 0 ? sfx.ok() : v < 0 ? sfx.no() : sfx.neutral(); buzz(v > 0 ? 40 : 90); scanSweep();
-  const vd = $("verd"); vd.textContent = v > 0 ? "✓" : v < 0 ? "✕" : "⌀"; vd.hidden = false; vd.style.animation = "none"; void vd.offsetWidth; vd.style.animation = "";
-  setTimeout(() => { vd.hidden = true; }, 1050);
-  setTimeout(() => { sealing = false; updateDoc(doc(db, "reports", rid), data).catch(() => note("sync ✕")); }, reduced ? 0 : 700);
-  photoData = ""; $("pprev").hidden = true; $("bphoto").parentElement.classList.remove("on");
+const sts = (s, v) => "<span>" + v + "<small>" + s + "</small></span>";
+function showRes(r) {
+  resV = r; const ok = r.result === "escaped", no = r.result === "caught";
+  $("res").className = ok ? "ok" : no ? "no" : ""; $("rbig").textContent = ok ? "✓" : no ? "✕" : "■";
+  $("rname").textContent = (r.name || "") + " · " + fmtT(r);
+  const sp = r.dur > 0 ? r.walked / (r.dur / 1000) : 0;
+  $("rstats").innerHTML = sts("↦", fmtD(r.walked || 0)) + sts("◷", mmss((r.dur || 0) / 1000)) + sts("◀", no ? "0" : fmtD(Math.max(0, r.gap || 0))) + sts(paceU(), fmtPace(sp));
+  route();
+  const pp = pathOf(r);
+  if (mapReady && pp.length > 1) {               // pull up over the whole walk: your line, and how much of it they covered
+    follow = false; map.stop(); map.setPadding(PAD0);             // the chase camera's padding would add to this one and squeeze the frame to nothing
+    const xs = pp.map(q => q[0]).concat(r.lng), ys = pp.map(q => q[1]).concat(r.lat);
+    map.fitBounds([[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]], { padding: { top: 90, bottom: 270, left: 50, right: 50 }, pitch: 35, bearing: -10, duration: reduced ? 0 : 2200, maxZoom: 17 });
+  }
+  paintRoute();
 }
-$("byes").addEventListener("click", () => finish(1));
-$("bno").addEventListener("click", () => finish(-1));
-$("bnone").addEventListener("click", () => finish(0));      // could not reach it: counts neither way
-$("nxgo").addEventListener("click", () => {      // go on: a new point from where you stand, same intention
-  if (!choose || !pos) return; const c = choose; setChoose(null); sfx.enter(); runSpin(c.text, c.jid);
-});
-$("nxend").addEventListener("click", () => {    // end: pull up and back over the whole journey for a moment, then home
-  const c = choose; setChoose(null); sfx.close(); route();
-  const legs = c ? [...mine.values()].filter(r => (r.journey || r.rid) === c.jid) : [];
-  if (!mapReady || reduced || !legs.length) return;
-  const pts = legs.map(r => [r.lng, r.lat]).concat(pos ? [[pos.lng, pos.lat]] : []);
-  const w = Math.min(...pts.map(p => p[0])), e = Math.max(...pts.map(p => p[0])), s = Math.min(...pts.map(p => p[1])), n = Math.max(...pts.map(p => p[1]));
-  follow = false; lb(3400); whoosh(1.6, 900, 200, .03);
-  map.fitBounds([[w, s], [e, n]], { padding: PADV, maxZoom: 16.2, pitch: 40, bearing: -12, duration: 1800 });
-  setTimeout(() => { if (document.body.dataset.st === "home") { follow = true; if (pos) map.easeTo({ center: [pos.lng, pos.lat], zoom: 15.6, pitch: HOME_PITCH, bearing: 0, duration: 1600 }); } }, 3600);
+$("rclose").addEventListener("click", () => {
+  resV = null; ending = false; sfx.close(); follow = true; route(); paintRoute();
+  if (pos && mapReady) map.easeTo({ center: [pos.lng, pos.lat], zoom: 15.6, pitch: HOME_PITCH, bearing: 0, padding: PAD0, duration: 1400 });
 });
 
 /* ---------- screens ---------- */
 let lastRid = null;
 function route() {
-  const pend = active && active.status === "pending", arr = active && active.status === "arrived";
-  const st = typing ? "intent" : spinning ? "spin" : pend ? "travel" : arr ? "rep" : choose ? "choose" : "home";
-  $("nx").hidden = st !== "choose";
+  const pend = active && active.status === "pending";
+  const st = resV ? "res" : spinning ? "spin" : pend ? "travel" : "home";
   document.body.dataset.st = st; if (st !== "home") { setHide(false); if (mn.classList.contains("open")) menu(false); }
-  if (st !== "travel") { document.body.dataset.near = "0"; setBed(0); }
-  $("hud").hidden = st !== "travel"; $("tfoot").hidden = st !== "travel"; $("rep").hidden = st !== "rep";
+  if (st !== "travel") { document.body.dataset.near = "0"; document.body.dataset.hot = "0"; document.body.style.setProperty("--hot", 0); setBed(0); }
+  $("hud").hidden = st !== "travel"; $("tfoot").hidden = st !== "travel"; $("res").hidden = st !== "res";
   $("dockhome").hidden = st !== "home"; wakeOn(st === "travel");
   if (!pend) { rt = null; drawRoute(); }
-  if (route.prev === "travel" && st !== "travel") { homeCam(1000); if (st === "home") document.body.dataset.lb = "0"; }   // leaving the chase: back to the 3D home view
+  if (route.prev === "travel" && st === "home") { homeCam(1000); document.body.dataset.lb = "0"; }   // leaving the chase: back to the 3D home view
   route.prev = st;
-  if (arr && $("rep").dataset.r !== active.rid) { $("rep").dataset.r = active.rid; fillRep(); }
-  if (!arr) $("rep").dataset.r = "";
   const rid = active ? active.rid : null;
   if (rid !== lastRid) {
     lastRid = rid; arriving = null; shownD = null; near100 = null; nearSince = 0; crumbs = []; crumbLast = null; setTarget();
+    if (pend) { loadW(rid); if (!wpath.length && pos) wpath = [[pos.lng, pos.lat]]; freed = chase() && chase().free ? rid : null; }
     if (pend && pos && mapReady && follow) { follow = false; overview(700); setTimeout(() => { if (active && active.status === "pending") follow = true; }, 2400); }
   }
   if (pend) { fetchRoute(); drawRoute(); updateTravel(); }
   drawCompass();
 }
 
-/* ---------- reports data + rank (plain numbers) ---------- */
-const updateRank = () => { $("mid").textContent = agent; };      // no ranks, no score: just your ID
+/* ---------- walks data ---------- */
+const isWalk = r => r.kind === "walk";
 function subMine() {
   unsubMine = onSnapshot(query(collection(db, "reports"), where("uid", "==", uid)), snap => {
-    mine = new Map(); snap.forEach(d => mine.set(d.id, { ...d.data(), rid: d.id }));
-    const cur = [...mine.values()].filter(r => r.status === "pending" || r.status === "arrived").sort((a, b) => b.seq - a.seq)[0] || null;
+    mine = new Map(); snap.forEach(d => { const r = { ...d.data(), rid: d.id }; if (isWalk(r)) mine.set(d.id, r); });
+    const cur = [...mine.values()].filter(r => r.status === "pending").sort((a, b) => b.seq - a.seq)[0] || null;
     active = cur; if (active && spinning) spinning = false;
-    if (!choose && !cur && !subMine.once) {          // reloaded between two legs: bring the continue / end choice back
-      try { const s = JSON.parse(store.get("tm.choose") || "null"); if (s && s.u === uid && s.jid) choose = { text: s.text || "", jid: s.jid }; } catch {}
-    }
-    subMine.once = true;
-    drawMine(); route(); updateRank();
+    drawMine(); route(); $("mid").textContent = agent;
   }, e => console.error(e));
 }
 function subAll() {
   if (unsubAll) return;
   unsubAll = onSnapshot(query(collection(db, "reports"), where("status", "==", "done"), limit(400)), snap => {
-    allDocs = new Map(); snap.forEach(d => allDocs.set(d.id, { ...d.data(), rid: d.id })); drawAll();
+    allDocs = new Map(); snap.forEach(d => { const r = { ...d.data(), rid: d.id }; if (isWalk(r)) allDocs.set(d.id, r); }); drawAll();
     if (listAll && sheet.classList.contains("open") && sbody.dataset.k === "list") renderList();
   }, e => console.error(e));
 }
@@ -1307,35 +1240,30 @@ function closeSheet(fromPop) {
 }
 addEventListener("popstate", () => { if (sheet.classList.contains("open")) closeSheet(true); });
 $("sx").addEventListener("click", () => { sfx.close(); closeSheet(); });
-const ldot = r => '<span class="ld l' + (r.status === "done" ? (r.level || 0) : 0) + '"></span>';
+const ldot = r => '<span class="ld ' + (r.result === "escaped" ? "l2" : r.result === "caught" ? "lr" : "l0") + '"></span>';
 
-let listAll = false;                             // the list shows your reports, or everyone's
+let listAll = false;                             // the list shows your walks, or everyone's
 const tms = r => r.at && r.at.toMillis ? r.at.toMillis() : 0;
 function renderList() {
   const src = listAll ? [...allDocs.values()] : [...mine.values()];
-  const arr = src.filter(r => r.status === "done" || !listAll).sort((a, b) => listAll ? tms(b) - tms(a) : b.seq - a.seq).slice(0, 150);
+  const arr = src.filter(r => r.status === "done").sort((a, b) => tms(b) - tms(a)).slice(0, 150);
   const tabs = '<div class="st" style="border:0;padding:0 0 8px;gap:10px;justify-content:flex-start"><button class="o sm' + (listAll ? "" : " on") + '" data-t="0" type="button" aria-label="Mine">◉</button>' +
     '<button class="o sm' + (listAll ? " on" : "") + '" data-t="1" type="button" aria-label="Everyone">⊕</button></div>';
-  openSheet(tabs + (arr.length ? arr.map(r => '<button class="li" data-r="' + esc(r.rid) + '"><span>' + ldot(r) + esc(r.intention || r.rid) +
-    '</span><span class="g">' + vg(r) + " " + esc(fmtT(r)) + "</span></button>").join("") : '<p class="g">–</p>'));
+  openSheet(tabs + (arr.length ? arr.map(r => '<button class="li" data-r="' + esc(r.rid) + '"><span>' + ldot(r) + esc(r.name || r.rid) +
+    '</span><span class="g">' + fmtD(r.walked || 0) + " · " + esc(fmtT(r)) + "</span></button>").join("") : '<p class="g">–</p>'));
   sbody.dataset.k = "list";
   sbody.querySelectorAll("[data-t]").forEach(b => b.addEventListener("click", () => { listAll = b.dataset.t === "1"; sfx.key(); if (listAll) subAll(); renderList(); }));
-  sbody.querySelectorAll(".li").forEach(b => b.addEventListener("click", () => { const r = (mine.get(b.dataset.r) || allDocs.get(b.dataset.r)); if (r) { follow = false; if (mapReady) map.flyTo({ center: [r.lng, r.lat], zoom: 15.8, duration: 800 }); openReport(r); } }));
+  sbody.querySelectorAll(".li").forEach(b => b.addEventListener("click", () => { const r = (mine.get(b.dataset.r) || allDocs.get(b.dataset.r)); if (r) openReport(r); }));
 }
 $("blist").addEventListener("click", () => {
   if (sheet.classList.contains("open") && sbody.dataset.k === "list") { closeSheet(); return; }
   if (listAll) subAll(); renderList(); sfx.open();
 });
-
-function openReport(r) {
-  const head = "<h2>" + esc(r.rid) + " " + vg(r) + " " + TG[r.type] + ' <span class="g">' + esc(fmtT(r)) + " · " + esc(r.src || "") + "</span></h2>";
-  let b = '<div class="bl">';
-  if (r.intention) b += "<p>" + esc(r.intention) + "</p>";
-  if (r.status === "done") b += '<p class="g">' + ldot(r) + esc(LV[r.level || 0]) + "</p>";
-  if (r.photo) b += '<img class="gray" src="' + esc(r.photo) + '" alt="">';
-  openSheet(head + b + "</div>"); sbody.dataset.k = "rep"; sfx.open();
+function openReport(r) {                         // any finished walk opens as its ending: the line, how far they got, the numbers
+  if (r.status !== "done" || active || spinning) return;
+  if (sheet.classList.contains("open")) closeSheet();
+  sfx.open(); showRes(r);
 }
-
 $("bset").addEventListener("click", () => {
   if (sheet.classList.contains("open") && sbody.dataset.k === "set") { closeSheet(); return; }
   const on = document.documentElement.dataset.dots === "1";
@@ -1358,9 +1286,10 @@ $("bset").addEventListener("click", () => {
   $("sout").addEventListener("click", () => { sfx.no(); signOut(auth).then(() => location.reload()).catch(() => location.reload()); });
 });
 
-const HELP = [["◎", "type an intention · the machine places a point"], ["➤", "arrow up = straight on"], ["✕", "hold to end"],
-  ["◉", "menu · tap the map to hide everything"], ["● ● ●", "calm · strange · uncanny, then ✓ ✕ ⌀"], ["▶ ■", "there: go on from here with the same intention, or end"],
-  ["⊕", "everyone's reports on the map"], ["≡", "reports: yours · everyone's"], ["⚙", "settings"]];
+const HELP = [["◎", "start a walk: pick a distance and the pace of whoever is behind you"], ["▶", "the finish is a real named place from the map"],
+  ["◷", "your head start; then it sets off along your exact path"], ["◀", "how far behind it is, in distance and in seconds"],
+  ["➤", "arrow up = straight on"], ["✓ ✕ ■", "escaped · caught · stopped"], ["◐", "your own best pace, once you have escaped once"],
+  ["✕", "hold to stop"], ["≡", "your walks · everyone's"], ["⚙", "settings"]];
 function openHelp() {
   if (sheet.classList.contains("open") && sbody.dataset.k === "help") { closeSheet(); return; }
   openSheet(HELP.map(h => '<div class="st hp"><span style="font-size:20px;min-width:3.6em">' + esc(h[0]) + "</span><span>" + esc(h[1]) + "</span></div>").join(""));

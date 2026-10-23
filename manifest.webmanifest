@@ -1,7 +1,7 @@
 {
-  "name": "locator",
-  "short_name": "locator",
-  "description": "locator",
+  "name": "on the run",
+  "short_name": "on the run",
+  "description": "walk somewhere real with someone on your heels",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
