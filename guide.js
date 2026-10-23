@@ -122,7 +122,7 @@ export async function area(lat, lng) {
     }
     const v = name ? { name, kind: j.addresstype || j.type || "", line, url } : null;
     lastArea = { lat, lng, v }; return v;
-  } catch { return lastArea ? lastArea.v : null; }
+  } catch { areaAt0 = 0; return lastArea ? lastArea.v : null; }              // a failed lookup is retried on the next position, not 20 seconds later
 }
 
 // Who took the photo and under which licence: shown with every picture
@@ -138,14 +138,31 @@ export async function credit(file) {
   } catch { return null; }
 }
 
-// The phone's own voice
-let voice = null;
+// The phone's own voice, with a queue so lines never talk over each other.
+// Priority: 3 briefing, 2 a stop's story, 1 everything else. A higher line interrupts a lower one; an equal one waits its turn.
+let voice = null, mode = "always", rate = 1, walking = false, cur = null, q = [], last = null, token = 0;
 const pickVoice = () => { const vs = speechSynthesis.getVoices(); voice = vs.find(v => /en-GB/i.test(v.lang) && /natural|neural|google/i.test(v.name)) || vs.find(v => /en-GB/i.test(v.lang)) || vs.find(v => /^en/i.test(v.lang)) || null; };
 if ("speechSynthesis" in window) { pickVoice(); speechSynthesis.addEventListener("voiceschanged", pickVoice); }
-export function say(text, on) {
-  if (!("speechSynthesis" in window) || !text) return null;
-  speechSynthesis.cancel(); if (!on) return null;
-  const u = new SpeechSynthesisUtterance(text); if (voice) u.voice = voice; u.lang = voice ? voice.lang : "en-GB"; u.rate = .98; u.pitch = .96;
-  speechSynthesis.speak(u); return u;
+const ok = () => "speechSynthesis" in window && mode !== "off" && (mode === "always" || walking);
+export function setVoice(m, r) { if (m) mode = m; if (r) rate = r; if (!ok()) hush(); }
+export const setWalking = w => { walking = w; if (!ok()) hush(); };
+export function prime() {                        // called from a real tap: phones only allow speech once they've seen one
+  if (!("speechSynthesis" in window)) return; const u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u);
 }
-export const hush = () => { if ("speechSynthesis" in window) speechSynthesis.cancel(); };
+function next() {
+  if (cur || !q.length) return; const it = q.shift(), my = ++token;
+  const u = new SpeechSynthesisUtterance(it.text); if (voice) u.voice = voice; u.lang = voice ? voice.lang : "en-GB"; u.rate = .98 * rate; u.pitch = .96;
+  const done = () => { if (token === my) { cur = null; next(); } };
+  u.onend = done; u.onerror = done; cur = it; last = it; speechSynthesis.speak(u);
+}
+export function say(text, on, prio = 1) {
+  if (!text || on === false || !ok()) return null;
+  if (cur && prio > cur.prio) { q = q.filter(i => i.prio >= prio); token++; cur = null; speechSynthesis.cancel(); }
+  else if (cur && prio < cur.prio) return null;                                                      // something more important is talking
+  if (q.length < 6) q.push({ text, prio }); next(); return true;
+}
+export function hush() { q = []; cur = null; token++; if ("speechSynthesis" in window) speechSynthesis.cancel(); }
+export function skip() { if (!cur) return; token++; cur = null; if ("speechSynthesis" in window) speechSynthesis.cancel(); next(); }   // the earphones' "next"
+export function again() { if (last) { const l = last; hush(); say(l.text, true, l.prio); } }                                        // the earphones' "previous"
+export const pause = () => { if ("speechSynthesis" in window) speechSynthesis.pause(); };
+export const resume = () => { if ("speechSynthesis" in window) speechSynthesis.resume(); };

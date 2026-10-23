@@ -375,7 +375,7 @@ const pad4 = n => String(n).padStart(4, "0");
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
 
-const BUILD = "v9.0a";
+const BUILD = "v9.1";
 const ARR = 30, HOME_PITCH = 50;
 
 /* ---------- sound ---------- */
@@ -421,7 +421,7 @@ const sfx = {
 };
 // iPhone only unlocks sound and the compass from a finished tap (touchend / click), so keep trying on each one until both are awake
 const unlockEv = ["touchend", "click"];
-function unlock() { ac(); startCompass(); if (AC && AC.state === "running" && (compassOn || !needsPerm)) unlockEv.forEach(t => removeEventListener(t, unlock, true)); }
+function unlock() { ac(); G.prime(); if (window.startMedia) window.startMedia(); startCompass(); if (AC && AC.state === "running" && (compassOn || !needsPerm)) unlockEv.forEach(t => removeEventListener(t, unlock, true)); }
 unlockEv.forEach(t => addEventListener(t, unlock, true));
 
 /* ---------- dots ---------- */
@@ -643,12 +643,12 @@ function restyle(st) {                           // black, white, a little cyan/
       L0["text-font"] = FONT_MAIN; L0["text-size"] = scaleSize(L0["text-size"] == null ? 12 : L0["text-size"], MAIN_K);
     }
     out.push(l);
-    if (id === "building") out.push({ id: "building3d", type: "fill-extrusion", source: "openmaptiles", "source-layer": "building", minzoom: 13.8,
+    if (id === "building") out.push({ id: "building3d", type: "fill-extrusion", source: "openmaptiles", "source-layer": "building", minzoom: 13,
       paint: {
-        "fill-extrusion-color": ["interpolate", ["linear"], ["coalesce", ["get", "render_height"], 9], 0, "#2c2c34", 40, "#5d5d70", 120, "#9a94ff", 250, "#c9c5ff"],
+        "fill-extrusion-color": ["interpolate", ["linear"], ["coalesce", ["get", "render_height"], 9], 0, "#3a3a46", 40, "#6c6c82", 120, "#a39dff", 250, "#d2cfff"],
         "fill-extrusion-height": ["*", 1.6, ["coalesce", ["get", "render_height"], 9]],
         "fill-extrusion-base": ["*", 1.6, ["coalesce", ["get", "render_min_height"], 0]],
-        "fill-extrusion-opacity": .82, "fill-extrusion-vertical-gradient": true } });
+        "fill-extrusion-opacity": .92, "fill-extrusion-vertical-gradient": true } });
   }
   st.layers = out; return st;
 }
@@ -1041,8 +1041,14 @@ function briefing(r) {                           // the whole walk in one frame,
     const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
     map.jumpTo({ padding: PAD0 }); map.fitBounds([[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]], { padding: PADV, maxZoom: 16.5, pitch: 45, bearing: -15, duration: reduced ? 0 : 1800 });
   }
-  const words = r.stops ? "Your tour: " + r.stops.map(s => s.n).join(", ") + "." : "Heading to " + r.name + ".";
-  setTimeout(() => G.say(words + (areaNow ? " You are in " + areaNow.name + "." : ""), !muted), 400);
+  const mins = Math.max(5, Math.round(r.want * 1.3 / 1.25 / 60 / 5) * 5), P = id => id ? G.byId(id) : null, first = r.stops ? P(r.stops[0].id) : P(r.pid);
+  const say = (t, p = 3) => G.say(t, !muted, p);                    // each line waits for the one before; none talks over another
+  setTimeout(() => {
+    if (areaNow) say("You're starting in " + areaNow.name + "." + (areaNow.line ? " " + areaNow.line : ""));
+    say(r.stops ? "Your tour takes in " + r.stops.length + " places: " + r.stops.map(s => s.n).join(", ") + ". About " + mins + " minutes on foot." : "You're heading to " + r.name + ", about " + mins + " minutes on foot.");
+    if (first) say((r.stops ? "First, " : "") + first.title + ". " + G.short(first));
+    say("Head off whenever you're ready.");
+  }, 300);
   setTimeout(() => { if (active && active.rid === r.rid && document.body.dataset.st === "travel") { follow = true; lb(0); } }, r.stops ? 5200 : 3200);
 }
 const nextSeq = () => [...mine.values()].reduce((m, r) => Math.max(m, r.seq || 0), 0) + 1;
@@ -1228,7 +1234,7 @@ function chime(p) {                              // the chime comes from the dir
   });
 }
 function heardOne(p, full) {                     // speak it, remember it
-  chime(p); setTimeout(() => G.say(full ? p.title + ". " + G.story(p) : G.spoken(p), !muted), 450);
+  chime(p); setTimeout(() => G.say(full ? p.title + ". " + G.story(p) : G.spoken(p), !muted, full ? 2 : 1), 450);
   if (!heard.has(p.id)) { heard.add(p.id); saveHeard(); }
   if (active && !wHeard.some(h => h.id === p.id)) wHeard.push({ id: p.id, t: p.title });
   drawTitles(true);
@@ -1247,6 +1253,7 @@ async function areaTick() {                      // crossing into a new neighbou
   const el = $("area"); el.querySelector("b").textContent = v.name; el.querySelector("span").textContent = v.line || "";
   el.classList.remove("go"); void el.offsetWidth; el.classList.add("go");
   if (active && active.status === "pending") setTimeout(() => G.say(v.name + ". " + (v.line || ""), !muted), 600);
+  else if (first) { const h = new Date().getHours(); setTimeout(() => G.say((h < 5 ? "Hello" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening") + ". You're in " + v.name + ".", !muted), 1200); }   // the first thing the guide says
 }
 async function openCard(p, full, auto) {         // the place's own words, its facts, its picture, and where they come from
   clearTimeout(cardT);
@@ -1322,9 +1329,10 @@ function route() {
   const st = resV ? "res" : spinning ? "spin" : pend ? "travel" : "home";
   document.body.dataset.st = st; if (st !== "home") { setHide(false); if (mn.classList.contains("open")) menu(false); }
   if (st !== "travel") { document.body.dataset.near = "0"; setBed(0); }
+  if (mapReady) map.setMinZoom(st === "travel" ? 13 : 9);                        // the map data has no buildings below zoom 13: on a walk, stay where the 3D city is
   if (st !== route.prev) setTimeout(() => drawTitles(true), 50);               // the floating titles belong to home and walking only
   $("hud").hidden = st !== "travel"; $("tfoot").hidden = st !== "travel"; $("res").hidden = st !== "res";
-  $("dockhome").hidden = st !== "home"; wakeOn(st === "travel");
+  $("dockhome").hidden = st !== "home"; wakeOn(st === "travel"); G.setWalking(st === "travel" || st === "spin");
   if (!pend) { rt = null; drawRoute(); }
   if (route.prev === "travel" && st === "home") { homeCam(1000); document.body.dataset.lb = "0"; }   // leaving the walk: back to the 3D home view
   route.prev = st;
@@ -1412,13 +1420,15 @@ function openReport(r) {                         // any finished walk opens as i
 }
 $("bset").addEventListener("click", () => {
   if (sheet.classList.contains("open") && sbody.dataset.k === "set") { closeSheet(); return; }
-  const on = document.documentElement.dataset.dots === "1";
+  const on = document.documentElement.dataset.dots === "1", vmode = VMODES[vi], vrate = VRATES[ri];
   openSheet('<div class="sg">' +
     '<button id="sdots" class="o' + (on ? " on" : "") + '" type="button" aria-label="Dots"><span class="dw">dots</span></button>' +
     '<button id="smute" class="o' + (!muted ? " on" : "") + '" type="button" aria-label="Sound">♪</button>' +
     '<button id="sdm" class="o' + (DOTMAP ? " on" : "") + '" type="button" aria-label="Dotted map">⋰</button>' +
     '<button id="sunit" class="o" type="button" aria-label="Units">' + units + "</button>" +
     '<button id="smode" class="o" type="button" aria-label="Route mode">' + (routeMode === "car" ? "ⓓ" : "ⓦ") + "</button>" +
+    '<button id="svoice" class="o" type="button" aria-label="Voice">✺<small>' + vmode + "</small></button>" +
+    '<button id="srate" class="o" type="button" aria-label="Voice speed">×<small>' + vrate + "</small></button>" +
     '<button id="shelp" class="o" type="button" aria-label="Help">?</button>' +
     '<button id="sout" class="o" type="button" aria-label="Sign out">⏻</button></div>' +
     '<div class="st g" style="border:0;justify-content:center"><span>' + BUILD + "</span></div>");
@@ -1428,14 +1438,34 @@ $("bset").addEventListener("click", () => {
   $("sunit").addEventListener("click", e => { units = units === "mi" ? "km" : "mi"; store.set("tm.units", units); e.currentTarget.textContent = units; sfx.key(); });
   $("smode").addEventListener("click", e => { routeMode = routeMode === "foot" ? "car" : "foot"; store.set("tm.mode", routeMode); e.currentTarget.textContent = routeMode === "car" ? "ⓓ" : "ⓦ"; rt = null; lastFetch = 0; sfx.key(); if (active) { fetchRoute(); } });
   $("sdm").addEventListener("click", () => { store.set("tm.dotmap", DOTMAP ? "0" : "1"); sfx.key(); location.reload(); });
+  $("svoice").addEventListener("click", e => { vi = (vi + 1) % 3; store.set("tour.vmode", vi); applyVoice(); e.currentTarget.querySelector("small").textContent = VMODES[vi]; sfx.key(); if (VMODES[vi] !== "off") G.say("Voice " + VMODES[vi] + ".", true, 3); });
+  $("srate").addEventListener("click", e => { ri = (ri + 1) % 3; store.set("tour.vrate", ri); applyVoice(); e.currentTarget.querySelector("small").textContent = VRATES[ri]; sfx.key(); G.say("This is the speed.", true, 3); });
   $("shelp").addEventListener("click", openHelp);
   $("sout").addEventListener("click", () => { sfx.no(); signOut(auth).then(() => location.reload()).catch(() => location.reload()); });
 });
 
+/* ---------- voice settings, and the earphone buttons ---------- */
+const VMODES = ["always", "walks", "off"], VRATES = [".9", "1", "1.2"];
+let vi = Math.min(2, +(store.get("tour.vmode") || 0)), ri = Math.min(2, +(store.get("tour.vrate") ?? 1));
+const applyVoice = () => G.setVoice(VMODES[vi], +VRATES[ri]);
+applyVoice();
+{ // a silent, looping sound keeps the phone treating tour as media, so the earphone buttons reach it
+  const n = 8000, b = new Uint8Array(44 + n), dv = new DataView(b.buffer), w = (o, s) => [...s].forEach((c, i) => b[o + i] = c.charCodeAt(0));
+  w(0, "RIFF"); dv.setUint32(4, 36 + n, true); w(8, "WAVEfmt "); dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true); dv.setUint32(24, 8000, true); dv.setUint32(28, 8000, true); dv.setUint16(32, 1, true); dv.setUint16(34, 8, true); w(36, "data"); dv.setUint32(40, n, true); b.fill(128, 44);
+  const a = new Audio(URL.createObjectURL(new Blob([b], { type: "audio/wav" }))); a.loop = true; a.volume = .01;
+  window.startMedia = () => { a.play().catch(() => {}); };
+  if ("mediaSession" in navigator) {
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({ title: "tour", artist: "your guide" });
+      const h = (k, f) => { try { navigator.mediaSession.setActionHandler(k, f); } catch {} };
+      h("pause", () => G.pause()); h("play", () => G.resume()); h("nexttrack", () => G.skip()); h("previoustrack", () => G.again());
+    } catch {}
+  }
+}
 const HELP = [["◎", "start a walk: a tour of several places, or one place with history, a view or green"], ["◌", "tour: a loop through the most notable real places around you"],
   ["▥ ◭ ♧", "history · view · green: one real place at about that distance"], ["✦", "places with a story float over the map; tap one, or walk past and the guide tells you"],
-  ["◉", "look around: the three most interesting things near you"], ["➤", "arrow up = straight on"], ["✓ ■", "arrived · stopped"], ["✕", "hold to stop"],
-  ["≡", "your walks · everyone's"], ["⌁", "waiting to sync"], ["⚙", "settings"], ["", "facts: wikipedia · wikidata · photos: wikimedia commons · places: openstreetmap"]];
+  ["◉", "look around: the three most interesting things near you"], ["✺", "voice: always · only on walks · off, and speed in settings; earphone buttons: pause, skip, repeat"], ["➤", "arrow up = straight on"], ["✓ ■", "arrived · stopped"], ["✕", "hold to stop"],
+  ["≡", "your walks · everyone's"], ["▦", "buildings are 3D from zoom 13; the map data has none further out"], ["⌁", "waiting to sync"], ["⚙", "settings"], ["", "facts: wikipedia · wikidata · photos: wikimedia commons · places: openstreetmap"]];
 function openHelp() {
   if (sheet.classList.contains("open") && sbody.dataset.k === "help") { closeSheet(); return; }
   openSheet(HELP.map(h => '<div class="st hp"><span style="font-size:20px;min-width:3.6em">' + esc(h[0]) + "</span><span>" + esc(h[1]) + "</span></div>").join(""));
