@@ -681,7 +681,9 @@ function daily() {
 /* ---------- session ---------- */
 onAuthStateChanged(auth, user => {
   if (!user) { $("app").hidden = true; $("open").hidden = false; busy = false; return; }
-  uid = user.uid; agent = user.displayName || pendingId || store.get("tm.id") || "????"; store.set("tm.id", agent);
+  uid = user.uid; agent = user.displayName || pendingId || store.get("tm.id") || "";
+  if (!/^\d{4}$/.test(agent)) { signOut(auth); return; }
+  store.set("tm.id", agent);
   setTimeout(() => {
     $("open").hidden = true; $("app").hidden = false; $("me").textContent = agent;
     initMap(); map.invalidateSize(); startGeo(); subMine(); daily(); route();
