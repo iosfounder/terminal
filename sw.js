@@ -1,5 +1,5 @@
-const V = "locator-v7-2-1";
-const SHELL = ["./", "index.html", "manifest.webmanifest", "DotsiesRect.ttf",
+const V = "locator-v7-3a";
+const SHELL = ["./", "index.html", "manifest.webmanifest", "DotsiesRect.ttf", "fonts/ui/dm-mono-300.woff2", "fonts/ui/dm-mono-400.woff2", "fonts/ui/dm-mono-500.woff2",
   "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png", "icons/apple-touch-icon.png", "icons/favicon-32.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => {
