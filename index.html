@@ -278,7 +278,7 @@ const pad4 = n => String(n).padStart(4, "0");
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
 
-const BUILD = "v5";
+const BUILD = "v5.1";
 const INTENT = "benefit of mankind";
 const R = 1000, N = 500, G = 12, ARR = 30;
 const TG = { attractor:"◉", void:"◌", anomaly:"◈" };
@@ -431,6 +431,7 @@ let near100 = null, nearSince = 0, wake = null, tickT = null, lastTouch = Date.n
 const vg = r => r.status !== "done" ? "○" : r.verdict > 0 ? "●" : r.verdict < 0 ? "✕" : "⌀";
 const setEyes = v => { document.body.dataset.eyes = v ? "1" : "0"; if (!v) eyesOffAt = Date.now(); };
 const setHide = v => { document.body.dataset.hide = v ? "1" : "0"; $("dot").hidden = !v; };
+$("dot").addEventListener("click", () => setHide(false));
 
 const flash = (ms = 100) => { if (reduced) return; const f = $("flash"); f.hidden = false; setTimeout(() => { f.hidden = true; }, ms); };
 const note = (t, dim = true) => { const l = $("line"); l.textContent = t; l.classList.toggle("dim", dim); };
