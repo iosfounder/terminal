@@ -13,22 +13,26 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/5.6.0/maplibre-gl.min.css">
 <style>
 @font-face{font-family:"Dotsies";src:url("DotsiesRect.ttf") format("truetype");font-display:swap}
-:root{--k:#000;--w:#fff;--g:#777;--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px)}
+:root{--k:#000;--w:#fff;--g:#777;--c:#4ff3ff;--i:#8a7dff;--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);--ease:cubic-bezier(.2,.8,.2,1)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:var(--k);color:var(--w);overflow:hidden;overscroll-behavior:none;touch-action:manipulation;-webkit-text-size-adjust:100%;
   font:16px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;text-transform:lowercase}
 html[data-dots="1"] body{font-family:"Dotsies",ui-monospace,monospace}
 button,input,textarea{font:inherit;color:inherit;background:none;border:0;outline:0;border-radius:0;text-transform:inherit}
-button{cursor:pointer;border:1.5px solid var(--w);user-select:none;-webkit-user-select:none;transition:background .1s,color .1s}
+button{cursor:pointer;border:1.5px solid var(--w);user-select:none;-webkit-user-select:none;transition:background .18s,color .18s,transform .18s var(--ease),opacity .25s,border-color .25s}
 button:active,button.on{background:var(--w);color:var(--k)}
+button:active{transform:scale(.94)}
 :focus-visible{outline:1px solid var(--w);outline-offset:2px}
 [hidden]{display:none!important}
 .o{width:44px;height:44px;border-radius:50%;font-size:20px;line-height:1;display:grid;place-items:center}
+.o.sm{width:40px;height:40px;font-size:18px}
 .o.xl{width:80px;height:80px;font-size:34px;border-width:2px}
 .g{color:var(--g)}
+.o,#kp .mut{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace!important}   /* symbol buttons stay readable in Dots mode */
+.dw{font-family:"Dotsies",ui-monospace,monospace!important;font-size:34px;line-height:1}   /* the word "dots" is always written in Dots */
 
-/* map */
-#map{position:fixed;inset:0;background:var(--k);animation:wipe .6s steps(8) both}
+/* map + layers */
+#map{position:fixed;inset:0;background:var(--k);animation:wipe .9s var(--ease) both}
 @keyframes wipe{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0)}}
 .maplibregl-map{background:var(--k);font:inherit}
 .maplibregl-canvas{outline:0}
@@ -37,234 +41,251 @@ button:active,button.on{background:var(--w);color:var(--k)}
 .maplibregl-ctrl-attrib-button{background-color:transparent!important;filter:invert(.5)}
 .maplibregl-ctrl-bottom-right{z-index:600}
 .maplibregl-marker{will-change:transform}
-#grid{position:fixed;inset:0;z-index:400;pointer-events:none;opacity:.07;
+#grid{position:fixed;inset:0;z-index:400;pointer-events:none;opacity:.06;
   background:linear-gradient(var(--w) 1px,transparent 1px) 0 0/48px 48px,linear-gradient(90deg,var(--w) 1px,transparent 1px) 0 0/48px 48px;
-  animation:gridin .9s steps(10) both}
+  animation:gridin 1.4s var(--ease) both}
 @keyframes gridin{from{clip-path:circle(0 at 50% 50%)}to{clip-path:circle(150% at 50% 50%)}}
-#fx{position:fixed;inset:0;z-index:600;pointer-events:none}
-#flash{position:fixed;inset:0;z-index:900;background:var(--w);pointer-events:none}
+#rcv{position:fixed;inset:0;z-index:610;pointer-events:none;width:100%;height:100%}
+#fx{position:fixed;inset:0;z-index:620;pointer-events:none}
+#dim{position:fixed;inset:0;z-index:690;pointer-events:none;background:rgba(0,0,0,.55);opacity:0;transition:opacity .5s ease}
+body[data-st="intent"] #dim{opacity:1}
+#tint{position:fixed;inset:0;z-index:860;pointer-events:none;opacity:0;background:radial-gradient(circle at 50% 55%,rgba(var(--tc,255,255,255),0) 25%,rgba(var(--tc,255,255,255),.38) 100%)}
+#tint.go{animation:tint 1.1s ease-out}
+@keyframes tint{0%{opacity:0}28%{opacity:1}100%{opacity:0}}
 
 /* markers */
 .mkw{background:none!important;border:0!important;width:0;height:0}
-.mk{display:block;width:24px;height:24px;margin:-12px 0 0 -12px;font-size:20px;line-height:24px;text-align:center;font-weight:400;text-shadow:0 0 3px #000,0 0 3px #000}
-.mk.o2{opacity:.65}
-.mk.drop{animation:drop .5s steps(5) both}
-@keyframes drop{from{transform:translateY(-30px);opacity:0}to{transform:none;opacity:1}}
-.me i,.tgm i{position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-radius:50%;background:var(--w)}
-.me b,.tgm b{position:absolute;left:-14px;top:-14px;width:28px;height:28px;border:1px solid var(--w);border-radius:50%;animation:pulse 2s steps(5) infinite}
-.tgm i{background:none;border:1px solid var(--w);width:14px;height:14px;left:-7px;top:-7px}
-@keyframes pulse{from{transform:scale(.4);opacity:1}to{transform:scale(1.5);opacity:0}}
-.seg-new{animation:flick .9s steps(1) 1}
-@keyframes flick{0%,40%,80%{opacity:0}20%,60%,100%{opacity:1}}
+.mk{display:block;width:24px;height:24px;margin:-12px 0 0 -12px;font-size:20px;line-height:24px;text-align:center;font-weight:400;text-shadow:0 0 4px #000,0 0 4px #000}
+.mk.l1{color:var(--i);text-shadow:0 0 8px var(--i),0 0 3px #000}
+.mk.l2{color:var(--c);text-shadow:0 0 9px var(--c),0 0 3px #000}
+.mk.o2{opacity:.7}
+.mk.drop{animation:drop .8s var(--ease) both}
+@keyframes drop{from{transform:translateY(-34px) scale(1.6);opacity:0}to{transform:none;opacity:1}}
+.me i,.tgm i{position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-radius:50%;background:var(--w);box-shadow:0 0 10px rgba(255,255,255,.8)}
+.me b,.tgm b{position:absolute;left:-14px;top:-14px;width:28px;height:28px;border:1px solid var(--c);border-radius:50%;animation:pulse 2.4s ease-out infinite}
+.tgm i{background:none;border:1.5px solid var(--c);width:16px;height:16px;left:-8px;top:-8px;box-shadow:0 0 12px var(--c)}
+@keyframes pulse{from{transform:scale(.4);opacity:1}to{transform:scale(1.8);opacity:0}}
+.me em.sw{position:absolute;left:-110px;top:-110px;width:220px;height:220px;border:1px solid var(--c);border-radius:50%;opacity:0;animation:sweep 6s ease-out infinite 2s}
+@keyframes sweep{0%{transform:scale(.05);opacity:.5}75%{opacity:0}100%{transform:scale(1);opacity:0}}
+.mk.rip{animation:rip .8s var(--ease) both;animation-delay:var(--rd,0ms)}
+@keyframes rip{from{transform:scale(2.4);opacity:0}to{transform:none;opacity:1}}
+.rpl{position:absolute;left:-250px;top:-250px;width:500px;height:500px;border:1.5px solid var(--c);border-radius:50%;animation:rpl 1.9s cubic-bezier(.2,.6,.3,1) forwards}
+@keyframes rpl{from{transform:scale(.02);opacity:.9}to{transform:scale(3);opacity:0}}
 
-/* open */
-#open{position:fixed;inset:0;z-index:800;background:var(--k);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:36px}
-#boxes{display:flex;gap:12px;position:relative}
-#boxes i{width:52px;height:72px;border:1px solid var(--w);display:grid;place-items:center;font-style:normal;font-size:40px}
-#boxes i.cur::after{content:"_";animation:blink 1s steps(1) infinite}
-#boxes.busy i{animation:blink .4s steps(1) infinite}
+/* open: sign in */
+#open{position:fixed;inset:0;z-index:800;background:var(--k);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:calc(var(--sat) + 10px) 16px calc(var(--sab) + 10px)}
+#boxes{display:flex;gap:12px}
+#boxes i{width:54px;height:72px;border:1.5px solid var(--w);border-radius:10px;display:grid;place-items:center;font-style:normal;font-size:38px;transition:background .3s,color .3s,border-color .3s,transform .3s var(--ease)}
+#boxes i.f{border-color:var(--c);box-shadow:0 0 14px rgba(79,243,255,.3)}
+#boxes i.cur::after{content:"_";animation:blink 1.1s ease-in-out infinite}
+#boxes.busy i{animation:blink .5s ease-in-out infinite}
 #boxes.inv i{background:var(--w);color:var(--k)}
-#boxes.shake{animation:shake .3s steps(3)}
-@keyframes blink{50%{opacity:0}}
-@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
-#idin{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;text-align:center;caret-color:transparent}
-#oerr{min-height:1.4em;color:var(--g);font-size:16px}
-#obtn{display:flex;gap:18px}
+#boxes.shake{animation:shake .42s var(--ease)}
+@keyframes blink{50%{opacity:.25}}
+@keyframes shake{20%{transform:translateX(-9px)}50%{transform:translateX(7px)}80%{transform:translateX(-3px)}}
+#orow{display:flex;gap:18px;align-items:center;margin-top:4px}
+#bgo{width:60px;height:60px;font-size:26px;border-width:2px;border-color:var(--c);color:var(--c)}
+#bgo:active{background:var(--c);color:var(--k)}
+#oerr{min-height:1.4em;color:var(--g);font-size:15px}
+#kp{display:grid;grid-template-columns:repeat(3,76px);gap:10px;margin-top:6px}
+#kp button{height:58px;border-radius:14px;font-size:26px;border-color:#555}
+#kp button:active{background:var(--w);border-color:var(--w)}
+#kp .gh{visibility:hidden}
+#kp button.mut{font-size:20px;color:var(--g)}
+#ack{margin-top:10px}
 .o.pri{background:var(--w);color:var(--k)}
-#last{border:0;color:var(--g);font-size:20px;letter-spacing:.3em;padding:8px 12px}
-#last:active{background:none;color:var(--w)}
 
-/* top */
-#top{position:fixed;top:0;left:0;right:0;z-index:700;background:var(--k);border-bottom:1px solid var(--w);
-  padding:calc(var(--sat) + 8px) 12px 8px;display:flex;align-items:center;gap:8px}
-#top .sp{flex:1}
-#top{gap:6px}
-#top .o{width:44px;height:44px;font-size:19px}
-#me{font-size:19px}
-#me{font-size:20px;letter-spacing:.08em}
-#rk{text-transform:none;font-size:18px;min-width:2.2em;text-align:center;border:1px solid var(--w);padding:0 6px}
-#rk.flick{animation:inv .9s steps(1) 1}
-@keyframes inv{0%,34%,67%{background:var(--w);color:var(--k)}17%,50%,84%,100%{background:none;color:var(--w)}}
-#line{position:fixed;top:calc(var(--sat) + 62px);left:12px;right:12px;z-index:650;pointer-events:none;color:var(--w);text-shadow:0 0 3px #000,0 0 3px #000}
-#line.dim{color:var(--g)}
+/* menu: one button that blooms */
+#bm{position:fixed;top:calc(var(--sat) + 12px);right:12px;z-index:730;width:46px;height:46px;border-radius:50%;font-size:20px;display:grid;place-items:center;background:rgba(0,0,0,.45);backdrop-filter:blur(6px)}
+#bm.on{background:var(--w);color:var(--k);transform:rotate(90deg)}
+#bm.flick{animation:flick 1.2s ease 1}
+@keyframes flick{0%,40%,80%{box-shadow:0 0 0 0 var(--c)}20%,60%{box-shadow:0 0 0 12px rgba(79,243,255,0)}}
+#mn{position:fixed;top:calc(var(--sat) + 66px);right:12px;z-index:725;display:flex;flex-direction:column;align-items:flex-end;gap:10px;pointer-events:none}
+#mn>*{opacity:0;transform:translate(8px,-20px) scale(.5);transform-origin:top right;transition:transform .42s cubic-bezier(.2,1.25,.3,1),opacity .25s;pointer-events:none}
+#mn.open>*{opacity:1;transform:none;pointer-events:auto}
+#mn.open>*:nth-child(2){transition-delay:.04s}#mn.open>*:nth-child(3){transition-delay:.08s}#mn.open>*:nth-child(4){transition-delay:.12s}#mn.open>*:nth-child(5){transition-delay:.16s}
+#mid{font-size:15px;letter-spacing:.06em;padding:6px 12px;border:1px solid #444;border-radius:20px;background:rgba(0,0,0,.6);backdrop-filter:blur(6px)}
+#mn .o{background:rgba(0,0,0,.6);backdrop-filter:blur(6px)}
+#mn .o.on{background:var(--w)}
+body:not([data-st="home"]) #bm,body:not([data-st="home"]) #mn{display:none}
 
-/* compass: ring + north tick; the big arrow shows where to walk */
-.cmp svg{width:100%;height:100%;display:block}
-.cmp .ar{display:none}.cmp.has .ar{display:block}
-#cmph{position:fixed;top:calc(var(--sat) + 64px);right:12px;width:68px;height:68px;z-index:650;pointer-events:none;background:rgba(0,0,0,.55);border-radius:50%}
+/* toast: only for problems */
+#toast{position:fixed;left:0;right:0;bottom:calc(var(--sab) + 118px);z-index:700;text-align:center;color:var(--g);font-size:14px;pointer-events:none;opacity:0;transition:opacity .5s ease}
+#toast.on{opacity:1}
 
 /* dock */
-#dockhome{position:fixed;left:0;right:0;bottom:calc(var(--sab) + 22px);z-index:700;display:flex;align-items:center;justify-content:center;pointer-events:none}
+#dockhome{position:fixed;left:0;right:0;bottom:calc(var(--sab) + 24px);z-index:700;display:flex;align-items:center;justify-content:center;pointer-events:none}
 #dockhome>*{pointer-events:auto}
-#brec{position:absolute;left:20px;bottom:16px}
-#bspin.pulse1{animation:ring 1.6s ease-out infinite}
-@keyframes ring{0%{box-shadow:0 0 0 0 rgba(255,255,255,.7)}100%{box-shadow:0 0 0 26px rgba(255,255,255,0)}}
+#brec{position:absolute;left:20px;bottom:18px;background:rgba(0,0,0,.5)}
+#bspin{background:rgba(0,0,0,.35);box-shadow:0 0 22px rgba(79,243,255,.18)}
+#bspin.pulse1{animation:ring 2s ease-out infinite}
+@keyframes ring{0%{box-shadow:0 0 0 0 rgba(79,243,255,.6)}100%{box-shadow:0 0 0 30px rgba(79,243,255,0)}}
 
-/* hide to essentials */
-#top,#line,#cmph,#dockhome{transition:opacity .3s ease}
-body[data-hide="1"] #top,body[data-hide="1"] #line,body[data-hide="1"] #cmph,body[data-hide="1"] #dockhome{opacity:0;pointer-events:none}
-#dot{position:fixed;right:14px;bottom:calc(var(--sab) + 44px);z-index:710;width:36px;height:36px;font-size:14px;opacity:.7}
+/* everything that disappears when you tap the map */
+#bm,#mn,#dockhome,#toast{transition:opacity .45s ease}
+body[data-hide="1"] #bm,body[data-hide="1"] #mn,body[data-hide="1"] #dockhome,body[data-hide="1"] #toast{opacity:0!important;pointer-events:none}
 
-/* travel: everything at the top */
-body[data-st="travel"] #top,body[data-st="travel"] #line,body[data-st="travel"] #cmph{display:none}
-#travel{position:fixed;top:0;left:0;right:0;z-index:700;background:var(--k);border-bottom:1.5px solid var(--w);
-  padding:calc(var(--sat) + 10px) 16px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px;animation:down .3s ease both}
-@keyframes down{from{transform:translateY(-30px);opacity:0}}
-#dist{font-size:46px;line-height:1;font-variant-numeric:tabular-nums}
-#rinfo{font-size:16px;margin-top:6px;min-height:1.4em}
-#travel .tb{display:flex;gap:10px;margin-top:10px}
-#travel .cmp{width:116px;height:116px;flex:none}
-#tfoot{position:fixed;left:20px;right:20px;bottom:calc(var(--sab) + 22px);z-index:710;display:flex;justify-content:space-between;align-items:center}
+/* walking: small, top right, no bar */
+.cmp svg{width:100%;height:100%;display:block}
+.cmp .ar{display:none}.cmp.has .ar{display:block}
+#hud{position:fixed;top:calc(var(--sat) + 12px);right:12px;z-index:700;width:92px;display:flex;flex-direction:column;align-items:flex-end;pointer-events:none;animation:down .6s var(--ease) both}
+@keyframes down{from{transform:translateY(-18px);opacity:0}}
+#hud .cmp{width:72px;height:72px;border-radius:50%;background:rgba(0,0,0,.5);filter:drop-shadow(0 0 8px rgba(79,243,255,.35))}
+#dist{font-size:23px;line-height:1.1;margin-top:6px;font-variant-numeric:tabular-nums;text-shadow:0 0 6px #000,0 0 3px #000}
+#rinfo{font-size:15px;color:#cfcfcf;text-shadow:0 0 6px #000,0 0 3px #000}
+#tfoot{position:fixed;left:20px;right:20px;bottom:calc(var(--sab) + 24px);z-index:710;display:flex;justify-content:space-between;align-items:center}
+#tfoot .o{background:rgba(0,0,0,.5)}
 .hold{position:relative;isolation:isolate;overflow:hidden}
 .hold::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--w);transform:scaleY(0);transform-origin:bottom;transition:transform .15s linear}
 .hold.press::before{transform:scaleY(1);transition:transform .9s linear}
 .hold.press{color:var(--k)}
-body[data-eyes="1"] #map,body[data-eyes="1"] #grid,body[data-eyes="1"] #fx{display:none}
-body[data-eyes="1"] #travel{bottom:0;flex-direction:column;justify-content:center;border-bottom:0;gap:20px;text-align:center}
-body[data-eyes="1"] #dist{font-size:22vw}
-body[data-eyes="1"] #travel .cmp{width:min(76vw,44vh);height:min(76vw,44vh)}
-body[data-eyes="1"] #bmode{display:none}
-body[data-eyes="1"] #travel .tb{justify-content:center}
-.rt-casing{stroke:#000}
+body:not([data-st="travel"]) #hud,body:not([data-st="travel"]) #tfoot{display:none}
 
 /* feedback */
-#verd{position:fixed;inset:0;z-index:850;display:grid;place-items:center;font-size:44vw;pointer-events:none;text-shadow:0 0 6px #000;animation:verd .8s ease both}
-@keyframes verd{0%{opacity:0;transform:scale(.6)}25%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.12)}}
-#open.out{animation:oout .3s ease forwards}
-@keyframes oout{to{opacity:0;transform:scale(1.25)}}
-#pad,#rep{animation:up .3s ease both}
-@keyframes up{from{opacity:0;transform:translateY(24px)}}
+#verd{position:fixed;inset:0;z-index:850;display:grid;place-items:center;font-size:44vw;pointer-events:none;text-shadow:0 0 6px #000;animation:verd 1s ease both}
+@keyframes verd{0%{opacity:0;transform:scale(.7)}25%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.12)}}
+#open.out{animation:oout .5s var(--ease) forwards}
+@keyframes oout{to{opacity:0;transform:scale(1.2)}}
 
-/* pad */
-#pad,#rep{position:fixed;inset:0 0 auto 0;height:var(--vh,100%);z-index:750;background:var(--k);display:flex;flex-direction:column;gap:12px;
-  padding:calc(var(--sat) + 14px) 16px calc(var(--sab) + 16px);overflow:auto}
-#tbar{height:2px;background:var(--g);margin:-14px -16px 0}
-#tbar i{display:block;height:100%;width:0;background:var(--w)}
-#tbar.run i{width:100%;transition:width 180s linear}
-.info{display:flex;justify-content:space-between;align-items:baseline;font-size:16px}
-.int{font-size:20px;text-align:center;letter-spacing:.04em;padding:6px 0}
-#cv{width:min(88vw,46vh);height:min(88vw,46vh);align-self:center;border:1px solid var(--w);touch-action:none;cursor:crosshair;background:var(--k)}
-textarea{width:100%;border:1px solid var(--w);padding:10px;resize:none;font-size:16px;min-height:64px}
-textarea::placeholder{color:var(--g)}
-.row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:auto}
-.row.c{justify-content:center;gap:32px}
-#rep img,#sheet img{max-width:100%;max-height:34vh;display:block;border:1px solid var(--w)}
-#rep img.gray,#sheet img.gray{filter:grayscale(1) contrast(1.1)}
-#rep .pv{display:flex;gap:12px;align-items:flex-start}
-#rep .pv img{width:96px;height:96px;object-fit:cover}
+/* intention: type, with our own keyboard */
+#int{position:fixed;left:0;right:0;bottom:0;z-index:760;padding:20px 12px calc(var(--sab) + 12px);background:linear-gradient(to bottom,rgba(0,0,0,0),#000 22%);transform:translateY(105%);transition:transform .55s var(--ease)}
+body[data-st="intent"] #int{transform:none}
+#icancel{position:absolute;right:14px;top:-4px;background:rgba(0,0,0,.6)}
+#itx{min-height:3.2em;padding:8px 52px 14px 6px;font-size:26px;line-height:1.25;word-break:break-word;border-bottom:1px solid #333;margin-bottom:12px}
+html[data-dots="1"] #itx{font-size:44px}
+#itx::after{content:"";display:inline-block;width:.5em;height:1px;border-bottom:2px solid var(--c);margin-left:2px;animation:blink 1.1s ease-in-out infinite}
+.kr{display:flex;gap:6px;justify-content:center;margin-bottom:7px}
+.kk{flex:1 1 0;max-width:42px;min-width:0;height:46px;border-radius:11px;font-size:20px;border-color:#555}
+.kk.wide{max-width:none;flex:4 1 0}
+.kk.go{max-width:none;flex:2 1 0;border-color:var(--c);color:var(--c);font-size:24px}
+.kk.go:active{background:var(--c);color:var(--k)}
+.kk.sp{font-family:ui-monospace,monospace!important;font-size:18px}
+html[data-dots="1"] .kk{font-size:36px}
+html[data-dots="1"] .kk.go,html[data-dots="1"] .kk.sp{font-size:20px}
+
+/* arrival: classify, then confirm */
+#rep{position:fixed;left:0;right:0;bottom:0;z-index:750;padding:22px 16px calc(var(--sab) + 20px);background:linear-gradient(to bottom,rgba(0,0,0,0),#000 24%);display:flex;flex-direction:column;gap:18px;align-items:center;animation:up .7s var(--ease) both}
+@keyframes up{from{opacity:0;transform:translateY(40px)}}
+#rep .info{width:100%;display:flex;justify-content:space-between;font-size:15px;color:var(--g)}
+#lv{display:flex;gap:26px;justify-content:center}
+.lvb{border:0;display:flex;flex-direction:column;align-items:center;gap:8px;font-size:14px;color:#aaa;transition:transform .4s var(--ease),opacity .4s,filter .4s;opacity:.85}
+.lvb:active{background:none;color:inherit}
+.lvb i{width:66px;height:66px;border-radius:50%;border:2px solid var(--lc);box-shadow:0 0 18px color-mix(in srgb,var(--lc) 45%,transparent);transition:background .4s,box-shadow .4s}
+.lvb[data-l="0"]{--lc:#fff}.lvb[data-l="1"]{--lc:var(--i)}.lvb[data-l="2"]{--lc:var(--c)}
+#lv.chosen .lvb{opacity:.28;transform:scale(.85)}
+#lv.chosen .lvb.sel{opacity:1;transform:scale(1.18)}
+.lvb.sel i{background:var(--lc);box-shadow:0 0 34px var(--lc)}
+#vr{display:flex;gap:26px;align-items:center;justify-content:center;opacity:.25;pointer-events:none;transition:opacity .5s}
+#vr.ready{opacity:1;pointer-events:auto}
+#vr .o{width:60px;height:60px;font-size:26px}
+#rep .pv{display:flex;gap:12px;align-items:center}
+#rep img{width:60px;height:60px;object-fit:cover;border:1px solid var(--w);filter:grayscale(1) contrast(1.1)}
+#sheet img{max-width:100%;max-height:34vh;display:block;border:1px solid var(--w)}
+#sheet img.gray{filter:grayscale(1) contrast(1.1)}
 
 /* sheet */
-#sheet{position:fixed;left:0;right:0;bottom:0;z-index:720;max-height:72vh;overflow:auto;background:var(--k);border-top:1px solid var(--w);
-  padding:58px 16px calc(var(--sab) + 18px);transform:translateY(105%);transition:transform .28s cubic-bezier(.2,.8,.2,1)}
+#sheet{position:fixed;left:0;right:0;bottom:0;z-index:740;max-height:72vh;overflow:auto;background:var(--k);border-top:1px solid #555;border-radius:18px 18px 0 0;
+  padding:58px 16px calc(var(--sab) + 18px);transform:translateY(105%);transition:transform .5s var(--ease)}
 #sheet.open{transform:none}
 #sheet .x{position:absolute;right:10px;top:8px}
 #sheet h2{font-size:18px;font-weight:400;margin-bottom:10px}
-#sheet .li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #333;cursor:pointer;width:100%;border-left:0;border-right:0;border-bottom:0;text-align:left}
+#sheet .li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid #222;cursor:pointer;width:100%;border-left:0;border-right:0;border-bottom:0;text-align:left}
 #sheet .li:active{background:var(--w);color:var(--k)}
 #sheet .bl{display:flex;flex-direction:column;gap:10px}
-#sheet .rt{display:flex;gap:12px;align-items:center}
 #sheet p{white-space:pre-wrap;word-break:break-word}
-#sheet .st{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid #333}
+#sheet .st{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid #222}
 #sheet .st.hp{justify-content:flex-start;gap:14px;padding:9px 0}
+.ld{display:inline-block;width:12px;height:12px;border-radius:50%;border:1.5px solid #fff;vertical-align:middle;margin-right:6px}
+.ld.l1{border-color:var(--i);background:var(--i)}.ld.l2{border-color:var(--c);background:var(--c)}
 
 /* film look */
 #grain{position:fixed;inset:0;z-index:880;pointer-events:none;opacity:.07;mix-blend-mode:overlay;background-size:160px 160px}
 #vig{position:fixed;inset:0;z-index:640;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 58%,rgba(0,0,0,.6) 100%);transition:opacity .8s ease}
 body[data-near="1"] #vig{background:radial-gradient(ellipse at 50% 45%,transparent 36%,rgba(0,0,0,.8) 100%)}
-body[data-eyes="1"] #vig{opacity:0}
 body[data-lite="1"] #grain{display:none}
-#scan{position:fixed;left:0;right:0;top:-4px;height:3px;z-index:870;pointer-events:none;opacity:0;background:linear-gradient(90deg,transparent,#fff 50%,transparent);box-shadow:0 0 22px #fff}
-#scan.go{animation:scan .9s cubic-bezier(.5,0,.3,1)}
-@keyframes scan{0%{top:-4px;opacity:.95}100%{top:100%;opacity:0}}
-.me em.sw{position:absolute;left:-110px;top:-110px;width:220px;height:220px;border:1px solid #fff;border-radius:50%;opacity:0;animation:sweep 6s ease-out infinite 2s}
-@keyframes sweep{0%{transform:scale(.05);opacity:.55}75%{opacity:0}100%{transform:scale(1);opacity:0}}
-.mk.rip{animation:rip .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:var(--rd,0ms)}
-@keyframes rip{from{transform:scale(2.4);opacity:0}to{transform:none;opacity:1}}
-.rpl{position:absolute;left:-250px;top:-250px;width:500px;height:500px;border:1.5px solid #fff;border-radius:50%;animation:rpl 1.8s cubic-bezier(.2,.6,.3,1) forwards}
-@keyframes rpl{from{transform:scale(.02);opacity:.9}to{transform:scale(3);opacity:0}}
+#scan{position:fixed;left:0;right:0;top:-4px;height:2px;z-index:870;pointer-events:none;opacity:0;background:linear-gradient(90deg,transparent,var(--c) 50%,transparent);box-shadow:0 0 22px var(--c)}
+#scan.go{animation:scan 1.1s cubic-bezier(.5,0,.3,1)}
+@keyframes scan{0%{top:-4px;opacity:.8}100%{top:100%;opacity:0}}
 
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
-<body data-st="home" data-hide="0" data-eyes="0">
+<body data-st="home" data-hide="0">
 <div id="map"></div>
 <div id="grid" aria-hidden="true"></div>
+<canvas id="rcv" aria-hidden="true"></canvas>
 <canvas id="fx" hidden aria-hidden="true"></canvas>
-<div id="flash" hidden></div>
+<div id="dim" aria-hidden="true"></div>
+<div id="tint" aria-hidden="true"></div>
 <div id="vig" aria-hidden="true"></div>
 <div id="grain" aria-hidden="true"></div>
 <div id="scan" aria-hidden="true"></div>
 
 <section id="open">
-  <div id="boxes"><i></i><i></i><i></i><i></i><input id="idin" type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" aria-label="ID"></div>
-  <div id="obtn">
-    <button id="bin" class="o" type="button" aria-label="Sign in">→</button>
-    <button id="bnew" class="o" type="button" aria-label="New agent">+</button>
-    <button id="dice" class="o" type="button" aria-label="Random new ID">⟳</button>
+  <div id="boxes"><i></i><i></i><i></i><i></i></div>
+  <div id="orow">
+    <button id="bmode" class="o sm" type="button" aria-label="New agent">+</button>
+    <button id="bgo" class="o" type="button" aria-label="Sign in">→</button>
+    <button id="dice" class="o sm" type="button" aria-label="Random ID" hidden>⟳</button>
+  </div>
+  <p id="oerr" role="alert"></p>
+  <div id="kp">
+    <button type="button" data-d="1">1</button><button type="button" data-d="2">2</button><button type="button" data-d="3">3</button>
+    <button type="button" data-d="4">4</button><button type="button" data-d="5">5</button><button type="button" data-d="6">6</button>
+    <button type="button" data-d="7">7</button><button type="button" data-d="8">8</button><button type="button" data-d="9">9</button>
+    <button type="button" id="klast" class="mut gh" aria-label="Last ID">↺</button><button type="button" data-d="0">0</button><button type="button" id="kdel" class="mut" aria-label="Delete">⌫</button>
   </div>
   <button id="ack" class="o xl" type="button" aria-label="Stored" hidden>✓</button>
-  <button id="last" type="button" aria-label="Last ID" hidden></button>
-  <p id="oerr" role="alert"></p>
 </section>
 
 <div id="app" hidden>
-  <header id="top">
-    <span id="me"></span><span id="rk">I</span>
-    <span class="sp"></span>
-    <button id="bglobal" class="o" type="button" aria-label="All agents">⊕</button>
-    <button id="blist" class="o" type="button" aria-label="Reports">≡</button>
-    <button id="bhelp" class="o" type="button" aria-label="Help">?</button>
-    <button id="bset" class="o" type="button" aria-label="Settings">⚙</button>
-  </header>
-  <p id="line" class="dim"></p>
+  <button id="bm" type="button" aria-label="Menu">◉</button>
+  <nav id="mn">
+    <div id="mid"></div>
+    <button id="bglobal" class="o sm" type="button" aria-label="All agents">⊕</button>
+    <button id="blist" class="o sm" type="button" aria-label="Reports">≡</button>
+    <button id="bhelp" class="o sm" type="button" aria-label="Help">?</button>
+    <button id="bset" class="o sm" type="button" aria-label="Settings">⚙</button>
+  </nav>
 
-  <div class="cmp" id="cmph"></div>
   <div id="dockhome">
-    <button id="brec" class="o" type="button" aria-label="Centre">⌖</button>
+    <button id="brec" class="o sm" type="button" aria-label="Centre" hidden>⌖</button>
     <button id="bspin" class="o xl" type="button" aria-label="Spin">◎</button>
   </div>
-  <button id="dot" class="o" type="button" aria-label="Show" hidden>◉</button>
+  <p id="toast"></p>
 
-  <section id="travel" hidden>
-    <div class="tl">
-      <div id="dist">–</div>
-      <div id="rinfo" class="g"></div>
-      <div class="tb">
-        <button id="bmode" class="o" type="button" aria-label="Foot or car">ⓦ</button>
-        <button id="bhere" class="o" type="button" aria-label="Here" hidden>⚑</button>
-      </div>
-    </div>
+  <section id="hud" hidden>
     <div class="cmp" id="cmpt"></div>
+    <div id="dist">–</div>
+    <div id="rinfo"></div>
   </section>
   <div id="tfoot" hidden>
-    <button id="babort" class="o hold" type="button" aria-label="Hold to abort">✕</button>
-    <button id="brec2" class="o" type="button" aria-label="Centre">⌖</button>
+    <button id="babort" class="o hold" type="button" aria-label="Hold to end">✕</button>
+    <button id="bhere" class="o sm" type="button" aria-label="Here" hidden>⚑</button>
+    <button id="brec2" class="o sm" type="button" aria-label="Centre">⌖</button>
   </div>
   <div id="verd" hidden></div>
 
-  <section id="pad" hidden>
-    <div id="tbar"><i></i></div>
-    <div class="info"><span id="pinfo"></span><span id="psrc" class="g"></span></div>
-    <div class="int">benefit of mankind</div>
-    <canvas id="cv" width="256" height="256"></canvas>
-    <textarea id="btxt" rows="2" maxlength="1000" placeholder="…" spellcheck="false" autocapitalize="off"></textarea>
-    <div class="row">
-      <button id="pcancel" class="o" type="button" aria-label="Cancel">✕</button>
-      <button id="pgo" class="o xl" type="button" aria-label="Go">▶</button>
-    </div>
+  <section id="int">
+    <button id="icancel" class="o sm" type="button" aria-label="Cancel">✕</button>
+    <div id="itx"></div>
+    <div id="kb"></div>
   </section>
 
   <section id="rep" hidden>
     <div class="info"><span id="rid"></span><span id="rtype"></span></div>
-    <div class="pv"><img id="rblind" alt=""><p id="rbtxt" class="g" style="white-space:pre-wrap"></p></div>
-    <textarea id="found" rows="3" maxlength="2000" placeholder="…" spellcheck="false" autocapitalize="off"></textarea>
-    <div class="pv"><button id="bphoto" class="o" type="button" aria-label="Photo">◫</button><img id="pprev" class="gray" alt="" hidden></div>
-    <input id="pfile" type="file" accept="image/*" capture="environment" hidden>
-    <div class="row c">
-      <button id="bno" class="o xl" type="button" aria-label="Deny">✕</button>
-      <button id="bnone" class="o xl" type="button" aria-label="Unreachable">⌀</button>
-      <button id="byes" class="o xl" type="button" aria-label="Confirm">✓</button>
+    <div id="lv">
+      <button class="lvb" data-l="0" type="button" aria-label="Calm"><i></i><span>calm</span></button>
+      <button class="lvb" data-l="1" type="button" aria-label="Strange"><i></i><span>strange</span></button>
+      <button class="lvb" data-l="2" type="button" aria-label="Uncanny"><i></i><span>uncanny</span></button>
     </div>
+    <div id="vr">
+      <button id="bno" class="o" type="button" aria-label="Deny">✕</button>
+      <button id="bnone" class="o" type="button" aria-label="Unreachable">⌀</button>
+      <button id="byes" class="o" type="button" aria-label="Confirm">✓</button>
+    </div>
+    <div class="pv"><button id="bphoto" class="o sm" type="button" aria-label="Photo">◫</button><img id="pprev" alt="" hidden></div>
+    <input id="pfile" type="file" accept="image/*" capture="environment" hidden>
   </section>
 
   <section id="sheet"><button id="sx" class="o x" type="button" aria-label="Close">✕</button><div id="sbody"></div></section>
@@ -277,7 +298,7 @@ import { initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, bro
   createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc, setDoc, updateDoc, deleteDoc,
-  collection, query, where, limit, onSnapshot, getDocs, serverTimestamp }
+  collection, query, where, limit, onSnapshot, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -300,13 +321,10 @@ const pad4 = n => String(n).padStart(4, "0");
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
 
-const BUILD = "v6.1";
-const INTENT = "benefit of mankind";
-const R = 1000, N = 500, G = 12, ARR = 30;
+const BUILD = "v7";
+const R = 1000, N = 500, G = 12, ARR = 30, HOME_PITCH = 50;
 const TG = { attractor:"◉", void:"◌", anomaly:"◈" };
-const LINES = ["go.","report.","spin.","hold it.","see first.","walk.","the machine is ready.","no maps. no names.","trust the pull.",
-  "confirm or deny.","again.","go now.","intention first.","draw before you move.","night counts.","rain counts.","short or far.",
-  "do not decide.","arrive.","write what is there.","one more.","the point is waiting.","begin.","evolve."];
+const LV = ["calm", "strange", "uncanny"];
 
 /* ---------- sound ---------- */
 let AC = null, muted = store.get("tm.mute") === "1";
@@ -327,15 +345,28 @@ function whoosh(d = .9, f0 = 300, f1 = 2400, g = .05) {          // airy filtere
   s.connect(f).connect(v).connect(a.destination); s.start(t); s.stop(t + d + .05);
 }
 const sfx = {
-  key: () => tone(800, .03, "square", .03),
+  key: () => tone(1250 + rnd(160), .035, "sine", .04),                    // a soft tick, slightly different each time
+  del: () => tone(520, .06, "sine", .05, 0, 380),
+  enter: () => { tone(700, .09, "sine", .05); tone(1050, .12, "sine", .04, .07); },
+  in: () => { tone(440, .16, "sine", .06); tone(660, .18, "sine", .05, .1); tone(880, .3, "sine", .05, .2); },
+  open: () => tone(320, .22, "sine", .045, 0, 640),
+  close: () => tone(640, .18, "sine", .04, 0, 320),
+  hide: () => whoosh(.6, 900, 180, .02),
+  show: () => whoosh(.6, 180, 900, .02),
+  hum: () => tone(88, 1, "sine", .06, 0, 150),
   spin: () => { tone(46, 1.7, "sine", .1, 0, 92); whoosh(1.5, 120, 900, .03); },
   dive: () => whoosh(.8, 400, 3200, .05),
+  trace: () => whoosh(.9, 300, 3600, .045),
   type: t => t === "attractor" ? tone(880, .22, "sine", .06) : t === "void" ? tone(196, .4, "sine", .08) : (tone(660, .14, "sine", .05), tone(990, .14, "sine", .04, .12)),
   beat: () => { tone(62, .16, "sine", .13, 0, 36); tone(62, .12, "sine", .07, .17, 36); },
-  lock: () => { tone(1200, .05); tone(600, .08, "square", .05, .06); },
-  arrive: () => { tone(660, .15); tone(990, .28, "square", .05, .16); },
-  ok: () => { tone(520, .1); tone(780, .2, "square", .05, .1); },
-  no: () => { tone(300, .12); tone(160, .28, "square", .05, .12); }
+  lock: () => { tone(1200, .05, "sine", .05); tone(600, .08, "sine", .05, .06); },
+  near: () => { tone(880, .1, "sine", .06); tone(880, .1, "sine", .05, .18); },
+  arrive: () => { tone(660, .2, "sine", .06); tone(990, .4, "sine", .05, .16); tone(1320, .5, "sine", .035, .3); },
+  level: n => n === 0 ? (tone(196, .7, "sine", .08), tone(247, .7, "sine", .05, .02)) : n === 1 ? (tone(330, .8, "triangle", .07, 0, 290), tone(415, .8, "triangle", .05, .05, 380)) : (tone(1320, .6, "sine", .05), tone(1760, .7, "sine", .04, .08), whoosh(.7, 1500, 5000, .02)),
+  ok: () => { tone(520, .12, "sine", .06); tone(780, .25, "sine", .05, .1); },
+  neutral: () => tone(440, .3, "sine", .05),
+  no: () => { tone(300, .14, "sine", .06); tone(160, .3, "sine", .06, .12); },
+  rank: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, .25, "sine", .05, i * .09))
 };
 addEventListener("pointerdown", () => { ac(); startCompass(); }, { once: true });
 
@@ -350,35 +381,41 @@ let db;
 try { db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
 catch { db = initializeFirestore(app, {}); }
 
-/* ---------- open: 4-digit ID ---------- */
+/* ---------- open: sign in with our own pad ---------- */
 const hex = async s => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))].map(b => b.toString(16).padStart(2, "0")).join("");
 const creds = async id => ({ email: (await hex("id:" + id)).slice(0, 24) + "@terminal.iosci.org", password: await hex("pw:" + id) });
 const boxes = [...document.querySelectorAll("#boxes i")];
-const idin = $("idin");
-let busy = false, pendingId = null;
+let busy = false, pendingId = null, idv = "", omode = "in", hold = false;
 
-const setDigits = s => {
-  boxes.forEach((b, i) => { b.textContent = s[i] || ""; b.classList.toggle("cur", i === s.length && s.length < 4); });
-};
-setDigits("");
+const renderId = () => boxes.forEach((b, i) => { b.textContent = idv[i] || ""; b.classList.toggle("cur", i === idv.length && idv.length < 4); b.classList.toggle("f", i < idv.length); });
+renderId();
+const fillId = s => { idv = s; renderId(); $("oerr").textContent = ""; };
 const known = new Map();                       // id -> agent exists
 async function exists(id) {
   if (known.has(id)) return known.get(id);
   try { const e = (await getDoc(doc(db, "agents", id))).exists(); known.set(id, e); return e; } catch { return null; }
 }
-let hseq = 0;
-async function hint(s) {                         // highlight the button that fits this ID
-  const my = ++hseq; $("bin").classList.remove("pri"); $("bnew").classList.remove("pri");
-  if (s.length !== 4) return;
-  const e = await exists(s); if (my !== hseq || e == null) return;
-  $(e ? "bin" : "bnew").classList.add("pri");
+const addDigit = d => { if (busy || hold || idv.length >= 4) return; fillId(idv + d); sfx.key(); };
+const delDigit = () => { if (busy || hold) return; fillId(idv.slice(0, -1)); sfx.del(); };
+document.querySelectorAll("#kp [data-d]").forEach(b => b.addEventListener("pointerdown", e => { e.preventDefault(); addDigit(b.dataset.d); }));
+$("kdel").addEventListener("pointerdown", e => { e.preventDefault(); delDigit(); });
+{ const l = store.get("tm.last"); if (/^\d{4}$/.test(l || "")) { $("klast").classList.remove("gh"); $("klast").addEventListener("pointerdown", e => { e.preventDefault(); if (!busy && !hold) { fillId(l); sfx.key(); } }); } }
+function setMode(m) {                          // the same screen is both sign in and sign up
+  omode = m; const up = m === "up";
+  $("bmode").textContent = up ? "←" : "+"; $("bmode").setAttribute("aria-label", up ? "Back to sign in" : "New agent");
+  $("bgo").textContent = up ? "+" : "→"; $("bgo").setAttribute("aria-label", up ? "Create" : "Sign in"); $("dice").hidden = !up;
+  $("oerr").textContent = ""; sfx.key();
 }
-const typed = () => idin.value.replace(/\D/g, "").slice(0, 4);
-const fillId = s => { idin.value = s; setDigits(s); $("oerr").textContent = ""; hint(s); };
-idin.addEventListener("input", () => { const s = typed(); fillId(s); sfx.key(); });
-idin.addEventListener("keydown", e => { if (e.key === "Enter") ($("bnew").classList.contains("pri") ? doNew : doIn)(); });
-$("open").addEventListener("pointerdown", e => { if (!e.target.closest("button")) setTimeout(() => idin.focus(), 0); });
-{ const l = store.get("tm.last"); if (/^\d{4}$/.test(l || "")) { $("last").textContent = l; $("last").hidden = false; $("last").addEventListener("click", () => { fillId(l); sfx.key(); }); } }
+$("bmode").addEventListener("click", () => { if (!busy && !hold) setMode(omode === "in" ? "up" : "in"); });
+$("bgo").addEventListener("click", () => (omode === "in" ? doIn : doNew)());
+addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (!$("open").hidden && !$("ack").hidden === false) {
+    if (/^\d$/.test(e.key)) addDigit(e.key); else if (e.key === "Backspace") delDigit(); else if (e.key === "Enter") (omode === "in" ? doIn : doNew)();
+  } else if (document.body.dataset.st === "intent") {
+    if (e.key === "Backspace") kbKey("⌫"); else if (e.key === "Enter") kbKey("▶"); else if (e.key.length === 1) kbKey(e.key.toLowerCase());
+  }
+});
 
 const reason = e => {
   const c = (e && e.code) || "";
@@ -389,13 +426,11 @@ const reason = e => {
 };
 const busyOn = on => { $("boxes").classList.toggle("busy", on); };
 function fail(e) {
-  busy = false; busyOn(false); const r = reason(e); $("oerr").textContent = r;
-  if (r === "no agent") { $("bin").classList.remove("pri"); $("bnew").classList.add("pri"); }
-  if (r === "taken") { $("bnew").classList.remove("pri"); $("bin").classList.add("pri"); }
+  busy = false; busyOn(false); $("oerr").textContent = reason(e);
   const b = $("boxes"); b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake"); sfx.no();
 }
-const need4 = () => { const s = typed(); if (s.length === 4) return s; fail({ code: "4 digits" }); return null; };
-const done = id => { store.set("tm.last", id); busy = false; busyOn(false); $("boxes").classList.add("inv"); sfx.lock(); };
+const need4 = () => { if (idv.length === 4) return idv; fail({ code: "4 digits" }); return null; };
+const done = id => { store.set("tm.last", id); busy = false; busyOn(false); $("boxes").classList.add("inv"); sfx.in(); };
 async function heal(id) {                        // make sure the account carries its ID and the public agent doc exists
   const u = auth.currentUser; if (!u) return;
   if (u.displayName !== id) { try { await updateProfile(u, { displayName: id }); } catch {} }
@@ -404,11 +439,10 @@ async function heal(id) {                        // make sure the account carrie
 }
 async function doIn() {
   if (busy) return; const id = need4(); if (!id) return;
-  busy = true; busyOn(true); idin.blur(); pendingId = id;
+  busy = true; busyOn(true); pendingId = id;
   try { const { email, password } = await creds(id); await signInWithEmailAndPassword(auth, email, password); await heal(id); done(id); }
   catch (e) { fail(e); }
 }
-let hold = false;
 async function createAgent(id) {
   if (await exists(id) === true) throw { code: "taken" };
   const { email, password } = await creds(id); pendingId = id;
@@ -417,27 +451,25 @@ async function createAgent(id) {
 }
 async function doNew() {
   if (busy) return; const id = need4(); if (!id) return;
-  busy = true; busyOn(true); idin.blur();
+  busy = true; busyOn(true);
   try { await createAgent(id); done(id); } catch (e) { fail(e); }
 }
-$("bin").addEventListener("click", doIn);
-$("bnew").addEventListener("click", doNew);
 $("dice").addEventListener("click", async () => {
-  if (busy) return; busy = true; $("oerr").textContent = ""; idin.blur();
+  if (busy) return; busy = true; $("oerr").textContent = "";
   let id = pad4(rnd(10000));
   for (let t = 0; t < 8; t++) {
     id = pad4(rnd(10000));
     const e = await exists(id); if (e !== true) break;
   }
   const t0 = performance.now();
-  while (performance.now() - t0 < 600) { setDigits(pad4(rnd(10000))); sfx.key(); await sleep(60); }
+  while (performance.now() - t0 < 700) { const r = pad4(rnd(10000)); boxes.forEach((b, i) => { b.textContent = r[i]; }); sfx.key(); await sleep(70); }
   fillId(id); sfx.lock(); busyOn(true); hold = true;
-  try { await createAgent(id); busy = false; busyOn(false); store.set("tm.last", id); $("boxes").classList.add("inv"); $("obtn").hidden = true; $("last").hidden = true; $("ack").hidden = false; }
+  try { await createAgent(id); busy = false; busyOn(false); store.set("tm.last", id); $("boxes").classList.add("inv"); $("orow").hidden = true; $("kp").hidden = true; $("oerr").hidden = true; $("ack").hidden = false; }
   catch (e) { hold = false; fail(e); }
 });
-$("ack").addEventListener("click", () => { hold = false; sfx.lock(); boot(auth.currentUser); });
+$("ack").addEventListener("click", () => { hold = false; sfx.in(); boot(auth.currentUser); });
 
-/* ---------- geometry ---------- */
+/* ---------- geometry + units ---------- */
 const rad = d => d * Math.PI / 180;
 function hav(a, b) {
   const dLa = rad(b.lat - a.lat), dLo = rad(b.lng - a.lng);
@@ -449,37 +481,40 @@ function brg(a, b) {
   const x = Math.cos(rad(a.lat)) * Math.sin(rad(b.lat)) - Math.sin(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.cos(rad(b.lng - a.lng));
   return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
 }
-const fmtD = m => m < 1000 ? Math.round(m) + " m" : (m / 1000).toFixed(1) + " km";
+let units = store.get("tm.units") === "km" ? "km" : "mi";
+const fmtD = m => units === "km" ? (m < 1000 ? Math.round(m) + " m" : (m / 1000).toFixed(2) + " km")
+  : (m < 400 ? Math.round(m * 1.0936) + " yd" : (m / 1609.34).toFixed(2) + " mi");
 const fmtT = r => { const t = r.at && r.at.toMillis ? r.at.toMillis() : Date.now();
   return new Date(t).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }); };
 
 /* ---------- state ---------- */
 let uid = null, agent = "", map = null, pos = null, follow = true, heading = 0, hasCompass = false, compassOn = false;
-let mine = new Map(), active = null, draft = null, spinning = false, arriving = null;
+let mine = new Map(), active = null, spinning = false, typing = false, arriving = null;
 let showAll = false, allDocs = new Map(), unsubMine = null, unsubAll = null, newRid = null;
-const net = new Map(); // rid -> net rating (own reports, lazy)
-let meMk = null, tgMk = null, todayLine = "";
+let meMk = null, tgMk = null;
 let rt = null, routing = false, lastFetch = 0, routeMode = store.get("tm.mode") === "car" ? "car" : "foot";
-let near100 = null, nearSince = 0, wake = null, tickT = null, lastTouch = Date.now(), eyesOffAt = 0, spd = 0, shownD = null, targetD = 0, dtw = false;
+let near100 = null, nearSince = 0, wake = null, tickT = null, spd = 0, shownD = null, targetD = 0, dtw = false, rankSeen = null;
 const vg = r => r.status !== "done" ? "○" : r.verdict > 0 ? "●" : r.verdict < 0 ? "✕" : "⌀";
-const setEyes = v => { document.body.dataset.eyes = v ? "1" : "0"; if (!v) { eyesOffAt = Date.now(); setTimeout(() => { if (mapReady) map.resize(); }, 60); } };
-const setHide = v => {                           // hide: the interface fades and the camera pulls back to a wide, tilted frame
-  const was = document.body.dataset.hide === "1";
-  document.body.dataset.hide = v ? "1" : "0"; $("dot").hidden = !v;
-  if (mapReady && v !== was && document.body.dataset.st === "home" && !reduced) {
-    if (v) map.easeTo({ pitch: 48, zoom: map.getZoom() - .6, duration: 1600 }); else flatCam(900);
+const setHide = v => {                           // tap the map: everything fades and the camera pulls back; tap again: it all returns
+  const was = document.body.dataset.hide === "1"; if (v === was) return;
+  document.body.dataset.hide = v ? "1" : "0"; v ? sfx.hide() : sfx.show();
+  if (mapReady && document.body.dataset.st === "home" && !reduced) {
+    if (v) map.easeTo({ pitch: HOME_PITCH + 10, zoom: map.getZoom() - .5, duration: 1600 }); else homeCam(900);
   }
 };
-$("dot").addEventListener("click", () => setHide(false));
+const flash = (ms, col = "255,255,255") => { if (reduced) return; const t = $("tint"); t.style.setProperty("--tc", col); t.classList.remove("go"); void t.offsetWidth; t.classList.add("go"); };
+let toastT = null;
+const note = (t, keep) => {                      // one quiet line, only for problems
+  const el = $("toast"); clearTimeout(toastT);
+  if (!t) { el.classList.remove("on"); return; }
+  el.textContent = t; el.classList.add("on"); if (!keep) toastT = setTimeout(() => el.classList.remove("on"), 4200);
+};
 
-const flash = (ms = 100) => { if (reduced) return; const f = $("flash"); f.hidden = false; setTimeout(() => { f.hidden = true; }, ms); };
-const note = (t, dim = true) => { const l = $("line"); l.textContent = t; l.classList.toggle("dim", dim); };
-
-/* ---------- compass ---------- */
+/* ---------- compass (only while walking) ---------- */
 const CMP = '<svg viewBox="-50 -50 100 100"><circle r="46" fill="none" stroke="#fff" stroke-width="2"/>' +
-  '<g class="n"><path d="M0-46V-35" stroke="#fff" stroke-width="4"/></g>' +
+  '<g class="n"><path d="M0-46V-35" stroke="#4ff3ff" stroke-width="4"/></g>' +
   '<g class="ar"><path d="M0-36L17-8H7V32H-7V-8H-17Z" fill="#fff"/></g></svg>';
-$("cmph").innerHTML = CMP; $("cmpt").innerHTML = CMP;
+$("cmpt").innerHTML = CMP;
 const nrm = a => ((a % 360) + 540) % 360 - 180;                 // -180..180
 const smooth = (a, b, k) => (a + nrm(b - a) * k + 360) % 360;   // ease an angle toward another
 const buzz = p => { try { navigator.vibrate && navigator.vibrate(p); } catch {} };
@@ -487,11 +522,10 @@ let lastAlign = 0;
 function drawCompass() {
   const tb = active && pos && active.status === "pending" ? brg(pos, active) : null;
   const rel = tb == null ? null : (hasCompass ? tb - heading : tb);   // arrow: up = straight on
-  document.querySelectorAll(".cmp").forEach(c => {
-    c.querySelector(".n").setAttribute("transform", "rotate(" + (hasCompass ? -heading : 0).toFixed(1) + ")");
-    const on = tb != null && c.id === "cmpt"; c.classList.toggle("has", on);
-    if (on) c.querySelector(".ar").setAttribute("transform", "rotate(" + rel.toFixed(1) + ")");
-  });
+  const c = $("cmpt");
+  c.querySelector(".n").setAttribute("transform", "rotate(" + (hasCompass ? -heading : 0).toFixed(1) + ")");
+  c.classList.toggle("has", tb != null);
+  if (tb != null) c.querySelector(".ar").setAttribute("transform", "rotate(" + rel.toFixed(1) + ")");
   if (rel != null && hasCompass && Math.abs(nrm(rel)) < 12 && Date.now() - lastAlign > 3500) { lastAlign = Date.now(); buzz(25); }
 }
 function oe(e) {
@@ -511,11 +545,9 @@ function startCompass() {
 
 /* ---------- map (vector, MapLibre) ---------- */
 const FONT_MAIN = ["noto"], FONT_DOTS = ["dots"], DOTS_K = 3.2, MAIN_K = 1.2;
-const PAD0 = { top: 0, bottom: 0, left: 0, right: 0 }, PADT = { top: 250, bottom: 80, left: 0, right: 0 };
-let mapReady = false, labels = [], allMk = [], mineMk = [], routeAnimT = null, trailAnimT = null, routeBusy = false;
-const lineFC = c => ({ type: "FeatureCollection", features: c && c.length > 1 ? [{ type: "Feature", geometry: { type: "LineString", coordinates: c }, properties: {} }] : [] });
-const ptFC = c => ({ type: "FeatureCollection", features: c ? [{ type: "Feature", geometry: { type: "Point", coordinates: c }, properties: {} }] : [] });
-const src = n => map && mapReady && map.getSource(n);
+const PAD0 = { top: 0, bottom: 0, left: 0, right: 0 }, PADT = { top: 110, bottom: 90, left: 0, right: 0 };
+let mapReady = false, labels = [], allMk = [], mineMk = [], trailAnimT = null;
+const DOTMAP = store.get("tm.dotmap") !== "0";
 const scaleSize = (s, k) => {                    // zoom expressions can't be wrapped, so scale their output values in place
   if (typeof s === "number") return s * k;
   if (!Array.isArray(s)) return s;
@@ -523,36 +555,43 @@ const scaleSize = (s, k) => {                    // zoom expressions can't be wr
   if (s[0] === "step") return s.map((v, i) => (i === 2 || (i >= 4 && i % 2 === 0)) && typeof v === "number" ? v * k : v);
   return s;
 };
-
-function restyle(st) {                           // one fixed look: black, white, a few greys; Dots-ready labels; 3D buildings
+function restyle(st) {                           // black, white, a little cyan/indigo; dotted roads; real 3D buildings; Dots-ready labels
   st.glyphs = location.origin + "/fonts/{fontstack}/{range}.pbf"; delete st.sprite;
-  st.sky = { "sky-color": "#000000", "horizon-color": "#000000", "fog-color": "#000000", "sky-horizon-blend": .6, "horizon-fog-blend": .9, "fog-ground-blend": .55 };
+  st.sky = { "sky-color": "#000000", "horizon-color": "#05050c", "fog-color": "#000000", "sky-horizon-blend": .6, "horizon-fog-blend": .9, "fog-ground-blend": .55 };
   const out = [];
   for (const l of st.layers) {
     const L0 = l.layout || (l.layout = {}), P = l.paint || (l.paint = {}), id = l.id;
     if (l.type === "symbol" && !L0["text-field"]) continue;              // icon-only layers (one-way arrows)
     for (const k of Object.keys(L0)) if (k.startsWith("icon-")) delete L0[k];
     for (const k of Object.keys(P)) if (k.startsWith("icon-") || k.endsWith("-pattern")) delete P[k];
-    if (id === "background") P["background-color"] = "#090909";
+    if (id === "background") P["background-color"] = "#08080b";
     else if (id === "water") P["fill-color"] = "#000000";
-    else if (id === "landuse_park") P["fill-color"] = "#111111";
-    else if (id === "landcover_wood") P["fill-color"] = "#0e0e0e";
-    else if (id === "landuse_residential") P["fill-color"] = "#0b0b0b";
-    else if (id === "building") { P["fill-color"] = "#151515"; P["fill-outline-color"] = "#2e2e2e"; }
+    else if (id === "landuse_park") P["fill-color"] = "#0f0f12";
+    else if (id === "landcover_wood") P["fill-color"] = "#0c0c0f";
+    else if (id === "landuse_residential") P["fill-color"] = "#0a0a0d";
+    else if (id === "building") { P["fill-color"] = "#17171c"; P["fill-outline-color"] = "#3a3a46"; }
     else if (l.type === "line" && /^(highway|road|railway|aeroway)/.test(id)) {
-      P["line-color"] = /casing/.test(id) ? "#000000" : /motorway/.test(id) ? "#ffffff" : /major/.test(id) ? "#b4b4b4"
-        : /path|pier/.test(id) ? "#6a6a6a" : /rail|transit/.test(id) ? "#3c3c3c" : "#555555";
-      P["line-opacity"] = 1; if (/path/.test(id)) P["line-dasharray"] = [1, 1.6];
+      const casing = /casing/.test(id), mway = /motorway/.test(id), rail = /rail|transit|aeroway/.test(id);
+      P["line-color"] = casing ? "#000000" : mway ? "#ffffff" : /major/.test(id) ? "#c4c4cc" : /path|pier/.test(id) ? "#7a7a86" : rail ? "#3c3c46" : "#62626e";
+      P["line-opacity"] = 1;
+      if (DOTMAP && !mway && !rail) {                                    // roads as dots: the same alphabet as Dots
+        if (casing) P["line-opacity"] = 0;
+        else { L0["line-cap"] = "round"; P["line-dasharray"] = /major/.test(id) ? [0.01, 1.7] : [0.01, 2.3]; }
+      } else if (/path/.test(id)) P["line-dasharray"] = [1, 1.6];
     }
     if (l.type === "symbol") {
       const road = /highway_name/.test(id), water = /water/.test(id);
-      P["text-color"] = road ? "#9a9a9a" : water ? "#8c8c8c" : "#d6d6d6"; P["text-halo-color"] = "#000000"; P["text-halo-width"] = 1.6; P["text-halo-blur"] = 0;
+      P["text-color"] = road ? "#9a9aa6" : water ? "#8c8c98" : "#dcdce6"; P["text-halo-color"] = "#000000"; P["text-halo-width"] = 1.6; P["text-halo-blur"] = 0;
       labels.push({ id, size: L0["text-size"] == null ? 12 : L0["text-size"], tt: L0["text-transform"] || "none", line: L0["symbol-placement"] === "line" ? (L0["symbol-spacing"] || 250) : 0 });
       L0["text-font"] = FONT_MAIN; L0["text-size"] = scaleSize(L0["text-size"] == null ? 12 : L0["text-size"], MAIN_K);
     }
     out.push(l);
-    if (id === "building") out.push({ id: "building3d", type: "fill-extrusion", source: "openmaptiles", "source-layer": "building", minzoom: 14.5,
-      paint: { "fill-extrusion-color": "#1d1d1d", "fill-extrusion-height": ["coalesce", ["get", "render_height"], 7], "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0], "fill-extrusion-opacity": .92 } });
+    if (id === "building") out.push({ id: "building3d", type: "fill-extrusion", source: "openmaptiles", "source-layer": "building", minzoom: 13.8,
+      paint: {
+        "fill-extrusion-color": ["interpolate", ["linear"], ["coalesce", ["get", "render_height"], 9], 0, "#2c2c34", 40, "#5d5d70", 120, "#9a94ff", 250, "#c9c5ff"],
+        "fill-extrusion-height": ["*", 1.6, ["coalesce", ["get", "render_height"], 9]],
+        "fill-extrusion-base": ["*", 1.6, ["coalesce", ["get", "render_min_height"], 0]],
+        "fill-extrusion-opacity": .82, "fill-extrusion-vertical-gradient": true } });
   }
   st.layers = out; return st;
 }
@@ -564,7 +603,7 @@ function applyDots() {                           // names on the map in the Dots
       map.setLayoutProperty(l.id, "text-size", scaleSize(l.size, on ? DOTS_K : MAIN_K));
       map.setLayoutProperty(l.id, "text-transform", on ? "lowercase" : l.tt);
       map.setLayoutProperty(l.id, "text-letter-spacing", on ? .25 : 0);
-      if (l.line) map.setLayoutProperty(l.id, "symbol-spacing", on ? l.line * 2.2 : l.line);       // fewer repeats along a road in Dots
+      if (l.line) map.setLayoutProperty(l.id, "symbol-spacing", on ? l.line * 2.2 : l.line);
     } catch {}
   }
 }
@@ -572,37 +611,35 @@ async function initMap() {
   if (map) return;
   try {
     const st = restyle(await (await fetch("map-style.json")).json());
-    map = new maplibregl.Map({ container: "map", style: st, center: [-0.12, 51.5], zoom: 11, attributionControl: false, dragRotate: false, pitchWithRotate: false,
-      maxPitch: 62, fadeDuration: 120, renderWorldCopies: false, cooperativeGestures: false });
+    map = new maplibregl.Map({ container: "map", style: st, center: [-0.12, 51.5], zoom: 11, pitch: HOME_PITCH, attributionControl: false, dragRotate: false, pitchWithRotate: false,
+      maxPitch: 66, fadeDuration: 120, renderWorldCopies: false, cooperativeGestures: false });
     window.tmMap = map; map.touchZoomRotate.disableRotation(); map.keyboard.disable();
     map.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: "OpenFreeMap · OpenMapTiles · OpenStreetMap" }), "bottom-right");
     map.on("dragstart", () => { follow = false; });
     map.on("click", () => {
       if (sheet.classList.contains("open")) { closeSheet(); return; }
+      if (Date.now() - menuClosedAt < 450) return;
       if (document.body.dataset.st === "home") setHide(document.body.dataset.hide !== "1");
     });
-    map.on("error", e => { if (!mapReady && e && e.error && /WebGL|webgl/.test(String(e.error.message))) note("map ✕", false); });
+    map.on("render", paintRoute);
+    map.on("error", e => { if (!mapReady && e && e.error && /WebGL|webgl/.test(String(e.error.message))) note("map ✕", true); });
     await new Promise(res => map.once("load", res));          // no give-up timer: a backgrounded tab simply loads when it is shown
-    const first = map.getStyle().layers.find(l => l.type === "symbol");
-    const E = { type: "FeatureCollection", features: [] }, b = first && first.id;
-    for (const n of ["trail", "rtail", "rt", "head"]) map.addSource(n, { type: "geojson", data: E });
-    map.addLayer({ id: "trail", type: "line", source: "trail", layout: { "line-cap": "round" }, paint: { "line-color": "#fff", "line-width": 1.8, "line-dasharray": [1, 2.6], "line-opacity": .9 } }, b);
-    map.addLayer({ id: "rtail", type: "line", source: "rtail", layout: { "line-cap": "round" }, paint: { "line-color": "#fff", "line-width": 3, "line-dasharray": [.1, 2.4] } }, b);
-    map.addLayer({ id: "rglow", type: "line", source: "rt", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#fff", "line-width": 14, "line-blur": 8, "line-opacity": .35 } }, b);
-    map.addLayer({ id: "rcase", type: "line", source: "rt", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#000", "line-width": 10 } }, b);
-    map.addLayer({ id: "rt", type: "line", source: "rt", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#fff", "line-width": 4 } }, b);
-    map.addLayer({ id: "head", type: "circle", source: "head", paint: { "circle-radius": 7, "circle-color": "#fff", "circle-blur": .6, "circle-opacity": .95 } }, b);
+    const first = map.getStyle().layers.find(l => l.type === "symbol"), b = first && first.id;
+    map.addSource("trail", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+    map.addLayer({ id: "trailglow", type: "line", source: "trail", layout: { "line-cap": "round" }, paint: { "line-color": "#8a7dff", "line-width": 9, "line-blur": 6, "line-opacity": .35 } }, b);
+    map.addLayer({ id: "trail", type: "line", source: "trail", layout: { "line-cap": "round" }, paint: { "line-color": "#a79dff", "line-width": 2.4, "line-dasharray": [0.01, 2.2], "line-opacity": .95 } }, b);
     const ab = document.querySelector(".maplibregl-ctrl-attrib"); if (ab) { ab.classList.remove("maplibregl-compact-show"); ab.removeAttribute("open"); }
-    mapReady = true; applyDots(); drawMine(); drawAll(); drawRoute(); setTarget();
+    mapReady = true; applyDots(); drawMine(); drawAll(); setTarget(); paintRoute();
     if (pos) { ensureMe(); establish(); }
     setTimeout(fpsCheck, 7000);
-  } catch (e) { console.error(e); map = null; mapReady = false; note("map ✕", false); }
+  } catch (e) { console.error(e); map = null; mapReady = false; note("map ✕", true); }
 }
 const mkEl = html => { const el = document.createElement("div"); el.className = "mkw"; el.innerHTML = html; return el; };
 const mkAdd = (el, lng, lat) => new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat([lng, lat]).addTo(map);
 function reportMk(r, mineFlag, delay) {
-  const g = vg(r), el = mkEl('<b class="mk' + (mineFlag ? "" : " o2") + (r.rid === newRid ? " drop" : "") + (delay != null ? " rip" : "") + '"' +
-    (delay != null ? ' style="--rd:' + delay + 'ms"' : "") + ">" + g + "</b>");
+  const lv = r.status === "done" && r.level > 0 ? " l" + r.level : "";
+  const el = mkEl('<b class="mk' + lv + (mineFlag ? "" : " o2") + (r.rid === newRid ? " drop" : "") + (delay != null ? " rip" : "") + '"' +
+    (delay != null ? ' style="--rd:' + delay + 'ms"' : "") + ">" + vg(r) + "</b>");
   el.addEventListener("click", e => { e.stopPropagation(); follow = false; if (mapReady) map.easeTo({ center: [r.lng, r.lat], duration: 700 }); openReport(r); });
   return mkAdd(el, r.lng, r.lat);
 }
@@ -616,6 +653,7 @@ const partial = (c, f) => {                      // first fraction f of a line, 
   }
   return out;
 };
+const src = n => map && mapReady && map.getSource(n);
 function drawMine() {
   if (!mapReady) return;
   mineMk.forEach(m => m.remove()); mineMk = [];
@@ -626,7 +664,7 @@ function drawMine() {
   clearInterval(trailAnimT); src("trail").setData(mls(solid));
   if (fresh) {                                   // the new leg draws itself from the last report to this one
     if (reduced) src("trail").setData(mls(segs));
-    else { const t0 = Date.now(), last = segs[segs.length - 1]; trailAnimT = setInterval(() => { const f = Math.min(1, (Date.now() - t0) / 900), e = 1 - (1 - f) ** 3;
+    else { const t0 = Date.now(), last = segs[segs.length - 1]; trailAnimT = setInterval(() => { const f = Math.min(1, (Date.now() - t0) / 1100), e = 1 - (1 - f) ** 3;
       src("trail").setData(mls([...solid, partial(last, e)])); if (f >= 1) clearInterval(trailAnimT); }, 40); }
   }
   arr.forEach(r => mineMk.push(reportMk(r, true)));
@@ -643,85 +681,104 @@ function drawAll() {
 function setTarget() {
   if (!mapReady) return;
   if (tgMk) { tgMk.remove(); tgMk = null; }
-  if (active) tgMk = mkAdd(mkEl('<div class="tgm"><i></i><b></b></div>'), active.lng, active.lat);
+  if (active && active.status !== "done") tgMk = mkAdd(mkEl('<div class="tgm"><i></i><b></b></div>'), active.lng, active.lat);
 }
 function ensureMe() {
   if (!mapReady || !pos || meMk) return;
   meMk = mkAdd(mkEl('<em class="sw"></em><b></b><i></i>'), pos.lng, pos.lat); meMk.getElement().classList.add("me");
 }
-const PADV = { top: 210, bottom: 120, left: 40, right: 40 };
+const PADV = { top: 130, bottom: 130, left: 50, right: 50 };
 function overview(ms = 800, t = active) {         // you and the point in one frame, flat, north up
   if (!mapReady || !pos || !t) return;
   const w = Math.min(pos.lng, t.lng), e = Math.max(pos.lng, t.lng), s = Math.min(pos.lat, t.lat), n = Math.max(pos.lat, t.lat);
-  map.fitBounds([[w, s], [e, n]], { padding: PADV, maxZoom: 17, duration: ms, pitch: 0, bearing: 0 });
+  map.fitBounds([[w, s], [e, n]], { padding: PADV, maxZoom: 17, duration: ms, pitch: 30, bearing: 0 });
 }
-function flatCam(ms = 700) { if (mapReady) map.easeTo({ pitch: 0, bearing: 0, padding: PAD0, duration: ms }); }
-let camT = null;
+function homeCam(ms = 700) { if (mapReady) map.easeTo({ pitch: HOME_PITCH, bearing: 0, padding: PAD0, duration: ms }); }
 function camTick() {                             // the chase camera: tilts and turns with you, never faster than ~20°/s
   if (!mapReady || !pos || spinning || document.hidden) return;
-  if (document.body.dataset.st !== "travel" || !follow || document.body.dataset.eyes === "1") return;
+  if (document.body.dataset.st !== "travel" || !follow) return;
   const cur = map.getBearing(), gh = hasCompass ? heading : (spd > 1 ? heading : cur);
   let d = nrm(gh - cur); if (Math.abs(d) < 4) d = 0; d = Math.max(-14, Math.min(14, d));
-  map.easeTo({ center: [pos.lng, pos.lat], bearing: cur + d, pitch: 56, zoom: 17, padding: PADT, duration: 700, easing: t => t });
+  map.easeTo({ center: [pos.lng, pos.lat], bearing: cur + d, pitch: 58, zoom: 17, padding: PADT, duration: 700, easing: t => t });
 }
-camT = setInterval(camTick, 650);
+setInterval(camTick, 650);
+
+/* ---------- the route: drawn on its own canvas above the map, so buildings can never hide it ---------- */
+let rPts = null, rHead = null, rTail = null, routeAnimT = null, routeBusy = false, painted = false;
+function sizeRcv() { const c = $("rcv"), d = Math.min(devicePixelRatio || 1, 2); c.width = Math.round(innerWidth * d); c.height = Math.round(innerHeight * d); }
+sizeRcv(); addEventListener("resize", () => { sizeRcv(); paintRoute(); });
+function paintRoute() {
+  const c = $("rcv"), x = c.getContext("2d"), has = (rPts && rPts.length > 1) || (rTail && rTail.length > 1);
+  if (!has) { if (painted) { x.clearRect(0, 0, c.width, c.height); painted = false; } return; }
+  if (!mapReady) return;
+  painted = true; const d = c.width / innerWidth; x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, innerWidth, innerHeight);
+  x.lineCap = x.lineJoin = "round"; const lite = document.body.dataset.lite === "1";
+  const path = pts => { x.beginPath(); pts.forEach((p, i) => { const q = map.project(p); i ? x.lineTo(q.x, q.y) : x.moveTo(q.x, q.y); }); };
+  if (rPts && rPts.length > 1) {
+    path(rPts); x.strokeStyle = "rgba(138,125,255,.55)"; x.lineWidth = 15; if (!lite) { x.shadowColor = "#8a7dff"; x.shadowBlur = 20; } x.stroke(); x.shadowBlur = 0;
+    path(rPts); x.strokeStyle = "rgba(0,0,10,.7)"; x.lineWidth = 8; x.stroke();
+    path(rPts); x.strokeStyle = "#4ff3ff"; x.lineWidth = 4; if (!lite) { x.shadowColor = "#4ff3ff"; x.shadowBlur = 10; } x.stroke(); x.shadowBlur = 0;
+  }
+  if (rTail && rTail.length > 1) { path(rTail); x.setLineDash([1, 9]); x.strokeStyle = "#fff"; x.lineWidth = 3; x.stroke(); x.setLineDash([]); }
+  if (rHead) { const q = map.project(rHead); x.fillStyle = "#fff"; x.shadowColor = "#4ff3ff"; x.shadowBlur = 18; x.beginPath(); x.arc(q.x, q.y, 6, 0, 7); x.fill(); x.shadowBlur = 0; }
+}
 
 /* ---------- film look ---------- */
 { const c = document.createElement("canvas"); c.width = c.height = 160; const x = c.getContext("2d"), d = x.createImageData(160, 160);
   for (let i = 0; i < d.data.length; i += 4) { const v = Math.random() * 255 | 0; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
   x.putImageData(d, 0, 0); $("grain").style.backgroundImage = "url(" + c.toDataURL() + ")"; }
 function scanSweep() { if (reduced) return; const s = $("scan"); s.classList.remove("go"); void s.offsetWidth; s.classList.add("go"); }
-function fpsCheck() {                            // phones that struggle lose the extras, in order: grain, glow, drift
+function fpsCheck() {                            // phones that struggle lose the extras: grain, glow
   let n = 0; const t0 = performance.now();
   const f = () => { n++; if (performance.now() - t0 < 2500) requestAnimationFrame(f);
-    else if (document.hasFocus() && n > 8 && n / 2.5 < 40) { document.body.dataset.lite = "1"; if (mapReady) try { map.setLayoutProperty("rglow", "visibility", "none"); } catch {} } };
+    else if (document.hasFocus() && n > 8 && n / 2.5 < 40) { document.body.dataset.lite = "1"; paintRoute(); } };
   requestAnimationFrame(f);
 }
 
 /* ---------- shots: flyover, idle drift, ripple ---------- */
-let flying = false, established = false, lastCtr = null, idleAt = Date.now(), drift = false, ripNext = false;
+let flying = false, established = false, lastCtr = null, idleAt = Date.now(), drift = false, ripNext = false, menuClosedAt = 0;
 function establish() {                           // the opening shot: down from a high, tilted view onto your dot
   if (established || !mapReady || !pos) return; established = true;
   const center = [pos.lng, pos.lat]; let seen = false;
   try { seen = sessionStorage.getItem("tm.est") === "1"; sessionStorage.setItem("tm.est", "1"); } catch {}
-  if (reduced) { map.jumpTo({ center, zoom: 15.2 }); return; }
+  if (reduced) { map.jumpTo({ center, zoom: 15.6, pitch: HOME_PITCH }); return; }
   flying = true;
   const stop = () => { if (flying) { map.stop(); flying = false; } };
   map.once("mousedown", stop); map.once("touchstart", stop);
-  if (seen) { map.jumpTo({ center, zoom: 12.6 }); map.flyTo({ center, zoom: 15.2, duration: 800, essential: true }); }
+  if (seen) { map.jumpTo({ center, zoom: 12.8 }); map.flyTo({ center, zoom: 15.6, pitch: HOME_PITCH, duration: 1000, essential: true }); }
   else {
-    map.jumpTo({ center: [pos.lng + .7, pos.lat + .35], zoom: 5, pitch: 52, bearing: -28 });
+    map.jumpTo({ center: [pos.lng + .7, pos.lat + .35], zoom: 5, pitch: 62, bearing: -28 });
     scanSweep(); whoosh(2.8, 160, 1700, .04);
-    map.flyTo({ center, zoom: 15.2, pitch: 0, bearing: 0, duration: 3400, curve: 1.5, essential: true });
+    map.flyTo({ center, zoom: 15.6, pitch: HOME_PITCH, bearing: 0, duration: 3600, curve: 1.5, essential: true });
   }
   map.once("moveend", () => { flying = false; });   // registered after the jump, so only the flight's end clears it
-  setTimeout(() => { flying = false; }, 4500);       // never leave the camera locked
+  setTimeout(() => { flying = false; }, 5000);       // never leave the camera locked
 }
-["pointerdown", "touchstart", "wheel"].forEach(ev => addEventListener(ev, () => { idleAt = Date.now(); if (drift) { drift = false; flatCam(500); } }, true));
+["pointerdown", "touchstart", "wheel"].forEach(ev => addEventListener(ev, () => { idleAt = Date.now(); if (drift) { drift = false; homeCam(500); } }, true));
 setInterval(() => {                              // the idle camera: a slow, small breathing sway for the first 20 s of stillness
   const d = document.body.dataset;
   if (!mapReady || reduced || document.hidden || d.lite === "1" || flying) return;
   if (d.st !== "home" || d.hide === "1" || spinning || sheet.classList.contains("open") || showAll) { drift = false; return; }
   const idle = Date.now() - idleAt;
-  if (idle > 26000) { if (drift) { drift = false; flatCam(1500); } return; }
+  if (idle > 26000) { if (drift) { drift = false; homeCam(1500); } return; }
   if (idle < 6000) return;
   drift = true; const k = Date.now() / 1000;
-  map.easeTo({ bearing: Math.sin(k / 9) * 4, pitch: 10 + Math.sin(k / 7) * 3, duration: 4200, easing: t => t });
+  map.easeTo({ bearing: Math.sin(k / 9) * 5, pitch: HOME_PITCH + Math.sin(k / 7) * 3, duration: 4200, easing: t => t });
 }, 4000);
 function sweepRipple() {                         // a ring spreads out from you when the shared map opens
   if (!mapReady || !pos || reduced) return;
-  const mk = mkAdd(mkEl('<div class="rpl"></div>'), pos.lng, pos.lat); setTimeout(() => mk.remove(), 2000);
+  const mk = mkAdd(mkEl('<div class="rpl"></div>'), pos.lng, pos.lat); setTimeout(() => mk.remove(), 2100);
 }
 
 /* ---------- location ---------- */
 let watchId = null;
 function startGeo(hi = true) {
-  if (!navigator.geolocation) { note("location ✕", false); return; }
+  if (!navigator.geolocation) { note("location ✕", true); return; }
   if (watchId != null) navigator.geolocation.clearWatch(watchId);
   watchId = navigator.geolocation.watchPosition(onPos, e => {
-    if (e.code === 1) note("location denied · allow in browser settings", false);
-    else if (hi) { note("locating…", false); startGeo(false); }
-    else note("location unavailable · try outside", false);
+    if (e.code === 1) note("location is off · allow it in your browser", true);
+    else if (hi) { note("locating…", true); startGeo(false); }
+    else note("no location yet · try outside", true);
   }, { enableHighAccuracy: hi, maximumAge: 5000, timeout: hi ? 15000 : 40000 });
 }
 function onPos(p) {
@@ -736,21 +793,21 @@ function onPos(p) {
   }
   pos = { lat, lng, acc, t };
   if (!hasCompass && p.coords.heading != null && !isNaN(p.coords.heading) && p.coords.speed > 1) { heading = p.coords.heading; }
+  if (first) note("");
   if (mapReady) {
     if (!meMk) ensureMe(); else meMk.setLngLat([pos.lng, pos.lat]);
     if (first) establish();
     else if (follow && !spinning && !flying && document.body.dataset.st === "home" && (!lastCtr || hav(lastCtr, pos) > 4)) { lastCtr = { lat: pos.lat, lng: pos.lng }; map.easeTo({ center: [pos.lng, pos.lat], duration: 600 }); }
   }
-  if (first && $("line").textContent.startsWith("locat")) { $("line").textContent = todayLine; $("line").classList.add("dim"); }
   if (active && active.status === "pending") {
     if (!rt || rt.rid !== active.rid || rt.mode !== routeMode) fetchRoute();
     else { const r = routeRemain(); if (r && r.bd > 40) fetchRoute(); }       // left the route: ask again
-    if (spd > 1.8 && document.body.dataset.eyes === "0" && Date.now() - eyesOffAt > 30000) setEyes(1);   // moving fast: eyes up
     drawRoute();
   }
   updateTravel(); drawCompass();
 }
-$("brec").addEventListener("click", () => { follow = true; if (!pos) startGeo(true); if (pos && mapReady) map.flyTo({ center: [pos.lng, pos.lat], zoom: Math.max(map.getZoom(), 15), duration: 600 }); });
+$("brec").addEventListener("click", () => { follow = true; sfx.key(); if (!pos) startGeo(true); if (pos && mapReady) map.flyTo({ center: [pos.lng, pos.lat], zoom: Math.max(map.getZoom(), 15), pitch: HOME_PITCH, duration: 700 }); });
+setInterval(() => { $("brec").hidden = follow || document.body.dataset.st !== "home"; }, 400);
 
 /* ---------- spin (randonautica method) ---------- */
 async function rand16(n) {
@@ -782,18 +839,17 @@ async function generate(c) {
 }
 function playSpin(g) {
   return new Promise(res => {
-    if (reduced) { res(); return; }
+    if (reduced || !mapReady) { res(); return; }
     const cv = $("fx"), x = cv.getContext("2d"); cv.width = innerWidth; cv.height = innerHeight; cv.hidden = false;
-    if (!mapReady) { res(); return; }
     const P = g.pts.map(p => { const q = map.project([p.lng, p.lat]); return { x: q.x, y: q.y, keep: p.c === g.cell }; });
     const T = map.project([g.lng, g.lat]), t0 = performance.now(); let locked = false, dived = false;
     const C = map.project([g.from.lng, g.from.lat]), E = map.project([g.from.lng + 1000 / (111320 * Math.cos(rad(g.from.lat))), g.from.lat]), rpx = Math.abs(E.x - C.x);
     const f = now => {
-      const t = now - t0; x.clearRect(0, 0, cv.width, cv.height); x.fillStyle = "#fff"; x.strokeStyle = "#fff";
+      const t = now - t0; x.clearRect(0, 0, cv.width, cv.height); x.fillStyle = "#fff"; x.strokeStyle = "#4ff3ff";
       if (t < 1000) {                            // the search circle opens around you, then fades as the points arrive
-        x.globalAlpha = Math.max(0, 1 - (t - 500) / 500); x.lineWidth = 1.2; x.beginPath(); x.arc(C.x, C.y, rpx * Math.min(1, t / 500), 0, 7); x.stroke(); x.globalAlpha = 1;
+        x.globalAlpha = Math.max(0, 1 - (t - 500) / 500); x.lineWidth = 1.4; x.beginPath(); x.arc(C.x, C.y, rpx * Math.min(1, t / 500), 0, 7); x.stroke(); x.globalAlpha = 1;
       }
-      if (t > 1750 && !dived) { dived = true; sfx.dive(); map.easeTo({ center: [g.lng, g.lat], zoom: 15.8, duration: 650 }); }       // the dive toward the chosen cell
+      if (t > 1750 && !dived) { dived = true; sfx.dive(); map.easeTo({ center: [g.lng, g.lat], zoom: 15.8, pitch: 40, duration: 700 }); }       // the dive toward the chosen cell
       const show = Math.min(P.length, Math.floor(t / 350 * P.length));
       for (let i = 0; i < show; i++) {
         const p = P[i]; let px = p.x, py = p.y;
@@ -805,52 +861,58 @@ function playSpin(g) {
       }
       if (t > 1800) {
         if (!locked) { locked = true; sfx.lock(); sfx.type(g.type); }
-        const k = t - 1800, rr = k < 300 ? k / 300 * 70 : 70 + ((k - 300) / 300) ** 2 * Math.hypot(cv.width, cv.height);   // ring swells into the pad
-        x.lineWidth = 1.5; x.beginPath(); x.arc(T.x, T.y, rr, 0, 7); x.stroke();
+        const k = t - 1800, rr = k < 300 ? k / 300 * 70 : 70 + ((k - 300) / 400) ** 2 * Math.hypot(cv.width, cv.height) * .35;
+        x.globalAlpha = k < 300 ? 1 : Math.max(0, 1 - (k - 300) / 420); x.lineWidth = 1.6; x.beginPath(); x.arc(T.x, T.y, rr, 0, 7); x.stroke(); x.globalAlpha = 1;
       }
-      if (t < 2400) requestAnimationFrame(f); else { x.clearRect(0, 0, cv.width, cv.height); cv.hidden = true; res(); }
+      if (t < 2500) requestAnimationFrame(f); else { x.clearRect(0, 0, cv.width, cv.height); cv.hidden = true; res(); }
     };
     requestAnimationFrame(f);
   });
 }
-async function spin() {
-  if (spinning || draft || active) return;
-  if (!pos) { startGeo(true); note("locating…", false); return; }
-  spinning = true; startCompass(); ac(); sfx.spin(); flash(80); scanSweep(); $("bspin").classList.remove("pulse1"); store.set("tm.spun", "1");
+const nextSeq = () => [...mine.values()].reduce((m, r) => Math.max(m, r.seq || 0), 0) + 1;
+async function runSpin(text) {                   // the intention is set; only now does the machine place a point
+  if (spinning || active) return;
+  spinning = true; route(); sfx.spin(); scanSweep(); $("bspin").classList.remove("pulse1"); store.set("tm.spun", "1");
+  setTimeout(() => { if (spinning && !active) { spinning = false; route(); } }, 9000);          // safety: never get stuck
   const c = { lat: pos.lat, lng: pos.lng };
-  if (mapReady) { map.stop(); map.jumpTo({ center: [c.lng, c.lat], zoom: 13.2, pitch: 0, bearing: 0, padding: PAD0 }); await sleep(180); }
+  if (mapReady) { map.stop(); map.easeTo({ center: [c.lng, c.lat], zoom: 13.2, pitch: 0, bearing: 0, padding: PAD0, duration: 800 }); await sleep(900); }
   const g = await generate(c); g.from = c;
   await playSpin(g);
-  draft = g; spinning = false; route();
+  const n = nextSeq(), rid = agent + "-" + pad4(n);
+  const data = { uid, agent, seq: n, rid, type: g.type, src: g.src, lat: g.lat, lng: g.lng, fromLat: c.lat, fromLng: c.lng,
+    intention: text, blind: { text: "", img: "" }, level: 0, status: "pending", verdict: 0, found: "", photo: "", at: serverTimestamp() };
+  rt = null; lastFetch = 0; shownD = null; near100 = null; nearSince = 0;
+  setDoc(doc(db, "reports", rid), data).catch(() => note("sync ✕"));
+  follow = false; overview(900, g); sfx.trace(); scanSweep();
+  setTimeout(() => { if (active && active.rid === rid && document.body.dataset.st === "travel") follow = true; }, 2800);   // then the camera swoops in behind you
 }
-$("bspin").addEventListener("click", spin);
-
-/* ---------- blind view pad ---------- */
-const cv = $("cv"), cx = cv.getContext("2d");
-let drawing = false, lx = 0, ly = 0, inked = false;
-const cp = e => { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * 256, y: (e.clientY - r.top) / r.height * 256 }; };
-cv.addEventListener("pointerdown", e => { drawing = true; const p = cp(e); lx = p.x; ly = p.y; cv.setPointerCapture(e.pointerId); cx.fillStyle = "#fff"; cx.fillRect(lx - 1, ly - 1, 2, 2); inked = true; });
-cv.addEventListener("pointermove", e => { if (!drawing) return; const p = cp(e); cx.strokeStyle = "#fff"; cx.lineWidth = 2; cx.lineCap = "round"; cx.beginPath(); cx.moveTo(lx, ly); cx.lineTo(p.x, p.y); cx.stroke(); lx = p.x; ly = p.y; });
-const endDraw = () => { drawing = false; };
-cv.addEventListener("pointerup", endDraw); cv.addEventListener("pointercancel", endDraw);
-function openPad() {
-  cx.fillStyle = "#000"; cx.fillRect(0, 0, 256, 256); inked = false; $("btxt").value = "";
-  $("pinfo").textContent = TG[draft.type] + " " + draft.type + " · " + fmtD(draft.dist); $("psrc").textContent = draft.src;
-  const b = $("tbar"); b.classList.remove("run"); void b.offsetWidth; b.classList.add("run");
-}
-$("pcancel").addEventListener("click", () => { draft = null; sfx.no(); route(); });
-const nextSeq = () => [...mine.values()].reduce((m, r) => Math.max(m, r.seq || 0), 0) + 1;
-$("pgo").addEventListener("click", () => {
-  if (!draft) return; const n = nextSeq(), rid = agent + "-" + pad4(n), d = draft;
-  const data = { uid, agent, seq: n, rid, type: d.type, src: d.src, lat: d.lat, lng: d.lng, fromLat: d.from.lat, fromLng: d.from.lng,
-    intention: INTENT, blind: { text: $("btxt").value.trim().slice(0, 1000), img: inked ? cv.toDataURL("image/png") : "" },
-    status: "pending", verdict: 0, found: "", photo: "", at: serverTimestamp() };
-  draft = null; sfx.lock(); rt = null; lastFetch = 0; shownD = null; near100 = null; nearSince = 0;
-  setDoc(doc(db, "reports", rid), data).catch(() => note("sync ✕", false));
-  follow = false;                                  // overview first: you and the point, with the route between
-  overview(900, d); route(); whoosh(.9, 200, 1600, .04); scanSweep();
-  setTimeout(() => { if (active && active.rid === rid && document.body.dataset.st === "travel") follow = true; }, 2600);   // then the camera swoops in behind you
+$("bspin").addEventListener("click", () => {
+  if (spinning || typing || active) return;
+  if (!pos) { startGeo(true); note("locating…"); sfx.no(); return; }
+  startCompass(); ac(); openIntent();
 });
+
+/* ---------- the intention: typed on our own keyboard ---------- */
+let itxt = "";
+const QW = ["1234567890", "qwertyuiop", "asdfghjkl", "zxcvbnm"], DT = ["1234567890", "abcdefghi", "jklmnopqr", "stuvwxyz"];   // Dots keys follow the chart: the alphabet in order
+function buildKb() {
+  const rows = document.documentElement.dataset.dots === "1" ? DT : QW; let h = "";
+  rows.forEach(r => { h += '<div class="kr">' + [...r].map(k => '<button class="kk" type="button" data-k="' + k + '">' + k + "</button>").join("") + "</div>"; });
+  h += '<div class="kr"><button class="kk wide sp" type="button" data-k=" " aria-label="Space">␣</button><button class="kk sp" type="button" data-k="⌫" aria-label="Delete">⌫</button><button class="kk go" type="button" data-k="▶" aria-label="Go">▶</button></div>';
+  $("kb").innerHTML = h;
+  $("kb").querySelectorAll(".kk").forEach(b => b.addEventListener("pointerdown", e => { e.preventDefault(); kbKey(b.dataset.k); }));
+}
+const renderI = () => { $("itx").textContent = itxt; };
+function kbKey(k) {
+  if (!typing) return;
+  if (k === "⌫") { itxt = itxt.slice(0, -1); sfx.del(); }
+  else if (k === "▶") { const t = itxt.trim(); if (!t) { sfx.no(); return; } sfx.enter(); closeIntent(); runSpin(t); return; }
+  else if (itxt.length < 120) { itxt += k; sfx.key(); }
+  renderI();
+}
+function openIntent() { typing = true; itxt = ""; renderI(); buildKb(); document.body.dataset.st = "intent"; sfx.hum(); route(); }
+function closeIntent() { typing = false; route(); }
+$("icancel").addEventListener("click", () => { sfx.close(); closeIntent(); });
 
 /* ---------- travel ---------- */
 const seg = (a, b) => hav({ lat: a[0], lng: a[1] }, { lat: b[0], lng: b[1] });
@@ -875,23 +937,22 @@ async function fetchRoute() {
     }
   } catch {} finally { routing = false; }
 }
-function drawRoute(anim) {                       // thick white line with a black edge along the route, dashed for the last stretch
-  if (!mapReady) return;
-  if (!active || active.status !== "pending" || !pos) { clearInterval(routeAnimT); routeBusy = false; src("rt").setData(lineFC(null)); src("rtail").setData(lineFC(null)); src("head").setData(ptFC(null)); return; }
+function drawRoute(anim) {                       // cyan line with an indigo halo along the route, dotted for the last stretch
+  if (!active || active.status !== "pending" || !pos) { clearInterval(routeAnimT); routeBusy = false; rPts = rTail = rHead = null; paintRoute(); return; }
   const T = [active.lat, active.lng], P = [pos.lat, pos.lng], rr = routeRemain();
   let pts = null, tail = [P, T];
   if (rr) { pts = [P, ...rt.c.slice(rr.bi)]; const e = pts[pts.length - 1]; tail = seg(e, T) > 12 ? [e, T] : null; }
-  src("rtail").setData(lineFC(tail && tail.map(q => [q[1], q[0]])));
-  if (!pts) { src("rt").setData(lineFC(null)); return; }
+  rTail = tail && tail.map(q => [q[1], q[0]]);
+  if (!pts) { if (!routeBusy) rPts = null; paintRoute(); return; }
   const full = pts.map(q => [q[1], q[0]]);
   if (anim && !reduced) {                        // the trace: a bright head runs along the road, drawing it
-    clearInterval(routeAnimT); routeBusy = true; const t0 = Date.now(), ms = 900;
+    clearInterval(routeAnimT); routeBusy = true; const t0 = Date.now(), ms = 1100; sfx.trace();
     routeAnimT = setInterval(() => {
       const f = Math.min(1, (Date.now() - t0) / ms), e = 1 - (1 - f) ** 3, c = partial(full, e);
-      src("rt").setData(lineFC(c)); src("head").setData(ptFC(f < 1 ? c[c.length - 1] : null));
+      rPts = c; rHead = f < 1 ? c[c.length - 1] : null; paintRoute();
       if (f >= 1) { clearInterval(routeAnimT); routeBusy = false; }
     }, 33);
-  } else if (!routeBusy) { src("rt").setData(lineFC(full)); src("head").setData(ptFC(null)); }
+  } else if (!routeBusy) { rPts = full; rHead = null; paintRoute(); }
 }
 function setDist(d) {                            // numbers glide instead of jumping
   targetD = d;
@@ -902,26 +963,22 @@ function setDist(d) {                            // numbers glide instead of jum
 }
 function arrive() {
   if (!active || arriving === active.rid) return;
-  arriving = active.rid; sfx.arrive(); buzz(400); flash(180); setEyes(0); setHide(false); scanSweep(); document.body.dataset.near = "0";
-  if (mapReady && !reduced) map.easeTo({ center: [active.lng, active.lat], pitch: 0, bearing: 0, zoom: 17.2, padding: PAD0, duration: 900 });   // drop to a top-down view of the point
+  arriving = active.rid; sfx.arrive(); buzz(400); flash(1000, "79,243,255"); setHide(false); scanSweep(); document.body.dataset.near = "0";
+  if (mapReady && !reduced) map.easeTo({ center: [active.lng, active.lat], pitch: 28, bearing: 0, zoom: 17.2, padding: { top: 0, bottom: 150, left: 0, right: 0 }, duration: 1100 });   // settle over the point
   updateDoc(doc(db, "reports", active.rid), { status: "arrived", arrivedAt: serverTimestamp() }).catch(() => { arriving = null; });
 }
 function updateTravel() {
   if (!active || !pos || active.status !== "pending") return;
   const d = hav(pos, active); setDist(d);
   const rr = routeRemain();
-  $("rinfo").textContent = rr ? "↳ " + fmtD(rr.rem) + " · " + Math.max(1, Math.round(rr.rem / rt.dist * rt.dur / 60)) + " min" : "";
+  $("rinfo").textContent = rr ? Math.max(1, Math.round(rr.rem / rt.dist * rt.dur / 60)) + " min" : "";
   document.body.dataset.near = d <= 100 ? "1" : "0";                    // the edges close in a notch near the point
-  if (d <= 100 && near100 !== active.rid) { near100 = active.rid; buzz([60, 80, 60]); tone(880, .1); tone(880, .1, "square", .05, .18); }
+  if (d <= 100 && near100 !== active.rid) { near100 = active.rid; buzz([60, 80, 60]); sfx.near(); }
   if (d <= 100) { if (!nearSince) nearSince = Date.now(); } else nearSince = 0;
   $("bhere").hidden = !(nearSince && Date.now() - nearSince > 120000);   // bad GPS must never block a report
   if (d <= Math.max(ARR, Math.min(pos.acc || 0, 60))) arrive();
 }
 $("bhere").addEventListener("click", arrive);
-$("bmode").addEventListener("click", () => {
-  routeMode = routeMode === "foot" ? "car" : "foot"; store.set("tm.mode", routeMode); $("bmode").textContent = routeMode === "car" ? "ⓓ" : "ⓦ";
-  rt = null; lastFetch = 0; fetchRoute(); drawRoute(); sfx.key();
-});
 function abortNow() {
   if (!active) return; sfx.no(); buzz(80);
   deleteDoc(doc(db, "reports", active.rid)).catch(() => {});
@@ -930,25 +987,20 @@ function abortNow() {
 { // ✕ must be held, so a pocket or a bump cannot end a mission
   const b = $("babort"); let t = null;
   const stop = () => { if (t) { clearTimeout(t); t = null; } b.classList.remove("press"); };
-  b.addEventListener("pointerdown", e => { e.preventDefault(); b.classList.add("press"); t = setTimeout(() => { t = null; b.classList.remove("press"); abortNow(); }, 900); });
+  b.addEventListener("pointerdown", e => { e.preventDefault(); b.classList.add("press"); sfx.key(); t = setTimeout(() => { t = null; b.classList.remove("press"); abortNow(); }, 900); });
   ["pointerup", "pointerleave", "pointercancel"].forEach(ev => b.addEventListener(ev, stop));
   b.addEventListener("contextmenu", e => e.preventDefault());
 }
 $("brec2").addEventListener("click", () => {     // overview of you + the point  <->  follow me
-  if (!pos || !active) return;
+  if (!pos || !active) return; sfx.key();
   if (follow) { follow = false; overview(700); }
   else { follow = true; camTick(); }
 });
-$("travel").addEventListener("click", e => { if (!e.target.closest("button")) setEyes(document.body.dataset.eyes !== "1"); });
-addEventListener("pointerdown", () => { lastTouch = Date.now(); }, true);
-setInterval(() => {                              // 10 s without a touch while walking: eyes up
-  if (active && active.status === "pending" && document.body.dataset.eyes === "0" && Date.now() - lastTouch > 10000 && !sheet.classList.contains("open")) setEyes(1);
-}, 1000);
-function tickLoop() {                            // soft ticks that speed up as you close in
+function tickLoop() {                            // a heartbeat that quickens as you close in
   clearTimeout(tickT);
   if (!(active && active.status === "pending" && pos) || muted || document.hidden) { tickT = setTimeout(tickLoop, 1500); return; }
   const d = hav(pos, active); sfx.beat();
-  tickT = setTimeout(tickLoop, Math.max(600, Math.min(3200, 600 + (d - 30) * 2.6)));      // a heartbeat that quickens as you close in
+  tickT = setTimeout(tickLoop, Math.max(600, Math.min(3200, 600 + (d - 30) * 2.6)));
 }
 async function wakeOn(on) {
   try {
@@ -958,9 +1010,9 @@ async function wakeOn(on) {
 }
 document.addEventListener("visibilitychange", () => { if (!document.hidden && active && active.status === "pending") wakeOn(true); });
 
-/* ---------- report ---------- */
-let photoData = "";
-$("bphoto").addEventListener("click", () => $("pfile").click());
+/* ---------- at the point: how did it feel, then did it match ---------- */
+let photoData = "", lvSel = null;
+$("bphoto").addEventListener("click", () => { sfx.key(); $("pfile").click(); });
 $("pfile").addEventListener("change", () => {
   const f = $("pfile").files[0]; if (!f) return;
   const img = new Image(), u = URL.createObjectURL(f);
@@ -971,76 +1023,70 @@ $("pfile").addEventListener("change", () => {
   };
   img.src = u; $("pfile").value = "";
 });
+document.querySelectorAll(".lvb").forEach(b => b.addEventListener("click", () => {
+  const n = +b.dataset.l; lvSel = n; sfx.level(n); buzz(30);
+  document.querySelectorAll(".lvb").forEach(x => x.classList.toggle("sel", x === b)); $("lv").classList.add("chosen"); $("vr").classList.add("ready");
+  flash(900, n === 0 ? "255,255,255" : n === 1 ? "138,125,255" : "79,243,255");
+}));
 function fillRep() {
   $("rid").textContent = active.rid; $("rtype").textContent = TG[active.type] + " " + active.type;
-  $("rblind").src = active.blind && active.blind.img || ""; $("rblind").hidden = !(active.blind && active.blind.img);
-  $("rbtxt").textContent = active.blind && active.blind.text || "";
+  lvSel = null; document.querySelectorAll(".lvb").forEach(x => x.classList.remove("sel")); $("lv").classList.remove("chosen"); $("vr").classList.remove("ready");
 }
 function finish(v) {
-  if (!active) return; const rid = active.rid;
-  const data = { status: "done", verdict: v, found: $("found").value.trim().slice(0, 2000), photo: photoData, doneAt: serverTimestamp() };
-  newRid = rid; v > 0 ? sfx.ok() : sfx.no(); buzz(v > 0 ? 40 : 90); flash(60); scanSweep();
+  if (!active || lvSel == null) return; const rid = active.rid;
+  const data = { status: "done", verdict: v, level: lvSel, found: "", photo: photoData, doneAt: serverTimestamp() };
+  newRid = rid; v > 0 ? sfx.ok() : v < 0 ? sfx.no() : sfx.neutral(); buzz(v > 0 ? 40 : 90); scanSweep();
   const vd = $("verd"); vd.textContent = v > 0 ? "✓" : v < 0 ? "✕" : "⌀"; vd.hidden = false; vd.style.animation = "none"; void vd.offsetWidth; vd.style.animation = "";
-  setTimeout(() => { vd.hidden = true; }, 850);
-  updateDoc(doc(db, "reports", rid), data).catch(() => note("sync ✕", false));
-  photoData = ""; $("found").value = ""; $("pprev").hidden = true;
+  setTimeout(() => { vd.hidden = true; }, 1050);
+  updateDoc(doc(db, "reports", rid), data).catch(() => note("sync ✕"));
+  photoData = ""; $("pprev").hidden = true;
 }
 $("byes").addEventListener("click", () => finish(1));
 $("bno").addEventListener("click", () => finish(-1));
 $("bnone").addEventListener("click", () => finish(0));      // could not reach it: counts neither way
 
-/* ---------- routing ---------- */
+/* ---------- screens ---------- */
 let lastRid = null;
 function route() {
   const pend = active && active.status === "pending", arr = active && active.status === "arrived";
-  const st = draft ? "pad" : pend ? "travel" : arr ? "rep" : "home";
-  document.body.dataset.st = st; if (st !== "home") setHide(false); if (st !== "travel") { setEyes(0); document.body.dataset.near = "0"; }
-  $("pad").hidden = !draft; $("rep").hidden = !(arr && !draft); $("travel").hidden = !(pend && !draft); $("tfoot").hidden = st !== "travel";
-  $("dockhome").hidden = !!(draft || active); wakeOn(st === "travel");
+  const st = typing ? "intent" : spinning ? "spin" : pend ? "travel" : arr ? "rep" : "home";
+  document.body.dataset.st = st; if (st !== "home") { setHide(false); if (mn.classList.contains("open")) menu(false); }
+  if (st !== "travel") document.body.dataset.near = "0";
+  $("hud").hidden = st !== "travel"; $("tfoot").hidden = st !== "travel"; $("rep").hidden = st !== "rep";
+  $("dockhome").hidden = st !== "home"; wakeOn(st === "travel");
   if (!pend) { rt = null; drawRoute(); }
-  if (route.prev === "travel" && st !== "travel") flatCam(900);        // leaving the chase: back to a flat, north-up map
+  if (route.prev === "travel" && st !== "travel") homeCam(1000);        // leaving the chase: back to the 3D home view
   route.prev = st;
-  if (draft && $("pad").dataset.o !== "1") { $("pad").dataset.o = "1"; openPad(); }
-  if (!draft) $("pad").dataset.o = "0";
   if (arr && $("rep").dataset.r !== active.rid) { $("rep").dataset.r = active.rid; fillRep(); }
   if (!arr) $("rep").dataset.r = "";
   const rid = active ? active.rid : null;
   if (rid !== lastRid) {
     lastRid = rid; arriving = null; shownD = null; near100 = null; nearSince = 0; setTarget();
-    if (pend && pos && mapReady && follow) { follow = false; overview(700); setTimeout(() => { if (active && active.status === "pending") follow = true; }, 2200); }
+    if (pend && pos && mapReady && follow) { follow = false; overview(700); setTimeout(() => { if (active && active.status === "pending") follow = true; }, 2400); }
   }
   if (pend) { fetchRoute(); drawRoute(); updateTravel(); }
   drawCompass();
 }
 
-/* ---------- reports data ---------- */
-const RANKS = ["I", "II", "III", "IV", "V"], TH = [0, 3, 8, 20, 50];
-let rankLvl = null;
+/* ---------- reports data + rank (plain numbers) ---------- */
+const TH = [0, 3, 8, 20, 50];
 function score() {
   const d = [...mine.values()].filter(r => r.status === "done" && r.verdict !== 0);   // ⌀ counts neither way
-  return d.length + 2 * d.filter(r => r.verdict > 0).length + d.reduce((s, r) => s + (net.get(r.rid) || 0), 0);
+  return d.length + 2 * d.filter(r => r.verdict > 0).length + d.filter(r => r.level > 0).length;
 }
 function updateRank() {
   const s = score(); let l = 0; TH.forEach((t, i) => { if (s >= t) l = i; });
-  $("rk").textContent = RANKS[l];
+  $("mid").textContent = agent + " · " + (l + 1);
   const saved = parseInt(store.get("tm.rank" + agent), 10);
-  if (!isNaN(saved) && l > saved) { const r = $("rk"); r.classList.remove("flick"); void r.offsetWidth; r.classList.add("flick"); sfx.ok(); }
+  if (!isNaN(saved) && l > saved) { const b = $("bm"); b.classList.remove("flick"); void b.offsetWidth; b.classList.add("flick"); sfx.rank(); note("↑ " + (l + 1)); }
   if (isNaN(saved) || l > saved) store.set("tm.rank" + agent, String(l));
-  rankLvl = l;
-}
-async function loadNet() {
-  const done = [...mine.values()].filter(r => r.status === "done").sort((a, b) => b.seq - a.seq).slice(0, 20);
-  await Promise.all(done.map(async r => {
-    try { const s = await getDocs(collection(db, "reports", r.rid, "ratings")); let n = 0; s.forEach(d => { n += d.data().v || 0; }); net.set(r.rid, n); } catch {}
-  }));
-  updateRank();
 }
 function subMine() {
   unsubMine = onSnapshot(query(collection(db, "reports"), where("uid", "==", uid)), snap => {
     mine = new Map(); snap.forEach(d => mine.set(d.id, { ...d.data(), rid: d.id }));
     const cur = [...mine.values()].filter(r => r.status === "pending" || r.status === "arrived").sort((a, b) => b.seq - a.seq)[0] || null;
-    active = cur; drawMine(); route(); updateRank();
-    if (!subMine.once) { subMine.once = true; loadNet(); }
+    active = cur; if (active && spinning) spinning = false;
+    drawMine(); route(); updateRank();
   }, e => console.error(e));
 }
 function subAll() {
@@ -1049,10 +1095,23 @@ function subAll() {
     allDocs = new Map(); snap.forEach(d => allDocs.set(d.id, { ...d.data(), rid: d.id })); drawAll();
   }, e => console.error(e));
 }
+
+/* ---------- the menu: one button that blooms ---------- */
+const mn = $("mn"), bm = $("bm");
+function menu(v) {
+  const open = v == null ? !mn.classList.contains("open") : v;
+  if (open === mn.classList.contains("open")) return;
+  mn.classList.toggle("open", open); bm.classList.toggle("on", open); open ? sfx.open() : sfx.close();
+  if (!open) menuClosedAt = Date.now();
+}
+bm.addEventListener("click", e => { e.stopPropagation(); menu(); });
+mn.querySelectorAll("button").forEach(b => b.addEventListener("click", () => menu(false)));
+document.addEventListener("pointerdown", e => { if (mn.classList.contains("open") && !e.target.closest("#mn,#bm")) menu(false); }, true);
+
 $("bglobal").addEventListener("click", () => {
-  showAll = !showAll; $("bglobal").classList.toggle("on", showAll); sfx.key();
-  if (showAll) { ripNext = true; subAll(); sweepRipple(); scanSweep(); sfx.dive(); if (mapReady && !reduced) map.easeTo({ pitch: 42, zoom: map.getZoom() - .9, duration: 1400 }); }
-  else if (mapReady && document.body.dataset.st === "home") flatCam(900);
+  showAll = !showAll; $("bglobal").classList.toggle("on", showAll);
+  if (showAll) { ripNext = true; subAll(); sweepRipple(); scanSweep(); sfx.dive(); if (mapReady && !reduced) map.easeTo({ pitch: HOME_PITCH + 8, zoom: map.getZoom() - .9, duration: 1400 }); }
+  else if (mapReady && document.body.dataset.st === "home") homeCam(900);
   drawAll();
 });
 
@@ -1065,77 +1124,56 @@ function closeSheet(fromPop) {
   if (pushed) { pushed = false; if (fromPop !== true) { try { history.back(); } catch {} } }
 }
 addEventListener("popstate", () => { if (sheet.classList.contains("open")) closeSheet(true); });
-$("sx").addEventListener("click", closeSheet);
+$("sx").addEventListener("click", () => { sfx.close(); closeSheet(); });
+const ldot = r => '<span class="ld l' + (r.status === "done" ? (r.level || 0) : 0) + '"></span>';
 
 $("blist").addEventListener("click", () => {
   if (sheet.classList.contains("open") && sbody.dataset.k === "list") { closeSheet(); return; }
   const arr = [...mine.values()].sort((a, b) => b.seq - a.seq);
-  openSheet(arr.length ? arr.map(r => '<button class="li" data-r="' + esc(r.rid) + '"><span>' + esc(r.rid) + " " +
+  openSheet(arr.length ? arr.map(r => '<button class="li" data-r="' + esc(r.rid) + '"><span>' + ldot(r) + esc(r.rid) + " " +
     vg(r) + " " + TG[r.type] + '</span><span class="g">' + esc(fmtT(r)) + "</span></button>").join("") : '<p class="g">–</p>');
   sbody.dataset.k = "list";
-  sbody.querySelectorAll(".li").forEach(b => b.addEventListener("click", () => { const r = mine.get(b.dataset.r); if (r) { follow = false; if (mapReady) map.flyTo({ center: [r.lng, r.lat], zoom: 15.5, duration: 700 }); openReport(r); } }));
+  sbody.querySelectorAll(".li").forEach(b => b.addEventListener("click", () => { const r = mine.get(b.dataset.r); if (r) { follow = false; if (mapReady) map.flyTo({ center: [r.lng, r.lat], zoom: 15.8, duration: 800 }); openReport(r); } }));
 });
 
-async function openReport(r) {
-  const own = r.uid === uid;
+function openReport(r) {
   const head = "<h2>" + esc(r.rid) + " " + vg(r) + " " + TG[r.type] + ' <span class="g">' + esc(fmtT(r)) + " · " + esc(r.src || "") + "</span></h2>";
   let b = '<div class="bl">';
-  if (r.blind && r.blind.img) b += '<img src="' + esc(r.blind.img) + '" alt="">';
-  if (r.blind && r.blind.text) b += "<p>" + esc(r.blind.text) + "</p>";
-  if (r.found) b += '<p class="g">' + esc(r.found) + "</p>";
+  if (r.intention) b += "<p>" + esc(r.intention) + "</p>";
+  if (r.status === "done") b += '<p class="g">' + ldot(r) + esc(LV[r.level || 0]) + "</p>";
   if (r.photo) b += '<img class="gray" src="' + esc(r.photo) + '" alt="">';
-  b += '<div class="rt" id="rt"></div></div>';
-  openSheet(head + b); sbody.dataset.k = "rep";
-  if (r.status !== "done") return;
-  try {
-    const s = await getDocs(collection(db, "reports", r.rid, "ratings")); let n = 0, my = 0;
-    s.forEach(d => { const v = d.data().v || 0; n += v; if (d.id === uid) my = v; });
-    if (own) net.set(r.rid, n);
-    const rt = $("rt"); if (!rt || sbody.dataset.k !== "rep") return;
-    rt.innerHTML = (own ? "" : '<button class="o' + (my > 0 ? " on" : "") + '" data-v="1" aria-label="Up">▲</button><button class="o' + (my < 0 ? " on" : "") + '" data-v="-1" aria-label="Down">▼</button>') + "<span>" + (n > 0 ? "+" : "") + n + "</span>";
-    rt.querySelectorAll("button").forEach(bt => bt.addEventListener("click", async () => {
-      const v = parseInt(bt.dataset.v, 10); sfx.key();
-      try { await setDoc(doc(db, "reports", r.rid, "ratings", uid), { uid, v }); } catch { note("sync ✕", false); return; }
-      openReport(r);
-    }));
-  } catch {}
+  openSheet(head + b + "</div>"); sbody.dataset.k = "rep"; sfx.open();
 }
 
 $("bset").addEventListener("click", () => {
   if (sheet.classList.contains("open") && sbody.dataset.k === "set") { closeSheet(); return; }
   const on = document.documentElement.dataset.dots === "1";
-  openSheet('<div class="st"><span>dots</span><button id="sdots" class="o' + (on ? " on" : "") + '" type="button">' + (on ? "●" : "○") + '</button></div>' +
+  openSheet('<div class="st"><span class="dw">dots</span><button id="sdots" class="o' + (on ? " on" : "") + '" type="button">' + (on ? "●" : "○") + '</button></div>' +
     '<div class="st"><span>♪</span><button id="smute" class="o' + (!muted ? " on" : "") + '" type="button">' + (!muted ? "●" : "○") + '</button></div>' +
+    '<div class="st"><span>' + (units === "mi" ? "mi" : "km") + '</span><button id="sunit" class="o" type="button">⇄</button></div>' +
+    '<div class="st"><span>' + (routeMode === "car" ? "ⓓ" : "ⓦ") + '</span><button id="smode" class="o" type="button">⇄</button></div>' +
+    '<div class="st"><span>⋰</span><button id="sdm" class="o' + (DOTMAP ? " on" : "") + '" type="button">' + (DOTMAP ? "●" : "○") + '</button></div>' +
     '<div class="st"><span>⏻</span><button id="sout" class="o" type="button">⏻</button></div>' +
     '<div class="st g"><span>' + BUILD + "</span></div>");
-  sbody.dataset.k = "set";
-  $("sdots").addEventListener("click", e => { const v = document.documentElement.dataset.dots !== "1"; setDots(v); applyDots(); e.currentTarget.classList.toggle("on", v); e.currentTarget.textContent = v ? "●" : "○"; });
+  sbody.dataset.k = "set"; sfx.open();
+  $("sdots").addEventListener("click", e => { const v = document.documentElement.dataset.dots !== "1"; setDots(v); applyDots(); sfx.key(); e.currentTarget.classList.toggle("on", v); e.currentTarget.textContent = v ? "●" : "○"; });
   $("smute").addEventListener("click", e => { muted = !muted; store.set("tm.mute", muted ? "1" : "0"); e.currentTarget.classList.toggle("on", !muted); e.currentTarget.textContent = !muted ? "●" : "○"; sfx.key(); });
-  $("sout").addEventListener("click", () => { signOut(auth).then(() => location.reload()).catch(() => location.reload()); });
+  $("sunit").addEventListener("click", e => { units = units === "mi" ? "km" : "mi"; store.set("tm.units", units); e.currentTarget.previousElementSibling.textContent = units; sfx.key(); });
+  $("smode").addEventListener("click", e => { routeMode = routeMode === "foot" ? "car" : "foot"; store.set("tm.mode", routeMode); e.currentTarget.previousElementSibling.textContent = routeMode === "car" ? "ⓓ" : "ⓦ"; rt = null; lastFetch = 0; sfx.key(); if (active) { fetchRoute(); } });
+  $("sdm").addEventListener("click", () => { store.set("tm.dotmap", DOTMAP ? "0" : "1"); sfx.key(); location.reload(); });
+  $("sout").addEventListener("click", () => { sfx.no(); signOut(auth).then(() => location.reload()).catch(() => location.reload()); });
 });
 
-/* ---------- help ---------- */
-const HELP = [["⌖", "location on · allow"], ["◎", "spin → a point"], ["✎", "blind view first · draw + write"], ["▶", "go"],
-  ["➤", "arrow up = straight on"], ["ⓦ ⓓ", "walk · drive route"], ["✕", "hold to end"], ["◉", "tap map: hide / show"],
-  ["✓ ✕ ⌀", "there: write what is · matched / not / can't reach"], ["◎", "again · trail grows"],
-  ["⊕", "all agents · ▲ ▼ rate"], ["≡", "your reports"], ["⚙", "dots · sound · exit"], ["◉", "benefit of mankind"]];
+const HELP = [["◎", "type an intention · the machine places a point"], ["➤", "arrow up = straight on"], ["✕", "hold to end"],
+  ["◉", "menu · tap the map to hide everything"], ["● ● ●", "calm · strange · uncanny, then ✓ ✕ ⌀"], ["⊕", "all agents"], ["≡", "your reports"], ["⚙", "settings"]];
 function openHelp() {
   if (sheet.classList.contains("open") && sbody.dataset.k === "help") { closeSheet(); return; }
-  openSheet(HELP.map(h => '<div class="st hp"><span style="font-size:20px;min-width:3.2em">' + esc(h[0]) + "</span><span>" + esc(h[1]) + "</span></div>").join(""));
-  sbody.dataset.k = "help";
+  openSheet(HELP.map(h => '<div class="st hp"><span style="font-size:20px;min-width:3.6em">' + esc(h[0]) + "</span><span>" + esc(h[1]) + "</span></div>").join(""));
+  sbody.dataset.k = "help"; sfx.open();
 }
 $("bhelp").addEventListener("click", openHelp);
 ["gesturestart", "gesturechange", "gestureend"].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
 document.addEventListener("touchmove", e => { if (e.touches.length > 1 && !e.target.closest("#map")) e.preventDefault(); }, { passive: false });
-
-/* ---------- daily line ---------- */
-function daily() {
-  const day = Math.floor(Date.now() / 864e5), t = LINES[day % LINES.length], l = $("line"); todayLine = t;
-  if (store.get("tm.day") === String(day) || reduced) { l.textContent = t; l.classList.add("dim"); return; }
-  store.set("tm.day", String(day)); l.classList.remove("dim"); l.textContent = "";
-  [...t].forEach((ch, i) => setTimeout(() => { l.textContent += ch; if (i % 2 === 0) sfx.key(); }, 700 + i * 55));
-  setTimeout(() => { if (!$("line").textContent.startsWith("location")) l.classList.add("dim"); }, 700 + t.length * 55 + 5000);
-}
 
 /* ---------- session ---------- */
 onAuthStateChanged(auth, user => {
@@ -1149,16 +1187,10 @@ function boot(user) {
   store.set("tm.id", agent);
   $("open").classList.add("out");
   setTimeout(() => {
-    $("open").hidden = true; $("open").classList.remove("out"); $("app").hidden = false; $("me").textContent = agent;
-    $("bmode").textContent = routeMode === "car" ? "ⓓ" : "ⓦ";
-    initMap(); startGeo(); subMine(); daily(); route(); tickLoop();
-    if (!store.get("tm.help")) { store.set("tm.help", "1"); setTimeout(openHelp, 400); }
-    else if (!store.get("tm.spun")) $("bspin").classList.add("pulse1");
-  }, reduced ? 0 : 280);
-}
-if (window.visualViewport) {                    // keep ▶ ✓ ✕ above the keyboard
-  const f = () => document.documentElement.style.setProperty("--vh", visualViewport.height + "px");
-  visualViewport.addEventListener("resize", f); visualViewport.addEventListener("scroll", f); f();
+    $("open").hidden = true; $("open").classList.remove("out"); $("app").hidden = false; $("mid").textContent = agent + " · 1";
+    initMap(); startGeo(); subMine(); route(); tickLoop();
+    if (!store.get("tm.spun")) $("bspin").classList.add("pulse1");
+  }, reduced ? 0 : 480);
 }
 
 if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(console.error));
