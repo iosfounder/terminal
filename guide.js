@@ -138,6 +138,36 @@ export async function credit(file) {
   } catch { return null; }
 }
 
+// Real photographs taken at a spot (Wikimedia Commons, searched by where the photo was taken), with who took them and the licence.
+// The place's own article picture comes first when there is one. No stock images, nothing generated.
+const shots = new Map();
+// The pictures Wikipedia's editors chose for the place's own article come first; photos merely taken nearby only fill gaps
+// (left to themselves they are often of events that happened there rather than of the place).
+const NOT_PHOTO = /(logo|icon|flag|map|locator|location|symbol|coat[_ ]of[_ ]arms|signature|diagram|plan|commons-|wiki|\.svg)/i;
+export async function photos(lat, lng, own, n = 5, radius = 160, article) {
+  const k = lat.toFixed(4) + "," + lng.toFixed(4) + "," + (own || "") + "," + (article || ""); if (shots.has(k)) return shots.get(k);
+  const txt = h => (h && h.value ? String(h.value).replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim() : "");
+  const out = [], seen = new Set();
+  const add = p => {
+    const ii = p.imageinfo && p.imageinfo[0]; if (!ii || seen.has(p.title)) return;
+    const m = ii.extmetadata || {}, w = ii.thumbwidth || ii.width, h = ii.thumbheight || ii.height;
+    if (!/^image\/(jpeg|png|webp)$/.test(ii.mime || "") || !w || !h || w / h > 2.4 || h / w > 1.9 || (ii.width || 0) < 640) return;   // photographs, not maps, diagrams or slivers
+    seen.add(p.title);
+    out.push({ src: ii.thumburl || ii.url, by: txt(m.Artist).slice(0, 60), lic: txt(m.LicenseShortName), url: ii.descriptionurl, what: txt(m.ImageDescription).slice(0, 140) });
+  };
+  const ask = q => get(CM + "action=query&prop=imageinfo&iiprop=url|extmetadata|size|mime&iiurlwidth=1080&" + q).then(j => Object.values(j.query && j.query.pages || {})).catch(() => []);
+  if (own) (await ask("titles=File:" + encodeURIComponent(own))).forEach(add);
+  if (article && out.length < n) {
+    try {
+      const j = await get(WP + "action=query&prop=images&imlimit=40&redirects=1&titles=" + encodeURIComponent(article));
+      const files = Object.values(j.query.pages).flatMap(p => (p.images || []).map(i => i.title)).filter(t => !NOT_PHOTO.test(t)).slice(0, 20);
+      if (files.length) (await ask("titles=" + files.map(encodeURIComponent).join("|"))).forEach(add);
+    } catch {}
+  }
+  if (out.length < n) (await ask("generator=geosearch&ggsnamespace=6&ggslimit=20&ggsradius=" + radius + "&ggscoord=" + lat + "|" + lng)).forEach(add);
+  const r = out.slice(0, n); shots.set(k, r); return r;
+}
+
 // The phone's own voice, with a queue so lines never talk over each other.
 // Priority: 3 briefing, 2 a stop's story, 1 everything else. A higher line interrupts a lower one; an equal one waits its turn.
 let voice = null, mode = "always", rate = 1, walking = false, cur = null, q = [], last = null, token = 0;
@@ -153,8 +183,11 @@ function next() {
   if (cur || !q.length) return; const it = q.shift(), my = ++token;
   const u = new SpeechSynthesisUtterance(it.text); if (voice) u.voice = voice; u.lang = voice ? voice.lang : "en-GB"; u.rate = .98 * rate; u.pitch = .96;
   const done = () => { if (token === my) { cur = null; next(); } };
-  u.onend = done; u.onerror = done; cur = it; last = it; speechSynthesis.speak(u);
+  u.onend = done; u.onerror = done; cur = it; last = it; if (lineHook) lineHook(it.text); speechSynthesis.speak(u);
 }
+let lineHook = null;
+export const onLine = f => { lineHook = f; };                                      // the slideshow captions what is being said
+export const busy = () => !!cur || q.length > 0;
 export function say(text, on, prio = 1) {
   if (!text || on === false || !ok()) return null;
   if (cur && prio > cur.prio) { q = q.filter(i => i.prio >= prio); token++; cur = null; speechSynthesis.cancel(); }
