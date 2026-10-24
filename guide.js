@@ -101,13 +101,14 @@ export const short = p => sentences(p.text, 2);
 export const story = p => sentences(p.text, 4);
 export function facts(p) {
   const o = [];
-  if (p.year != null) o.push(p.year < 0 ? -p.year + " BC" : String(p.year));
+  if (p.year != null) o.push(p.year < 0 ? -p.year + " BC" : p.year + (ago(p.year) ? " (" + ago(p.year) + ")" : ""));
   if (p.listed.length) o.push(p.listed[0]);
   if (p.architect.length) o.push(p.architect.join(", "));
   if (p.height) o.push(p.height + " m");
   return o;
 }
-export const spoken = p => p.title + ". " + short(p) + (p.year != null && !short(p).includes(String(Math.abs(p.year))) ? " Dating from " + (p.year < 0 ? -p.year + " BC" : p.year) + "." : "");
+export const ago = y => { const n = new Date().getFullYear() - y; return y > 0 && n > 0 ? (n === 1 ? "a year ago" : n + " years ago") : ""; };
+export const spoken = p => p.title + ". " + short(p) + (p.year != null && !short(p).includes(String(Math.abs(p.year))) ? (p.year > 0 ? " It dates from " + p.year + ", " + ago(p.year) + "." : " Dating from " + -p.year + " BC.") : "");
 
 // Which neighbourhood, village or park you're in, and that place's own first lines
 let lastArea = null, areaAt0 = 0;
@@ -149,19 +150,21 @@ const shots = new Map();
 // The pictures Wikipedia's editors chose for the place's own article come first; photos merely taken nearby only fill gaps
 // (left to themselves they are often of events that happened there rather than of the place).
 const NOT_PHOTO = /(logo|icon|flag|map|locator|location|symbol|coat[_ ]of[_ ]arms|signature|diagram|plan|commons-|wiki|\.svg)/i;
-export async function photos(lat, lng, own, n = 5, radius = 160, article) {
-  const k = lat.toFixed(4) + "," + lng.toFixed(4) + "," + (own || "") + "," + (article || ""); if (shots.has(k)) return shots.get(k);
+export async function photos(lat, lng, own, n = 5, radius = 160, article, old = false) {
+  const k = lat.toFixed(4) + "," + lng.toFixed(4) + "," + (own || "") + "," + (article || "") + (old ? ",old" : ""); if (shots.has(k)) return shots.get(k);
   const txt = h => (h && h.value ? String(h.value).replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim() : "");
   const out = [], seen = new Set();
   const add = p => {
     const ii = p.imageinfo && p.imageinfo[0]; if (!ii || seen.has(p.title)) return;
     const m = ii.extmetadata || {}, w = ii.thumbwidth || ii.width, h = ii.thumbheight || ii.height;
     if (!/^image\/(jpeg|png|webp)$/.test(ii.mime || "") || !w || !h || w / h > 2.4 || h / w > 1.9 || (ii.width || 0) < 640) return;   // photographs, not maps, diagrams or slivers
+    const yr = (/(1[5-9]\d\d|20[0-2]\d)/.exec(txt(m.DateTimeOriginal)) || /(1[5-9]\d\d|20[0-2]\d)/.exec(txt(m.DateTime)) || [])[1];
+    if (old && !(yr && +yr <= 1965)) return;                                     // "then": only photographs the file itself dates to 1965 or earlier
     seen.add(p.title);
-    out.push({ src: ii.thumburl || ii.url, by: txt(m.Artist).slice(0, 60), lic: txt(m.LicenseShortName), url: ii.descriptionurl, what: txt(m.ImageDescription).slice(0, 140) });
+    out.push({ src: ii.thumburl || ii.url, by: txt(m.Artist).slice(0, 60), lic: txt(m.LicenseShortName), url: ii.descriptionurl, what: txt(m.ImageDescription).slice(0, 140), year: yr ? +yr : null });
   };
   const ask = q => get(CM + "action=query&prop=imageinfo&iiprop=url|extmetadata|size|mime&iiurlwidth=1080&" + q).then(j => Object.values(j.query && j.query.pages || {})).catch(() => []);
-  if (own) (await ask("titles=File:" + encodeURIComponent(own))).forEach(add);
+  if (own && !old) (await ask("titles=File:" + encodeURIComponent(own))).forEach(add);
   if (article && out.length < n) {
     try {
       const j = await get(WP + "action=query&prop=images&imlimit=40&redirects=1&titles=" + encodeURIComponent(article));
@@ -169,7 +172,7 @@ export async function photos(lat, lng, own, n = 5, radius = 160, article) {
       if (files.length) (await ask("titles=" + files.map(encodeURIComponent).join("|"))).forEach(add);
     } catch {}
   }
-  if (out.length < n) (await ask("generator=geosearch&ggsnamespace=6&ggslimit=20&ggsradius=" + radius + "&ggscoord=" + lat + "|" + lng)).forEach(add);
+  if (out.length < n) (await ask("generator=geosearch&ggsnamespace=6&ggslimit=" + (old ? 50 : 20) + "&ggsradius=" + radius + "&ggscoord=" + lat + "|" + lng)).forEach(add);
   const r = out.slice(0, n); shots.set(k, r); return r;
 }
 

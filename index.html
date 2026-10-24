@@ -418,7 +418,7 @@ const pad4 = n => String(n).padStart(4, "0");
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
 
-const BUILD = "v10.2";
+const BUILD = "v10.3";
 const ARR = 30, HOME_PITCH = 50;
 
 /* ---------- sound ---------- */
@@ -1312,7 +1312,7 @@ function reachStop(T) {                          // at a stop: the camera circle
   sfx.arrive(); buzz([80, 60, 160]); scanSweep(); lb(7000); near100 = null; document.body.dataset.near = "0";
   const p = T.id ? G.byId(T.id) : null;
   musicSwell();
-  if (p) { heardOne(p, true); slideshow([{ label: p.title, lat: p.lat, lng: p.lng, img: p.img, art: p.title, n: 5 }], 9000); } else G.say(T.name, !muted);
+  if (p) { heardOne(p, true); slideshow([{ label: p.title, lat: p.lat, lng: p.lng, img: p.img, art: p.title, n: 4 }, { label: p.title, lat: p.lat, lng: p.lng, n: 3, r: 250, old: true }], 9000); } else G.say(T.name, !muted);
   if (mapReady && !reduced) { follow = false; map.jumpTo({ padding: PAD0 }); map.easeTo({ center: [T.lng, T.lat], zoom: 18, pitch: 62, bearing: map.getBearing() + 80, duration: 7000, easing: t => t * (2 - t) }); }
   setTimeout(() => { if (active && document.body.dataset.st === "travel") follow = true; }, 7200);
   rt = null; lastFetch = 0; setTarget(); fetchRoute(); updateTravel();
@@ -1434,7 +1434,7 @@ async function openCard(p, full, auto) {         // the place's own words, its f
   c.querySelector(".cf").textContent = f.join(" · ");
   c.querySelector(".cx").textContent = full ? G.story(p) : G.short(p);
   const img = c.querySelector("img"); img.hidden = !p.thumb; if (p.thumb) { img.src = p.thumb; img.alt = p.title; }
-  img.onclick = e => { e.stopPropagation(); sfx.open(); G.say(p.title + ". " + G.story(p), !muted, 2); slideshow([{ label: p.title, lat: p.lat, lng: p.lng, img: p.img, art: p.title, n: 6 }], 8000); };   // the photo opens its slideshow
+  img.onclick = e => { e.stopPropagation(); sfx.open(); G.say(p.title + ". " + G.story(p), !muted, 2); slideshow([{ label: p.title, lat: p.lat, lng: p.lng, img: p.img, art: p.title, n: 4 }, { label: p.title, lat: p.lat, lng: p.lng, n: 3, r: 250, old: true }], 8000); };   // the photo opens its slideshow
   const src = c.querySelector(".cs");
   src.innerHTML = '<a href="' + esc(p.url) + '" target="_blank" rel="noopener">wikipedia ↗</a>' + (p.q ? ' · <a href="https://www.wikidata.org/wiki/' + esc(p.q) + '" target="_blank" rel="noopener">wikidata</a>' : "");
   c.hidden = false; c.classList.remove("in"); void c.offsetWidth; c.classList.add("in");
@@ -1497,7 +1497,7 @@ const SHOW_HOLD = 6500;
 let stepId = 0;
 async function slideshow(groups, minMs = 0, maxMs = 60000) {   // groups: [{ label, lat, lng, img }] -> real photos for each, played in order while the guide speaks
   const my = ++showRun, el = $("show");
-  const sets = await Promise.all(groups.map(g => G.photos(g.lat, g.lng, g.img, g.n || 4, g.r || 160, g.art).then(ps => ps.map(p => ({ ...p, label: g.label }))).catch(() => [])));
+  const sets = await Promise.all(groups.map(g => G.photos(g.lat, g.lng, g.img, g.n || 4, g.r || 160, g.art, !!g.old).then(ps => ps.map(p => ({ ...p, label: g.label, old: !!g.old }))).catch(() => [])));
   const slides = sets.flat(); if (my !== showRun || !slides.length) return;
   closeCard(); el.hidden = false; void el.offsetWidth; el.classList.add("on");
   const L = [el.querySelector(".sl.a"), el.querySelector(".sl.b")], cap = el.querySelector(".sh p"), lab = el.querySelector(".sh b"), cred = el.querySelector(".sh small"), bar = el.querySelector(".bar");
@@ -1513,7 +1513,7 @@ async function slideshow(groups, minMs = 0, maxMs = 60000) {   // groups: [{ lab
       if (my !== showRun) return;
       ly.style.backgroundImage = 'url("' + s.src.replace(/"/g, "%22") + '")';
       ly.classList.remove("kb0", "kb1", "kb2", "in"); void ly.offsetWidth; ly.classList.add("in", "kb" + (idx % 3)); other.classList.remove("in");
-      lab.textContent = s.label || ""; cred.textContent = "photo: " + (s.by || "wikimedia commons") + (s.lic ? " · " + s.lic : "") + " · wikimedia commons";
+      lab.textContent = s.label || ""; cred.textContent = (s.old ? "old photo taken near here" + (s.year ? ", " + s.year + (G.ago(s.year) ? " (" + G.ago(s.year) + ")" : "") : "") + " · " : "") + "photo: " + (s.by || "wikimedia commons") + (s.lic ? " · " + s.lic : "") + " · wikimedia commons";
       bar.style.transition = "none"; bar.style.width = "0"; void bar.offsetWidth; bar.style.transition = "width " + SHOW_HOLD + "ms linear"; bar.style.width = "100%";
     };
     img.src = s.src; i++;
