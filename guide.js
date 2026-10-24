@@ -112,13 +112,15 @@ export const spoken = p => p.title + ". " + short(p) + (p.year != null && !short
 
 // Which neighbourhood, village or park you're in, and that place's own first lines
 let lastArea = null, areaAt0 = 0;
-export async function area(lat, lng) {
-  if (lastArea && dist(lastArea, { lat, lng }) < 350) return lastArea.v;
-  if (Date.now() - areaAt0 < 20000) return lastArea ? lastArea.v : null;          // the lookup service asks for gentle use
-  areaAt0 = Date.now();
+export async function area(lat, lng, elsewhere) {   // elsewhere: a place you are only planning to visit; it neither uses nor replaces the area you are standing in
+  if (!elsewhere) {
+    if (lastArea && dist(lastArea, { lat, lng }) < 350) return lastArea.v;
+    if (Date.now() - areaAt0 < 20000) return lastArea ? lastArea.v : null;          // the lookup service asks for gentle use
+    areaAt0 = Date.now();
+  }
   try {
     const j = await get(NOM + "lat=" + lat + "&lon=" + lng);
-    if (!/^(suburb|quarter|neighbourhood|village|town|hamlet|city_district|borough|island|isolated_dwelling|locality|square)$/.test(j.addresstype || "")) { areaAt0 = 0; return lastArea ? lastArea.v : null; }   // only real neighbourhoods and villages, not "built-up areas" or regions
+    if (!/^(suburb|quarter|neighbourhood|village|town|hamlet|city_district|borough|island|isolated_dwelling|locality|square)$/.test(j.addresstype || "")) { if (!elsewhere) areaAt0 = 0; return elsewhere ? null : lastArea ? lastArea.v : null; }   // only real neighbourhoods and villages, not "built-up areas" or regions   // only real neighbourhoods and villages, not "built-up areas" or regions
     const et = j.extratags || {}, name = j.name || (j.address && (j.address.suburb || j.address.neighbourhood || j.address.village || j.address.town)) || null;
     let line = "", url = null;
     if (et.wikipedia && /^en:/.test(et.wikipedia)) {
@@ -127,8 +129,14 @@ export async function area(lat, lng) {
         const pg = Object.values(k.query.pages)[0]; line = sentences(pg && pg.extract, 1); } catch {}
     }
     const v = name ? { name, kind: j.addresstype || j.type || "", line, url } : null;
-    lastArea = { lat, lng, v }; return v;
-  } catch { areaAt0 = 0; return lastArea ? lastArea.v : null; }              // a failed lookup is retried on the next position, not 20 seconds later
+    if (!elsewhere) lastArea = { lat, lng, v }; return v;
+  } catch { if (elsewhere) return null; areaAt0 = 0; return lastArea ? lastArea.v : null; }              // a failed lookup is retried on the next position, not 20 seconds later
+}
+
+// Find a place by name (OpenStreetMap), for planning a trip somewhere you are not
+export async function search(q) {
+  const j = await get("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&accept-language=en&q=" + encodeURIComponent(q), 10000);
+  return j.map(x => ({ name: x.name || x.display_name.split(",")[0], where: x.display_name.split(",").slice(1, 3).join(",").trim(), lat: +x.lat, lng: +x.lon }));
 }
 
 // Who took the photo and under which licence: shown with every picture

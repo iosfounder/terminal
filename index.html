@@ -189,6 +189,10 @@ body:not([data-st="travel"]) #hud,body:not([data-st="travel"]) #tfoot{display:no
 #sheet .sg.five .o small{font-size:9px;letter-spacing:0}
 #sheet .sg .o small{display:block;font-size:10px;letter-spacing:.1em;opacity:.7;margin-top:3px}
 #sheet .sg .o{flex-direction:column;line-height:1.1}
+#sheet .srow{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+#splace{flex:1;min-width:0;background:#0b0b10;border:1px solid #333;border-radius:14px;color:#fff;font-size:16px;padding:12px 14px;outline:0}
+#splace:focus{border-color:var(--c)}
+#sres{margin-bottom:8px}
 #sheet .go{width:100%;height:64px;border-radius:20px;margin-top:14px;border-color:var(--c);color:var(--c);font-size:26px}
 
 /* walking */
@@ -418,7 +422,7 @@ const pad4 = n => String(n).padStart(4, "0");
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
 
-const BUILD = "v10.3";
+const BUILD = "v10.4";
 const ARR = 30, HOME_PITCH = 50;
 
 /* ---------- sound ---------- */
@@ -1121,10 +1125,13 @@ const DISTS = { km: [1000, 2000, 3000, 5000], mi: [804.7, 1609.3, 3218.7, 4828] 
 const KINDS = [["tour", "◌"], ["history", "▥"], ["view", "◭"], ["green", "♧"], ["any", "◎"]];
 const mmss = s => { s = Math.max(0, Math.round(s)); const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, x = String(s % 60).padStart(2, "0"); return h ? h + ":" + String(m).padStart(2, "0") + ":" + x : m + ":" + x; };
 const pick = { d: Math.min(3, +(store.get("or.d") || 1)), k: store.get("tour.k") || "tour" };
+let plan = null;                                 // a place you are planning a trip to, instead of where you stand
 function openStart() {
   if (sheet.classList.contains("open") && sbody.dataset.k === "start") { closeSheet(); return; }
   const ds = DISTS[units === "km" ? "km" : "mi"];
-  let h = '<div class="sg five">' + KINDS.map(([k, s]) => '<button class="o' + (pick.k === k ? " on" : "") + '" data-k="' + k + '" type="button">' + s + "<small>" + k + "</small></button>").join("") + "</div>";
+  let h = plan ? '<button class="li" id="spclear" type="button"><span>⌖ ' + esc(plan.name) + '</span><span class="g">✕</span></button>'
+    : '<div class="srow"><input id="splace" type="text" placeholder="plan a trip somewhere else" enterkeyhint="search" autocomplete="off" autocapitalize="off" spellcheck="false"><button id="sps" class="o sm" type="button" aria-label="Search">⌕</button></div><div id="sres"></div>';
+  h += '<div class="sg five">' + KINDS.map(([k, s]) => '<button class="o' + (pick.k === k ? " on" : "") + '" data-k="' + k + '" type="button">' + s + "<small>" + k + "</small></button>").join("") + "</div>";
   h += '<div class="sg four">' + ds.map((m, i) => '<button class="o' + (pick.d === i ? " on" : "") + '" data-d="' + i + '" type="button">' +
     (units === "km" ? m / 1000 : MI_LBL[i]) + "<small>" + (units === "km" ? "km" : "mi") + "</small></button>").join("") + "</div>";
   h += '<button id="sgo" class="o go" type="button" aria-label="Go">▶</button>';
@@ -1132,9 +1139,23 @@ function openStart() {
   const tog = (sel, f) => sbody.querySelectorAll(sel).forEach(b => b.addEventListener("click", () => { f(b); sfx.key(); sbody.querySelectorAll(sel).forEach(x => x.classList.toggle("on", x === b)); }));
   tog("[data-k]", b => { pick.k = b.dataset.k; store.set("tour.k", pick.k); });
   tog("[data-d]", b => { pick.d = +b.dataset.d; store.set("or.d", pick.d); });
+  const reopen = () => { sbody.dataset.k = ""; openStart(); };
+  if ($("spclear")) $("spclear").addEventListener("click", () => { plan = null; sfx.close(); reopen(); });
+  if ($("sps")) {
+    const go = async () => {
+      const q = $("splace").value.trim(); if (q.length < 2) return; sfx.key(); $("sres").innerHTML = '<p class="g">searching…</p>';
+      try {
+        const rs = await G.search(q);
+        $("sres").innerHTML = rs.length ? rs.map((r, i) => '<button class="li" data-i="' + i + '"><span>' + esc(r.name) + '</span><span class="g">' + esc(r.where) + '</span></button>').join("") : '<p class="g">no such place</p>';
+        $("sres").querySelectorAll("[data-i]").forEach(b => b.addEventListener("click", () => { const r = rs[+b.dataset.i]; plan = { lat: r.lat, lng: r.lng, name: r.name }; sfx.enter(); reopen(); }));
+      } catch { $("sres").innerHTML = '<p class="g">the place search is busy · try again</p>'; }
+    };
+    $("sps").addEventListener("click", go); $("splace").addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+  }
   $("sgo").addEventListener("click", () => { closeSheet(); sfx.enter(); if (musicOn && window.startMedia) window.startMedia();   // only with our own music on: on iPhone any media playing pauses your own music app
- G.say(pick.k === "tour" ? "Finding the best places around you." : "Finding a place for you.", !muted);   // spoken from the tap itself, so phones allow it
-    startWalk(DISTS[units === "km" ? "km" : "mi"][pick.d], pick.k); });
+ G.say(plan ? "Planning a trip to " + plan.name + "." : pick.k === "tour" ? "Finding the best places around you." : "Finding a place for you.", !muted);   // spoken from the tap itself, so phones allow it
+    const where = plan; plan = null;               // a plan is used once: the next walk starts from where you stand again
+    startWalk(DISTS[units === "km" ? "km" : "mi"][pick.d], pick.k, where); });
 }
 // a single finish: a real named place at about the right walking distance
 const LMK = { viewpoint: 9, peak: 9, castle: 8, ruins: 8, monument: 8, memorial: 7, attraction: 7, artwork: 6, park: 6, garden: 6, nature_reserve: 6, museum: 5, place_of_worship: 5, church: 5,
@@ -1171,11 +1192,11 @@ async function historyPlace(c, want) {           // a single finish with a real 
   const band = (lo, hi) => pool.filter(p => { const d = hav(c, p); return d > s * lo && d < s * hi; })[0];
   return band(.6, 1.3) || band(.35, 1.8) || null;
 }
-async function startWalk(want, kind) {
-  if (spinning || active || resV || !pos) return;
+async function startWalk(want, kind, origin) {
+  if (spinning || active || resV || (!pos && !origin)) return;
   spinning = true; route(); sfx.spin(); scanSweep(); lb(12000); $("bspin").classList.remove("pulse1"); store.set("tm.spun", "1");
   const giveUp = setTimeout(() => { if (spinning && !active) { spinning = false; lb(0); route(); homeCam(900); note("the place search is slow · try again"); } }, 25000);   // never get stuck
-  const c = { lat: pos.lat, lng: pos.lng }; let stops = null, fin = null;
+  const c = origin ? { lat: origin.lat, lng: origin.lng } : { lat: pos.lat, lng: pos.lng }; let stops = null, fin = null;   // origin: a trip being planned somewhere else
   try {
     if (mapReady) {                              // look over the ground at the right scale, so its named places are in the tiles
       map.stop(); map.jumpTo({ padding: PAD0 }); map.easeTo({ center: [c.lng, c.lat], zoom: Math.max(12, Math.min(15, 14.7 - Math.log2(want / 1000))), pitch: 0, bearing: 0, duration: 1200 });
@@ -1191,13 +1212,54 @@ async function startWalk(want, kind) {
   if (!stops && !fin) { spinning = false; lb(0); route(); homeCam(900); sfx.no(); note(kind === "tour" ? "not enough places with a story nearby · try a longer walk" : "no " + kind + " place at that distance · try another"); return; }
   sfx.lock();
   const n = nextSeq(), rid = agent + "-w" + pad4(n); bornRid = rid;          // "w": walk IDs never collide with the old locator reports
-  const data = { uid, agent, seq: n, rid, kind: "walk", mode: kind, want: Math.round(want), status: "pending", t0: Date.now(), at: serverTimestamp(), got: [] };
+  const data = { uid, agent, seq: n, rid, kind: "walk", mode: kind, want: Math.round(want), status: origin ? "planned" : "pending", t0: Date.now(), at: serverTimestamp(), got: [] };
+  if (origin) data.home = { lat: c.lat, lng: c.lng, name: origin.name };
   if (stops) Object.assign(data, { loop: true, lat: c.lat, lng: c.lng, name: stops.map(p => p.title).join(" · "), stops: stops.map(p => ({ n: p.title, lat: p.lat, lng: p.lng, id: p.id })) });
   else Object.assign(data, { lat: fin.lat, lng: fin.lng, name: fin.name, cls: fin.cls, pid: fin.pid || null });
+  setDoc(doc(db, "reports", rid), data).catch(() => note("sync ✕"));
+  if (origin) { spinning = false; route(); previewTrip(data); return; }                  // planned somewhere else: play it as a preview and keep it in your trips
   rt = null; lastFetch = 0; shownD = null; near100 = null; nearSince = 0; wHeard = [];
   wpath = [[c.lng, c.lat]]; wlen = 0; saveW(rid);
-  setDoc(doc(db, "reports", rid), data).catch(() => note("sync ✕"));
   briefing(data);
+}
+async function previewTrip(r) {                  // a trip somewhere you are not: the same briefing, pictures and voice, then it waits in your trips
+  const h = r.home; follow = false; sfx.trace(); scanSweep(); lb(30000);
+  const pts = (r.stops || []).map(s => [s.lng, s.lat]).concat([[r.lng, r.lat], [h.lng, h.lat]]);
+  if (mapReady) { const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]); map.jumpTo({ padding: PAD0 });
+    map.fitBounds([[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]], { padding: PADV, maxZoom: 16.5, pitch: 55, bearing: -20, duration: reduced ? 0 : 2600 }); }
+  try { await G.near(h.lat, h.lng, 1500); } catch {}
+  const ar = await G.area(h.lat, h.lng, true), P = id => id ? G.byId(id) : null, say = (t, p = 3) => G.say(t, !muted, p);
+  const mins = Math.max(5, Math.round(r.want * 1.3 / 1.25 / 60 / 5) * 5), first = r.stops ? P(r.stops[0].id) : P(r.pid);
+  say("This is a plan for " + (ar ? ar.name : h.name) + ", not where you are now." + (ar && ar.line ? " " + ar.line : ""));
+  say(r.stops ? "The tour takes in " + r.stops.length + " places: " + r.stops.map(s => s.n).join(", ") + ". About " + mins + " minutes on foot." : "It heads to " + r.name + ", about " + mins + " minutes on foot.");
+  if (first) say((r.stops ? "First, " : "") + first.title + ". " + G.short(first));
+  say("It's saved in your trips. Start it when you get there.");
+  const places = (r.stops || [{ n: r.name, lat: r.lat, lng: r.lng, id: r.pid }]).slice(0, 3);
+  slideshow([{ label: ar ? ar.name : h.name, lat: h.lat, lng: h.lng, n: 2, r: 250, art: ar && ar.url ? decodeURIComponent(ar.url.split("/wiki/")[1]).replace(/_/g, " ") : null },
+    ...places.map(s => { const p = P(s.id); return { label: s.n, lat: s.lat, lng: s.lng, img: p && p.img, art: p ? p.title : null, n: 2 }; })], 0, 40000);
+  setTimeout(() => { document.body.dataset.lb = "0"; note("trip saved · ≡ to find it"); }, 40000);
+}
+async function startPlanned(r) {                 // you are there: the planned trip becomes a live walk
+  if (active || spinning) return;
+  if (!pos) { note("locating…"); return; }
+  const d = hav(pos, r.home);
+  if (d > 1500) { sfx.no(); note("this trip starts " + fmtD(d) + " away · preview it, or start it when you are there"); return; }
+  closeSheet(); sfx.enter();
+  const t0 = Date.now(); try { await updateDoc(doc(db, "reports", r.rid), { status: "pending", t0, got: [] }); } catch { note("sync ✕"); return; }
+  rt = null; lastFetch = 0; shownD = null; near100 = null; nearSince = 0; wHeard = [];
+  wpath = [[pos.lng, pos.lat]]; wlen = 0; saveW(r.rid);
+  briefing({ ...r, status: "pending", t0 });
+}
+function openTrip(r) {                           // a planned trip: hear it again, start it, or delete it
+  if (active || spinning) return;
+  openSheet('<h2>' + esc(r.stops ? r.stops.length + " places" : r.name) + '</h2><p class="g">in ' + esc(r.home.name) + ' · ' + esc(fmtD(r.want)) + '</p><div class="sg">' +
+    '<button id="tprev" class="o" type="button" aria-label="Preview">▶<small>preview</small></button>' +
+    '<button id="tgo" class="o" type="button" aria-label="Start here">⚑<small>start here</small></button>' +
+    '<button id="tdel" class="o" type="button" aria-label="Delete">✕<small>delete</small></button></div>');
+  sbody.dataset.k = "trip"; sfx.open();
+  $("tprev").addEventListener("click", () => { closeSheet(); sfx.enter(); previewTrip(r); });
+  $("tgo").addEventListener("click", () => startPlanned(r));
+  $("tdel").addEventListener("click", () => { sfx.no(); deleteDoc(doc(db, "reports", r.rid)).catch(() => {}); mine.delete(r.rid); closeSheet(); });
 }
 function briefing(r) {                           // the whole walk in one frame, the guide names the stops, then the camera drops in behind you
   const pts = (r.stops || []).map(s => [s.lng, s.lat]).concat([[r.lng, r.lat]]); if (pos) pts.push([pos.lng, pos.lat]);
@@ -1684,11 +1746,11 @@ let listAll = false;                             // the list shows your walks, o
 const tms = r => r.at && r.at.toMillis ? r.at.toMillis() : 0;
 function renderList() {
   const src = listAll ? [...allDocs.values()] : [...mine.values()];
-  const arr = src.filter(r => r.status === "done").sort((a, b) => tms(b) - tms(a)).slice(0, 150);
+  const arr = src.filter(r => r.status === "done" || (!listAll && r.status === "planned")).sort((a, b) => (b.status === "planned") - (a.status === "planned") || tms(b) - tms(a)).slice(0, 150);   // trips you have planned first
   const tabs = '<div class="st" style="border:0;padding:0 0 8px;gap:10px;justify-content:flex-start"><button class="o sm' + (listAll ? "" : " on") + '" data-t="0" type="button" aria-label="Mine">◉</button>' +
     '<button class="o sm' + (listAll ? " on" : "") + '" data-t="1" type="button" aria-label="Everyone">⊕</button></div>';
-  openSheet(tabs + (arr.length ? arr.map(r => '<button class="li" data-r="' + esc(r.rid) + '"><span>' + ldot(r) + esc(r.name || r.rid) +
-    '</span><span class="g">' + fmtD(r.walked || 0) + " · " + esc(fmtT(r)) + "</span></button>").join("") : '<p class="g">–</p>'));
+  openSheet(tabs + (arr.length ? arr.map(r => '<button class="li" data-r="' + esc(r.rid) + '"><span>' + (r.status === "planned" ? "◇ " : ldot(r)) + esc(r.status === "planned" ? (r.stops ? r.stops.length + " places" : r.name) : r.name || r.rid) +
+    '</span><span class="g">' + (r.status === "planned" ? esc(r.home.name) : fmtD(r.walked || 0) + " · " + esc(fmtT(r))) + "</span></button>").join("") : '<p class="g">–</p>'));
   sbody.dataset.k = "list";
   sbody.querySelectorAll("[data-t]").forEach(b => b.addEventListener("click", () => { listAll = b.dataset.t === "1"; sfx.key(); if (listAll) subAll(); renderList(); }));
   sbody.querySelectorAll(".li").forEach(b => b.addEventListener("click", () => { const r = (mine.get(b.dataset.r) || allDocs.get(b.dataset.r)); if (r) openReport(r); }));
@@ -1698,6 +1760,7 @@ $("blist").addEventListener("click", () => {
   if (listAll) subAll(); renderList(); sfx.open();
 });
 function openReport(r) {                         // any finished walk opens as its ending: the line, how far they got, the numbers
+  if (r.status === "planned") { openTrip(r); return; }
   if (r.status !== "done" || active || spinning) return;
   if (sheet.classList.contains("open")) closeSheet();
   sfx.open(); showRes(r);
@@ -1768,7 +1831,7 @@ function openVoices() {                          // every English voice on this 
 const HELP = [["◎", "start a walk: a tour of several places, or one place with history, a view or green"], ["◌", "tour: a loop through the most notable real places around you"],
   ["▥ ◭ ♧", "history · view · green: one real place at about that distance"], ["✦", "places with a story float over the map; tap one, or walk past and the guide tells you"],
   ["◉", "look around: the three most interesting things near you"], ["⊓ ◍ ⊽ ◒ ▣", "bench · water · toilets · café · shop along your route (openstreetmap; benches are only partly mapped)"], ["♫", "music made on your phone; it follows the time of day and drops under the voice"], ["✺", "voice: always · only on walks · off, and speed in settings; earphone buttons: pause, skip, repeat"], ["Aa ▭", "choose the voice (the default is Boing where your phone has it, otherwise a female voice) · subtitles on or off"], ["♫", "music: off · soft (default, a quiet bed) · full (adds bells)"], ["⚡", "quality: auto (iPhones and older phones use smooth) · smooth · full"], ["➤", "arrow up = straight on"], ["✓ ■", "arrived · stopped"], ["✕", "hold to stop"],
-  ["≡", "your walks · everyone's"], ["▦", "buildings are 3D from zoom 13; the map data has none further out"], ["⌁", "waiting to sync"], ["⚙", "settings"], ["", "facts: wikipedia · wikidata · photos: wikimedia commons · places: openstreetmap"]];
+  ["⌕", "plan a trip somewhere else: search a place in the start sheet; it plays as a preview and waits in ≡ (◇) until you are there"], ["≡", "your walks and planned trips · everyone's"], ["▦", "buildings are 3D from zoom 13; the map data has none further out"], ["⌁", "waiting to sync"], ["⚙", "settings"], ["", "facts: wikipedia · wikidata · photos: wikimedia commons · places: openstreetmap"]];
 function openHelp() {
   if (sheet.classList.contains("open") && sbody.dataset.k === "help") { closeSheet(); return; }
   openSheet(HELP.map(h => '<div class="st hp"><span style="font-size:20px;min-width:3.6em">' + esc(h[0]) + "</span><span>" + esc(h[1]) + "</span></div>").join(""));
