@@ -296,7 +296,10 @@ html[data-dots="1"] #sub p{font-family:var(--mono)}
 #grain{position:fixed;inset:0;z-index:880;pointer-events:none;opacity:.07;mix-blend-mode:overlay;background-size:160px 160px}
 #vig{position:fixed;inset:0;z-index:640;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 58%,rgba(0,0,0,.6) 100%);transition:opacity .8s ease}
 body[data-near="1"] #vig{background:radial-gradient(ellipse at 50% 45%,transparent 36%,rgba(0,0,0,.8) 100%)}
-body[data-lite="1"] #grain{display:none}
+body[data-lite="1"] #grain,body[data-lite="1"] #grid,body[data-lite="1"] #scan{display:none}
+body[data-lite="1"] *{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}                /* live blur behind panels is the costliest thing on an iPhone */
+body[data-lite="1"] .o,body[data-lite="1"] #mid{box-shadow:none}
+body[data-lite="1"] #sub p,body[data-lite="1"] #card,body[data-lite="1"] .pt span{background:rgba(6,6,14,.92)}
 #scan{position:fixed;left:0;right:0;top:-4px;height:2px;z-index:870;pointer-events:none;opacity:0;background:linear-gradient(90deg,transparent,var(--c) 50%,transparent);box-shadow:0 0 22px var(--c)}
 #scan.go{animation:scan 1.1s cubic-bezier(.5,0,.3,1)}
 @keyframes scan{0%{top:-4px;opacity:.8}100%{top:100%;opacity:0}}
@@ -405,12 +408,17 @@ const store = {
   set(k,v){ try{ localStorage.setItem(k,v) }catch{} }
 };
 const reduced = matchMedia("(prefers-reduced-motion:reduce)").matches;
+// Smooth mode: iPhones and older phones draw the map at a lower pixel density, with no live blur or film grain, and update the camera less often.
+const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const QUALITY = store.get("tour.q") || "auto";
+const LOWPHONE = IOS || (navigator.deviceMemory && navigator.deviceMemory <= 4) || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+if (QUALITY === "smooth" || (QUALITY === "auto" && LOWPHONE)) document.body.dataset.lite = "1";
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const pad4 = n => String(n).padStart(4, "0");
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
 
-const BUILD = "v10.1";
+const BUILD = "v10.2";
 const ARR = 30, HOME_PITCH = 50;
 
 /* ---------- sound ---------- */
@@ -704,7 +712,7 @@ async function initMap() {
   try {
     const st = restyle(await (await fetch("map-style.json")).json());
     map = new maplibregl.Map({ container: "map", style: st, center: [-0.12, 51.5], zoom: 11, pitch: HOME_PITCH, attributionControl: false, dragRotate: false, pitchWithRotate: false,
-      maxPitch: 85, fadeDuration: 120, renderWorldCopies: false, cooperativeGestures: false });
+      maxPitch: 85, fadeDuration: 120, pixelRatio: document.body.dataset.lite === "1" ? 1.25 : Math.min(devicePixelRatio || 1, 2), renderWorldCopies: false, cooperativeGestures: false });
     window.tmMap = map; map.touchZoomRotate.disableRotation(); map.keyboard.disable();
     map.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: "OpenFreeMap · OpenMapTiles · OpenStreetMap" }), "bottom-right");
     map.on("dragstart", () => { follow = false; });
@@ -808,15 +816,17 @@ function routeAhead() {                          // which way the route goes fro
   let s = 0; for (let i = rr.bi; i < rt.c.length - 1; i++) { s += seg(rt.c[i], rt.c[i + 1]); if (s > 35) return brg(pos, { lat: rt.c[i + 1][0], lng: rt.c[i + 1][1] }); }
   return null;
 }
+let camN = 0;
 function camTick() {                             // eye level: just behind and above you, looking down the real street, turning at most ~18°/s
   if (!mapReady || !pos || spinning || document.hidden) return;
+  if (document.body.dataset.lite === "1" && (camN++ & 1)) return;              // smooth mode: the camera is nudged half as often, so the map redraws less
   if (document.body.dataset.st !== "travel" || !follow) return;
   if (Date.now() - userZoomAt < 6000) return;     // you pinched out for a look: hold that view, then settle back down
   const cur = map.getBearing(), fwd = routeAhead();
   const gh = hasCompass ? heading : spd > 1 ? heading : fwd != null ? fwd : cur;   // the way you face; without a compass, the way the route goes
   let d = nrm(gh - cur); if (Math.abs(d) < 3) d = 0; d = Math.max(-12, Math.min(12, d));
   const near = document.body.dataset.near === "1", lite = document.body.dataset.lite === "1";
-  const pitch = lite ? 68 : near ? 79 : 76, zoom = (lite ? 18.4 : 20.2) + (near ? .3 : 0);   // at zoom 20 the camera hangs about 35 m up and just behind you: buildings rise either side
+  const pitch = lite ? 70 : near ? 79 : 76, zoom = (lite ? 18.4 : 20.2) + (near ? .3 : 0);   // at zoom 20 the camera hangs about 35 m up and just behind you: buildings rise either side
   map.easeTo({ center: [pos.lng, pos.lat], bearing: cur + d, pitch, zoom, padding: { top: Math.round(innerHeight * .3), bottom: 30, left: 0, right: 0 }, duration: near ? 1100 : 700, easing: t => t });
 }
 setInterval(camTick, 650);
@@ -961,19 +971,20 @@ function titleCard() {
 // The mode follows the time of day; it rises on a walk, sinks under the voice, swells at a stop and as you near the next place.
 const MODES = { morning: [0, 2, 4, 6, 7, 9, 11], day: [0, 2, 4, 7, 9], dusk: [0, 2, 3, 5, 7, 9, 10], night: [0, 2, 3, 5, 7, 8, 10] };   // lydian, major pentatonic, dorian, aeolian
 const PROG = [[0, 2, 4], [5, 7, 9], [3, 5, 7], [4, 6, 8]];                       // scale-degree chords, cycled every 8 seconds
-let musicOn = store.get("tour.music") !== "0", mus = null, swellT = 0;
+let mlevel = +(store.get("tour.mlevel") ?? 1), mus = null, swellT = 0;      // 0 off, 1 soft (default: gentle pad only), 2 full (adds bells and a brighter tone)
+let musicOn = mlevel > 0;
 const tod = () => { const h = new Date().getHours(); return h < 5 ? "night" : h < 11 ? "morning" : h < 17 ? "day" : h < 21 ? "dusk" : "night"; };
 const hz = s => 110 * 2 ** (s / 12);
 function musicStart() {
   const a = AC; if (!a || mus || !musicOn) return;
   const out = a.createGain(), lp = a.createBiquadFilter(), dl = a.createDelay(1.5), fb = a.createGain(), wet = a.createGain();
-  out.gain.value = 0; lp.type = "lowpass"; lp.frequency.value = 1300; lp.Q.value = .4; dl.delayTime.value = .43; fb.gain.value = .45; wet.gain.value = .4;
+  out.gain.value = 0; lp.type = "lowpass"; lp.frequency.value = 1300; lp.Q.value = .4; dl.delayTime.value = .43; fb.gain.value = .3; wet.gain.value = .25;
   lp.connect(out); lp.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(wet); wet.connect(out); out.connect(a.destination);
   const pad = [0, 1, 2].map(i => {
     const o1 = a.createOscillator(), o2 = a.createOscillator(), g = a.createGain(), g2 = a.createGain(), pn = a.createStereoPanner ? a.createStereoPanner() : null;
-    o1.type = "triangle"; o2.type = "sawtooth"; o2.detune.value = 6 + i * 3; g.gain.value = 0; g2.gain.value = .22;
+    o1.type = "sine"; o2.type = "sawtooth"; o2.detune.value = 6 + i * 3; g.gain.value = 0; g2.gain.value = mlevel === 2 ? .22 : 0;
     o1.connect(g); o2.connect(g2).connect(g); if (pn) { pn.pan.value = (i - 1) * .65; g.connect(pn).connect(lp); } else g.connect(lp);
-    o1.start(); o2.start(); return { o1, o2, g };
+    o1.start(); o2.start(); return { o1, o2, g, g2 };
   });
   const bass = a.createOscillator(), bg = a.createGain(); bass.type = "sine"; bg.gain.value = 0; bass.connect(bg).connect(out); bass.start();
   mus = { out, lp, pad, bass, bg, step: 0, near: 0 };
@@ -987,7 +998,7 @@ function musicChord() {                          // the next chord, glided into
 }
 function bell() {                                // a sparse bell from the scale, somewhere in the stereo field
   if (!mus) return; const a = AC, sc = MODES[tod()], t = a.currentTime, st = document.body.dataset.st;
-  if (st === "travel" || st === "res" || Math.random() < .4) {
+  if (mlevel === 2 && (st === "travel" || st === "res" || Math.random() < .4)) {
     const o = a.createOscillator(), g = a.createGain(), pn = a.createStereoPanner ? a.createStereoPanner() : null;
     o.type = "sine"; o.frequency.value = hz(sc[rnd(sc.length)] + 24 + (rnd(3) ? 0 : 12));
     g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.03 + .02 * mus.near, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + 3.4);
@@ -997,7 +1008,9 @@ function bell() {                                // a sparse bell from the scale
 }
 function musicLevel() {
   if (!mus || !AC) return; const t = AC.currentTime, st = document.body.dataset.st, talk = G.busy();
+  mus.pad.forEach(p => p.g2.gain.setTargetAtTime(mlevel === 2 ? .22 : 0, t, 1));
   let v = !musicOn || muted || document.hidden ? 0 : st === "travel" || st === "spin" ? .85 : st === "res" ? .8 : .28;
+  v *= mlevel === 2 ? .5 : .3;                                                  // soft is a quiet bed under everything; full is still well below the voice
   v *= .85 + .35 * mus.near; if (Date.now() < swellT) v *= 1.5; if (talk) v *= .38;          // sink under the voice
   mus.out.gain.setTargetAtTime(v, t, talk ? .3 : 1.4);
   mus.lp.frequency.setTargetAtTime((tod() === "night" ? 850 : 1250) + (st === "travel" ? 700 : 0) + 900 * mus.near, t, 2);
@@ -1700,8 +1713,9 @@ $("bset").addEventListener("click", () => {
     '<button id="smode" class="o" type="button" aria-label="Route mode">' + (routeMode === "car" ? "ⓓ" : "ⓦ") + "</button>" +
     '<button id="svoice" class="o" type="button" aria-label="Voice">✺<small>' + vmode + "</small></button>" +
     '<button id="srate" class="o" type="button" aria-label="Voice speed">×<small>' + vrate + "</small></button>" +
-    '<button id="smusic" class="o' + (musicOn ? " on" : "") + '" type="button" aria-label="Music">♫</button>' +
+    '<button id="smusic" class="o' + (musicOn ? " on" : "") + '" type="button" aria-label="Music">♫<small>' + ["off", "soft", "full"][mlevel] + "</small></button>" +
     '<button id="ssubs" class="o' + (document.body.dataset.subs !== "0" ? " on" : "") + '" type="button" aria-label="Subtitles">▭<small>subs</small></button>' +
+    '<button id="sq" class="o" type="button" aria-label="Quality">⚡<small>' + QUALITY + "</small></button>" +
     '<button id="svname" class="o" type="button" aria-label="Choose voice">Aa<small>' + esc((G.voiceName() || "voice").replace(/^(Microsoft|Google)\s+/i, "").split(/[\s-]/)[0].toLowerCase()) + "</small></button>" +
     '<button id="shelp" class="o" type="button" aria-label="Help">?</button>' +
     '<button id="sout" class="o" type="button" aria-label="Sign out">⏻</button></div>' +
@@ -1714,9 +1728,10 @@ $("bset").addEventListener("click", () => {
   $("sdm").addEventListener("click", () => { store.set("tm.dotmap", DOTMAP ? "0" : "1"); sfx.key(); location.reload(); });
   $("svoice").addEventListener("click", e => { vi = (vi + 1) % 3; store.set("tour.vmode", vi); applyVoice(); e.currentTarget.querySelector("small").textContent = VMODES[vi]; sfx.key(); if (VMODES[vi] !== "off") G.say("Voice " + VMODES[vi] + ".", true, 3); });
   $("srate").addEventListener("click", e => { ri = (ri + 1) % 3; store.set("tour.vrate", ri); applyVoice(); e.currentTarget.querySelector("small").textContent = VRATES[ri]; sfx.key(); G.say("This is the speed.", true, 3); });
-  $("smusic").addEventListener("click", e => { musicOn = !musicOn; store.set("tour.music", musicOn ? "1" : "0"); e.currentTarget.classList.toggle("on", musicOn); sfx.key(); if (musicOn) musicStart(); musicLevel(); });
+  $("smusic").addEventListener("click", e => { mlevel = (mlevel + 1) % 3; musicOn = mlevel > 0; store.set("tour.mlevel", mlevel); e.currentTarget.classList.toggle("on", musicOn); e.currentTarget.querySelector("small").textContent = ["off", "soft", "full"][mlevel]; sfx.key(); if (musicOn) musicStart(); musicLevel(); });
   $("ssubs").addEventListener("click", e => { const on = document.body.dataset.subs === "0"; document.body.dataset.subs = on ? "1" : "0"; store.set("tour.subs", on ? "1" : "0"); e.currentTarget.classList.toggle("on", on); sfx.key(); });
   $("svname").addEventListener("click", openVoices);
+  $("sq").addEventListener("click", () => { const n = { auto: "smooth", smooth: "full", full: "auto" }[QUALITY]; store.set("tour.q", n); sfx.key(); location.reload(); });   // applied on reload: the map is drawn at a different density
   $("shelp").addEventListener("click", openHelp);
   $("sout").addEventListener("click", () => { sfx.no(); signOut(auth).then(() => location.reload()).catch(() => location.reload()); });
 });
@@ -1752,7 +1767,7 @@ function openVoices() {                          // every English voice on this 
 }
 const HELP = [["◎", "start a walk: a tour of several places, or one place with history, a view or green"], ["◌", "tour: a loop through the most notable real places around you"],
   ["▥ ◭ ♧", "history · view · green: one real place at about that distance"], ["✦", "places with a story float over the map; tap one, or walk past and the guide tells you"],
-  ["◉", "look around: the three most interesting things near you"], ["⊓ ◍ ⊽ ◒ ▣", "bench · water · toilets · café · shop along your route (openstreetmap; benches are only partly mapped)"], ["♫", "music made on your phone; it follows the time of day and drops under the voice"], ["✺", "voice: always · only on walks · off, and speed in settings; earphone buttons: pause, skip, repeat"], ["Aa ▭", "choose the voice (your phone's own voices, female first) · subtitles on or off"], ["➤", "arrow up = straight on"], ["✓ ■", "arrived · stopped"], ["✕", "hold to stop"],
+  ["◉", "look around: the three most interesting things near you"], ["⊓ ◍ ⊽ ◒ ▣", "bench · water · toilets · café · shop along your route (openstreetmap; benches are only partly mapped)"], ["♫", "music made on your phone; it follows the time of day and drops under the voice"], ["✺", "voice: always · only on walks · off, and speed in settings; earphone buttons: pause, skip, repeat"], ["Aa ▭", "choose the voice (the default is Boing where your phone has it, otherwise a female voice) · subtitles on or off"], ["♫", "music: off · soft (default, a quiet bed) · full (adds bells)"], ["⚡", "quality: auto (iPhones and older phones use smooth) · smooth · full"], ["➤", "arrow up = straight on"], ["✓ ■", "arrived · stopped"], ["✕", "hold to stop"],
   ["≡", "your walks · everyone's"], ["▦", "buildings are 3D from zoom 13; the map data has none further out"], ["⌁", "waiting to sync"], ["⚙", "settings"], ["", "facts: wikipedia · wikidata · photos: wikimedia commons · places: openstreetmap"]];
 function openHelp() {
   if (sheet.classList.contains("open") && sbody.dataset.k === "help") { closeSheet(); return; }

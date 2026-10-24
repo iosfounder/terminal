@@ -180,7 +180,8 @@ const FEMALE = /female|woman|samantha|serena|kate|martha|stephanie|fiona|moira|t
 const MALE = /\bmale\b|daniel|arthur|oliver|george|ryan|thomas|\bguy\b|david|\bmark\b|james|\balex\b|fred|rishi|aaron|\btom\b|gordon|lee\b/i;
 const isFemale = v => FEMALE.test(v.name) && !(/\bmale\b/i.test(v.name) && !/female/i.test(v.name));
 let voice = null, chosen = null, mode = "always", rate = 1, walking = false, cur = null, q = [], last = null, token = 0;
-const rank = v => (isFemale(v) ? 0 : MALE.test(v.name) ? 20 : 10) + (/en-GB/i.test(v.lang) ? 0 : /^en/i.test(v.lang) ? 3 : 50) + (/natural|neural|online|premium|enhanced|google/i.test(v.name) ? 0 : 1);
+// Boing (one of Apple's built-in voices) is the default where the phone has it; otherwise a female British voice
+const rank = v => (/\bboing\b/i.test(v.name) ? -100 : 0) + (isFemale(v) ? 0 : MALE.test(v.name) ? 20 : 10) + (/en-GB/i.test(v.lang) ? 0 : /^en/i.test(v.lang) ? 3 : 50) + (/natural|neural|online|premium|enhanced|google/i.test(v.name) ? 0 : 1);
 export function voices() {                       // English voices on this phone, female and British first
   if (!("speechSynthesis" in window)) return [];
   return speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)).sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name))
