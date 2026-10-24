@@ -61,7 +61,10 @@ function score(p) {                              // how notable: listed, old, a 
 export async function near(lat, lng, radius = 1000) {
   const c = { lat, lng }, hit = searched.find(s => s.r >= radius * .8 && dist(s, c) < s.r * .45);
   if (hit) await hit.p;                          // the same ground is already being fetched: wait for it rather than answer with nothing
-  else { const s = { lat, lng, r: radius }; searched.push(s); await (s.p = load(lat, lng, radius)); }
+  else {
+    const s = { lat, lng, r: radius }; searched.push(s);
+    if (!(await (s.p = load(lat, lng, radius)))) searched.splice(searched.indexOf(s), 1);   // it failed: forget it, so the next ask tries again
+  }
   return [...places.values()].map(p => ({ p, d: dist(c, p) })).filter(o => o.d <= radius).sort((a, b) => b.p.score - a.p.score || a.d - b.d).map(o => o.p);
 }
 async function load(lat, lng, radius) {
@@ -81,7 +84,8 @@ async function load(lat, lng, radius) {
           url: "https://en.wikipedia.org/wiki/" + encodeURIComponent(p.title.replace(/ /g, "_")) };
         pl.score = score(pl); places.set(pl.id, pl);
       }
-    } catch {}
+      return !fresh.length || pages.length > 0;  // succeeded unless the articles themselves never arrived
+    } catch { return false; }
 }
 export const byId = id => places.get(id);
 // Places at about a given distance: Wikipedia returns only the nearest 60 to a point, so in a dense city the far ones
