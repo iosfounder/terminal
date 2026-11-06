@@ -1,7 +1,22 @@
-// Retires the service worker of the previous app on this domain: clears its caches, unregisters, reloads open tabs.
-self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', e => e.waitUntil((async () => {
-  for (const k of await caches.keys()) await caches.delete(k);
-  await self.registration.unregister();
-  for (const c of await self.clients.matchAll({ type: 'window' })) c.navigate(c.url);
-})()));
+/* Diksyonær offline support: network first, cached copy when offline. Clears caches left by earlier apps on this domain. */
+const V = 'diksyonaer-v1';
+const SHELL = ['./', 'index.html', 'diksyonaer.tsv', 'kours.tsv', 'essential-500.tsv', 'icon.png', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
+self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(SHELL).catch(() => {})).then(() => self.skipWaiting())); });
+self.addEventListener('activate', e => { e.waitUntil((async () => { for (const k of await caches.keys()) if (k !== V) await caches.delete(k); await self.clients.claim(); })()); });
+self.addEventListener('fetch', e => {
+  const r = e.request;
+  if (r.method !== 'GET') return;
+  const u = new URL(r.url);
+  if (u.origin !== location.origin) return;
+  e.respondWith((async () => {
+    const c = await caches.open(V);
+    try {
+      const res = await fetch(r, { cache: 'no-cache' });
+      if (res.ok && res.type === 'basic') c.put(r.mode === 'navigate' ? 'index.html' : r, res.clone());
+      return res;
+    } catch (err) {
+      const hit = await c.match(r.mode === 'navigate' ? 'index.html' : r, { ignoreSearch: true });
+      return hit || Response.error();
+    }
+  })());
+});
