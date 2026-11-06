@@ -373,6 +373,38 @@ body.wide .ov.dim .card{width:min(600px,100%)}
 #vSide .next .ws{display:flex;flex-wrap:wrap;gap:.35rem}
 #vSide .next .ws span{padding:.2rem .6rem;border-radius:999px;background:var(--raised);border:1px solid var(--line);font-size:.92rem}
 #vSide .next .btn{margin-top:.2rem}
+.spk{display:inline-flex;align-items:center;justify-content:center;width:calc(2.7rem*var(--k));height:calc(2.7rem*var(--k));min-width:34px;min-height:34px;border-radius:50%;background:var(--accent-a);color:var(--accent);flex:none;vertical-align:middle;transition:transform .1s,background .15s;border:0;padding:0}
+.spk:active{transform:scale(.88);background:var(--accent-b)}
+.spk svg.i{width:52%;height:52%}
+.spk.sm{width:calc(2.1rem*var(--k));height:calc(2.1rem*var(--k));min-width:30px;min-height:30px}
+.spk.fbs{margin-left:.4rem;width:38px;height:38px}
+body:not(.tts) .spk{display:none}
+.hwrow{display:flex;align-items:center;gap:.7rem;justify-content:center;max-width:100%}
+.fb .hd .xp{margin-left:auto}
+#kbx{flex:none;width:100%}
+.kb{max-width:760px;margin:0 auto;padding:.35rem calc(.3rem + var(--sr)) .15rem calc(.3rem + var(--sl));display:flex;flex-direction:column;gap:clamp(4px,.8vh,7px)}
+.kb .r{display:flex;gap:clamp(3px,1vw,6px);justify-content:center}
+.kb button{flex:1;max-width:50px;height:clamp(34px,5.3vh,46px);border-radius:9px;background:var(--raised2);border:1px solid var(--line2);font-size:1.15rem;box-shadow:0 2px 0 #000;color:var(--fg);padding:0;display:flex;align-items:center;justify-content:center;touch-action:none}
+.kb .r.acc button{color:var(--accent);background:var(--raised)}
+.kb button.wide{max-width:none;flex:6}
+.kb button.mid{max-width:none;flex:1.7}
+.kb button.ent{background:var(--accent);color:#120f17;border-color:var(--accent)}
+.kb button.dn{background:var(--accent-b);transform:translateY(1px);box-shadow:none}
+.kb button svg.i{width:20px;height:20px}
+.mic.btnm{cursor:pointer;border:0}
+.mic.idle::before,.mic.idle::after{animation:none;opacity:0}
+.mic.on{background:var(--bad-a);color:var(--bad)}
+.mic.on::before,.mic.on::after{border-color:rgba(255,143,134,.55);animation-duration:1.1s}
+.heard{font-size:calc(1.15rem*var(--k));color:var(--mid);min-height:1.5em;font-style:italic}
+.heard.bad{color:var(--bad)}
+.gate{z-index:80;align-items:center;justify-content:center;padding:1.5rem}
+.gc{display:flex;flex-direction:column;align-items:center;gap:1rem;text-align:center;width:min(360px,100%)}
+.gc img{width:96px;height:96px;object-fit:contain;animation:pop .5s cubic-bezier(.2,.9,.3,1.3)}
+.gc h2{font-weight:400;font-size:1.7rem}
+.gc p{color:var(--mid);font-size:1rem}
+.gc small{color:var(--bad);min-height:1.2em}
+.gc .btn,.gc .gbtn{width:100%}
+.gg{display:inline-flex;width:24px;height:24px;border-radius:50%;background:#000;color:#fff;align-items:center;justify-content:center;font-size:.85rem}
 @media (min-height:700px) and (min-width:860px){.stage{justify-content:center}.akeys{margin-top:.2rem}.bank{margin-top:1.6rem}.mgrid{margin:0}}
 @media (max-height:600px){#vLearn .stats{display:none}#vLearn{gap:.5rem;padding-top:.5rem;padding-bottom:.5rem}.uh{padding:.35rem .5rem .3rem}}
 @media (max-width:400px){.acts .btn{padding:0 .55rem;gap:.35rem;font-size:.95rem}.acts .btn svg.i{display:none}.stat{padding:.45rem .45rem;gap:.4rem}.stat .ic,.stat .ring{width:28px;height:28px}}
@@ -874,6 +906,58 @@ function gradeEN(input, items, sentence) {
   return { ok: false };
 }
 
+
+/* ------------------------------------------- speech: Kréyòl spelling read by a French voice */
+const FV = 'aeiouyéèêôàâîïûü', FVC = 'aeiouéèêôàâîïûü';
+function frPart(p) {
+  let s = p;
+  if (!s) return s;
+  s = s.replace(/æ/g, 'è').replace(/œ/g, 'eu').replace(/ò/g, 'o').replace(/ì/g, 'i').replace(/ç/g, 's').replace(/ù/g, 'ou');
+  s = s.replace(/ch/g, 'tch').replace(/sh/g, 'ch').replace(/ñ/g, 'gn');
+  s = s.replace(/yin/g, 'ien').replace(/w/g, 'ou');
+  s = s.replace(/g(?=[eiéèêy])/g, 'gu');
+  s = s.replace(/ey(?![aeiouéèêôy])/g, 'èy');
+  s = s.replace(/e(?!u)(?![nm](?![aeiouyéèêô]))/g, 'eu');
+  s = s.replace(new RegExp('([' + FV + '])s(?=[' + FV + '])', 'g'), '$1ss');
+  const m = s.match(new RegExp('[^' + FVC + ']+$'));
+  if (m && m[0].length < s.length) {
+    const tail = m[0], before = s.slice(0, -tail.length);
+    const nasal = /^[nm]$/.test(tail) && /[aeiou]$/.test(before) && !/ou$/.test(before);
+    if (!nasal && tail !== 'h') s = before + (tail === 's' ? 'ss' : tail === 'k' ? 'qu' : tail) + 'e';
+  }
+  return s;
+}
+function toFr(text) {
+  return String(text || '').replace(/[‘’ʼ]/g, "'").replace(/[\p{L}\p{M}]+/gu, (w, at, all) => {
+    const lw = w.toLowerCase();
+    if (lw.length === 1 && all[at + 1] === "'" && !/[aeiouéèò]/.test(lw)) return lw;
+    return frPart(lw.normalize('NFC'));
+  });
+}
+/* rough sound key so a French transcript can be compared with the Kréyòl target */
+function sndKey(t) {
+  let s = String(t || '').toLowerCase().replace(/ç/g, 's').replace(/œ/g, 'e');
+  s = s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/['’\-]/g, ' ').replace(/[^a-z ]+/g, ' ');
+  return s.split(/\s+/).filter(Boolean).map(w => {
+    w = w.replace(/tch/g, 'S').replace(/ch/g, 'S').replace(/sh/g, 'S').replace(/ph/g, 'f').replace(/gn/g, 'N').replace(/qu/g, 'k').replace(/gu(?=[eiy])/g, 'g')
+      .replace(/c(?=[eiy])/g, 's').replace(/c/g, 'k').replace(/x/g, 'ks').replace(/h/g, '')
+      .replace(/eaux?|aux?/g, 'o').replace(/oi/g, 'wa').replace(/ou/g, 'U').replace(/U(?=[aeioy])/g, 'w')
+      .replace(/aient$|ais$|ait$|ai|ei|ey/g, 'e').replace(/(er|ez|et)$/g, 'e')
+      .replace(/(ain|ein|in|im|yn|un)(?![aeiouyU])/g, 'I').replace(/(an|am|en|em)(?![aeiouyU])/g, 'A').replace(/(on|om)(?![aeiouyU])/g, 'O')
+      .replace(/y/g, 'i').replace(/([a-zA-Z])\1+/g, '$1');
+    w = w.replace(/([aeiouIAOU])(s|t|d|z|p)$/, '$1').replace(/([^aeiouIAOU])e$/, '$1').replace(/eu/g, 'e');
+    return w;
+  }).join(' ');
+}
+function speechScore(heard, kl) {
+  const b = sndKey(toFr(kl)), a = sndKey(heard);
+  if (!a || !b) return 0;
+  const whole = 1 - lev(a, b) / Math.max(a.length, b.length);
+  const A = a.replace(/ /g, ''), B = b.replace(/ /g, '');
+  const tight = 1 - lev(A, B) / Math.max(A.length, B.length);
+  return Math.max(whole, tight);
+}
+
 /* ------------------------------------------------------- scheduling */
 const DAY = 864e5;
 /* record: [s stability days, due minute, ease*100, reps, lapses, last minute, added minute, last grade 0 again 1 hard 2 good] */
@@ -1071,10 +1155,24 @@ function Course(E, lex, S, course) {
     });
     return steps;
   }
-  return { lesson, review, jump, answersFor, words };
+  /* three questions on one unit, for the placement test */
+  function unitTest(U, opts = {}) {
+    const R = rng((opts.seed || 5) * 131 + U * 7);
+    const ids = []; C.units[U].ls.forEach(l => ids.push(...C.lessons[l].ids));
+    const pool = shuffle(ids.filter(i => !E[i].multi), R).concat(shuffle(ids.filter(i => E[i].multi), R));
+    const knownFn = i => C.lessonOf[i] <= C.units[U].ls[C.units[U].ls.length - 1];
+    const used = new Set(), steps = [];
+    pool.slice(0, 3).forEach((id, k) => {
+      const want = ['en2kl', 'fill', 'kl2en'][k];
+      const st = want === 'fill' ? sentenceStep(id, C.units[U].ls[0], knownFn, used, R, k % 2 ? 'fill' : 'build', ids) : null;
+      steps.push(Object.assign(st || typeStep(id, want === 'fill' ? 'en2kl' : want), { u: U }));
+    });
+    return steps;
+  }
+  return { lesson, review, jump, unitTest, answersFor, words };
 }
 
-G.DK = { dec, fold, loose, low, uniq, parseTSV, tokenize, Lexicon, buildSentences, makeSentence, buildCourse, Course, gradeKL, gradeEN, enWords, normKL, lev, rng, shuffle, recNew, recall, schedule, strength, isWeak, DAY, CATS, START, LESSON, UNIT };
+G.DK = { toFr, sndKey, speechScore, dec, fold, loose, low, uniq, parseTSV, tokenize, Lexicon, buildSentences, makeSentence, buildCourse, Course, gradeKL, gradeEN, enWords, normKL, lev, rng, shuffle, recNew, recall, schedule, strength, isWeak, DAY, CATS, START, LESSON, UNIT };
 })(typeof globalThis !== 'undefined' ? globalThis : window);
 
 </script>
@@ -1097,7 +1195,7 @@ const ROOT = /\/(index\.html)?$/.test(location.pathname);
 
 /* ================================================================ state */
 const LS = 'dk2-state';
-const fresh = () => ({ v: 1, rst: 0, w: {}, days: {}, set: { goal: 50, snd: 1, t: 0 }, stars: {}, mig: 0, t: 0 });
+const fresh = () => ({ v: 1, rst: 0, w: {}, days: {}, set: { goal: 50, snd: 1, voice: 1, t: 0 }, stars: {}, mig: 0, uid: '', placed: 0, t: 0 });
 let st = (() => { try { const v = JSON.parse(localStorage.getItem(LS)); if (v && v.v === 1) { const f = fresh(); return Object.assign(f, v, { set: Object.assign(f.set, v.set || {}) }); } } catch (e) {} return fresh(); })();
 function save(push = true) { st.t = now(); try { localStorage.setItem(LS, JSON.stringify(st)); } catch (e) {} if (push) pushLater(); }
 if (!st.mig) { try { (JSON.parse(localStorage.getItem('dk-stars') || '[]') || []).forEach(k => { const a = String(k).split('|')[0]; if (a && !(a in st.stars)) st.stars[a] = 1; }); } catch (e) {} st.mig = 1; save(false); }
@@ -1129,6 +1227,7 @@ const SFX = (() => {
   const tone = (f, at, d, type = 'sine', g = 0.05, f2) => { const c = ac(); if (!c) return; const t = c.currentTime + at, o = c.createOscillator(), v = c.createGain(); o.type = type; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d); v.gain.setValueAtTime(0.0001, t); v.gain.exponentialRampToValueAtTime(g, t + 0.012); v.gain.exponentialRampToValueAtTime(0.0001, t + d); o.connect(v).connect(c.destination); o.start(t); o.stop(t + d + 0.02); };
   return {
     tap: () => tone(1250, 0, 0.05, 'triangle', 0.025),
+    key: () => tone(1700, 0, 0.03, 'sine', 0.018),
     ok: () => { tone(784, 0, 0.13, 'triangle', 0.06); tone(1175, 0.09, 0.22, 'triangle', 0.06); },
     bad: () => { tone(220, 0, 0.22, 'sawtooth', 0.025, 150); tone(165, 0.05, 0.25, 'triangle', 0.04, 120); },
     match: () => tone(988, 0, 0.12, 'sine', 0.05),
@@ -1138,6 +1237,38 @@ const SFX = (() => {
   };
 })();
 const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+
+/* ================================================================ voice */
+/* There is no Kréyòl voice in browsers, so a French voice reads a French spelling of the Kréyòl (DK.toFr). */
+const TTS = (() => {
+  const ok = () => 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
+  let voice = null, last = '', lastT = 0;
+  const pick = () => {
+    if (!ok()) return;
+    const vs = speechSynthesis.getVoices().filter(v => /^fr([-_]|$)/i.test(v.lang));
+    const sc = v => (/natural|neural|premium|enhanced|google|siri/i.test(v.name) ? 6 : 0) + (/fr[-_]FR/i.test(v.lang) ? 2 : /fr[-_]CA/i.test(v.lang) ? 1 : 0) + (v.localService ? 0 : 1);
+    voice = vs.sort((a, b) => sc(b) - sc(a))[0] || null;
+    document.body.classList.toggle('tts', !!voice);
+  };
+  if (ok()) { pick(); try { speechSynthesis.addEventListener('voiceschanged', pick); } catch (e) { speechSynthesis.onvoiceschanged = pick; } }
+  function say(text, o = {}) {
+    if (!ok() || st.set.voice === 0 || !text) { if (o.end) o.end(); return; }
+    if (!voice) pick();
+    if (!voice) { if (o.end) o.end(); return; }
+    const t = now(), slow = o.slow || (o.tap && text === last && t - lastT < 2500 && !o.fast);
+    last = text; lastT = slow ? 0 : t;
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(DK.toFr(text));
+      u.voice = voice; u.lang = voice.lang; u.rate = slow ? 0.6 : 0.9;
+      if (o.end) { let done = false; const fin = () => { if (!done) { done = true; o.end(); } }; u.onend = fin; u.onerror = fin; }
+      speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+  return { say, stop() { try { if (ok()) speechSynthesis.cancel(); } catch (e) {} }, has: () => !!voice };
+})();
+const spk = (text, extra = '') => '<button class="spk ' + extra + '" type="button" data-say="' + esc(text) + '" aria-label="Listen">' + ico('snd') + '</button>';
+document.addEventListener('click', ev => { const b = ev.target.closest && ev.target.closest('.spk'); if (b) { ev.stopPropagation(); TTS.say(b.dataset.say, { tap: true }); } }, true);
 
 /* ============================================================== viewport */
 const root = document.documentElement;
@@ -1209,6 +1340,7 @@ function showTip(el) {
   let y = r.top - tr.height - 8; if (y < 8) y = r.bottom + 8;
   tipEl.style.left = x + 'px'; tipEl.style.top = y + 'px';
   clearTimeout(tipT); tipT = setTimeout(hideTip, 2800);
+  TTS.say(el.textContent, { fast: true });
 }
 document.addEventListener('pointerdown', ev => { const t = ev.target.closest && ev.target.closest('.tk'); if (t) { ev.preventDefault(); showTip(t); SFX.tap(); } else hideTip(); }, true);
 
@@ -1338,7 +1470,7 @@ function startSession(mode, steps, meta) {
   if (!steps || !steps.length) return;
   SFX.tap();
   Object.assign(P, { on: true, fin: false, mode, meta, steps: steps.map(s => Object.assign({}, s)), i: 0, ok: 0, tried: 0, mistakes: 0, combo: 0, best: 0, xp: 0, grades: new Map(), t0: now(), lives: mode === 'jump' ? 3 : null, answered: false, cur: null });
-  const el = overlay('pl', '<div class="ph"><button class="rb" id="pX" type="button" aria-label="Close">' + ico('x') + '</button><div class="pbar"><i id="pB"></i></div><div class="combo" id="pC"></div><div class="hearts" id="pH"></div></div><div class="stage" id="stg"></div><div class="pf" id="pf"></div><div class="fb" id="fb"><div class="in"></div></div>', '');
+  const el = overlay('pl', '<div class="ph"><button class="rb" id="pX" type="button" aria-label="Close">' + ico('x') + '</button><div class="pbar"><i id="pB"></i></div><div class="combo" id="pC"></div><div class="hearts" id="pH"></div></div><div class="stage" id="stg"></div><div id="kbx"></div><div class="pf" id="pf"></div><div class="fb" id="fb"><div class="in"></div></div>', '');
   el.querySelector('#pX').onclick = quitAsk;
   hearts();
   nextStep();
@@ -1354,14 +1486,16 @@ function quitAsk() {
   el.querySelector('[data-k]').onclick = () => closeOv('quit');
   el.querySelector('[data-q]').onclick = () => { closeOv('quit'); endPlayer(); };
 }
-function endPlayer() { P.on = false; closeOv('pl', true); closeOv('quit', true); renderAll(); }
+function endPlayer() { const wasPlace = P.mode === 'place' && !P.fin; P.on = false; TTS.stop(); closeOv('pl', true); closeOv('quit', true); renderAll(); if (wasPlace) openPlace(); }
 function setFoot(html) { const f = $('pf'); f.innerHTML = html; return f; }
 function nextStep() {
   if (!P.on) return;
   progress();
   if (P.mode === 'jump' && P.lives <= 0) return finish();
+  if (P.mode === 'place' && P.i >= P.steps.length && !placeRound()) return finish();
   if (P.i >= P.steps.length) return finish();
   const step = P.steps[P.i];
+  TTS.stop(); $('kbx').innerHTML = '';
   const stg = $('stg');
   stg.className = 'stage' + (step.type === 'intro' || step.type === 'speak' ? ' mid' : ''); void stg.offsetWidth; stg.classList.add('enter');
   stg.innerHTML = '';
@@ -1372,8 +1506,10 @@ function nextStep() {
   const cur = P.cur; if (cur && cur.focus) setTimeout(() => { if (P.cur === cur && P.on) cur.focus(); }, 60);
 }
 function checkBtn(ctrl) {
-  const f = setFoot('<button class="btn pri" id="pK" type="button" disabled>Check</button>');
+  const f = setFoot((P.mode === 'place' ? '<button class="btn ghost" id="pD" type="button">Don\'t know</button>' : '') + '<button class="btn pri" id="pK" type="button" disabled>Check</button>');
   const b = f.querySelector('#pK');
+  const dk = f.querySelector('#pD');
+  if (dk) dk.onclick = () => { b.dataset.done = 1; const res = ctrl.check(); res.ok = false; res.near = false; settle(res); };
   b.onclick = () => { if (b.disabled) return; const res = ctrl.check(); settle(res); };
   ctrl.update = () => { b.disabled = !ctrl.ready(); };
   return b;
@@ -1383,7 +1519,8 @@ function settle(res) {
   P.answered = true; P.tried++;
   let xp = 0;
   if (res.ok) { P.ok++; P.combo++; P.best = Math.max(P.best, P.combo); xp = first ? 2 : 1; P.xp += xp; SFX.ok(); }
-  else { P.mistakes++; P.combo = 0; if (P.lives != null) { P.lives--; hearts(); } if (first && step.type !== 'match' && P.mode !== 'jump') P.steps.push(Object.assign({}, step, { req: 1 })); SFX.bad(); buzz(60); }
+  else { P.mistakes++; P.combo = 0; if (P.lives != null) { P.lives--; hearts(); } if (first && step.type !== 'match' && P.mode !== 'jump' && P.mode !== 'place') P.steps.push(Object.assign({}, step, { req: 1 })); SFX.bad(); buzz(60); }
+  if (P.mode === 'place') P.meta.pl.res.push(!!res.ok);
   const g = res.ok ? ((res.near || !first) ? 1 : 2) : 0;
   (res.grades || (step.targets || []).map(id => [id, g])).forEach(([id, gg]) => { const c = P.grades.get(id); P.grades.set(id, c == null ? gg : Math.min(c, gg)); });
   combo();
@@ -1393,7 +1530,7 @@ function settle(res) {
 function feedback(res, xp) {
   const fb = $('fb'), inn = fb.querySelector('.in');
   const head = res.ok ? (res.near ? 'Almost' : ['Correct', 'Nice', 'Great', 'Yes'][P.ok % 4]) : 'Not quite';
-  inn.innerHTML = '<div class="hd"><span class="ic">' + ico(res.ok ? 'check' : 'x') + '</span>' + head + (xp ? '<span class="xp">+' + xp + ' XP</span>' : '') + '</div>' +
+  inn.innerHTML = '<div class="hd"><span class="ic">' + ico(res.ok ? 'check' : 'x') + '</span>' + head + (xp ? '<span class="xp">+' + xp + ' XP</span>' : '') + (res.say ? spk(res.say, 'fbs') : '') + '</div>' +
     (res.ans && (!res.ok || res.near || res.show) ? '<div class="ans">' + res.ans + '</div>' : '') + (res.sub ? '<div class="sub">' + res.sub + '</div>' : '') +
     (res.accept ? '<button class="lnk" type="button" id="pAcc">My answer was right</button>' : '') +
     '<div class="row2"><button class="btn ' + (res.ok ? 'okb' : 'badb') + '" id="pN" type="button">Continue</button></div>';
@@ -1409,6 +1546,7 @@ function feedback(res, xp) {
     SFX.ok(); go();
   };
   setTimeout(() => { const b = inn.querySelector('#pN'); if (b) b.focus({ preventScroll: true }); }, 30);
+  if (res.say) setTimeout(() => TTS.say(res.say), 250);
 }
 function finish() {
   if (P.fin) return; P.fin = true;
@@ -1418,6 +1556,10 @@ function finish() {
   if (mode === 'lesson') {
     C.lessons[P.meta.L].ids.forEach(id => { const g = P.grades.has(id) ? P.grades.get(id) : 2, k = E[id].key, r = st.w[k]; st.w[k] = r ? DK.schedule(r, g, t) : DK.recNew(t, g === 2 ? 1 : g === 1 ? 0.7 : 0.5); });
     P.xp += 5 + (P.mistakes ? 0 : 5);
+  } else if (mode === 'place') {
+    const h = P.meta.pl.pass; let k = 0;
+    if (h >= 0) { const lastL = C.units[h].ls[C.units[h].ls.length - 1]; for (let L = 0; L <= lastL; L++) C.lessons[L].ids.forEach(id => { const key = E[id].key; if (st.w[key]) return; const g = P.grades.get(id); st.w[key] = DK.recNew(t, g === 2 ? 7 + (k % 10) : 3 + (k % 12)); k++; }); }
+    viewU = Math.min(C.units.length - 1, h + 1); st.placed = t; P.xp += 10;
   } else if (mode === 'jump') {
     pass = P.lives > 0;
     if (pass) {
@@ -1434,8 +1576,8 @@ function finish() {
   const goalNow = before < st.set.goal && xpToday() >= st.set.goal;
   progress(); $('pB').style.width = '100%';
   const secs = Math.round((t - P.t0) / 1000), acc = P.tried ? Math.round(P.ok / P.tried * 100) : 100;
-  const title = mode === 'lesson' ? 'Lesson complete' : mode === 'jump' ? (pass ? 'Unit ' + (P.meta.U + 1) + ' unlocked' : 'Not yet') : 'Review complete';
-  const ws = mode === 'lesson' ? C.lessons[P.meta.L].ids : [...P.grades.keys()].slice(0, 14);
+  const title = mode === 'place' ? 'You start at Unit ' + (viewU + 1) : mode === 'lesson' ? 'Lesson complete' : mode === 'jump' ? (pass ? 'Unit ' + (P.meta.U + 1) + ' unlocked' : 'Not yet') : 'Review complete';
+  const ws = mode === 'lesson' ? C.lessons[P.meta.L].ids : mode === 'place' ? [] : [...P.grades.keys()].slice(0, 14);
   const stg = $('stg'); $('fb').className = 'fb'; stg.className = 'stage mid';
   stg.innerHTML = '<div class="res"><div class="medal"><img src="/icon.png" alt=""></div><h2>' + esc(title) + '</h2>' +
     '<div class="tiles3"><div class="x"><small>XP</small><b id="rX">+0</b></div><div class="a"><small>Accuracy</small><b>' + acc + '%</b></div><div class="s"><small>Time</small><b>' + Math.floor(secs / 60) + ':' + pad(secs % 60) + '</b></div></div>' +
@@ -1449,23 +1591,47 @@ function finish() {
 
 /* --------------------------------------------------------- exercises */
 const ACC = ['é', 'è', 'ò', 'ì', 'æ', 'œ', 'ê', 'ô', 'ç', 'ñ'];
-function accentBar(getInput) {
-  const d = document.createElement('div'); d.className = 'akeys';
-  d.innerHTML = ACC.map(c => '<button type="button" tabindex="-1">' + c + '</button>').join('');
-  d.addEventListener('pointerdown', ev => { const b = ev.target.closest('button'); if (!b) return; ev.preventDefault(); const inp = getInput(); if (!inp) return; const s = inp.selectionStart ?? inp.value.length, e2 = inp.selectionEnd ?? s; inp.value = inp.value.slice(0, s) + b.textContent + inp.value.slice(e2); inp.selectionStart = inp.selectionEnd = s + 1; inp.dispatchEvent(new Event('input')); inp.focus(); SFX.tap(); });
-  return d;
+const TOUCH = matchMedia('(pointer: coarse)').matches || ('ontouchstart' in window && !matchMedia('(pointer: fine)').matches);
+/* built-in keyboard: on touch screens it replaces the device keyboard; on desktop only the accent row shows */
+function keyboard(inp, en) {
+  if (TOUCH) { inp.setAttribute('inputmode', 'none'); inp.setAttribute('virtualkeyboardpolicy', 'manual'); }
+  const rows = [];
+  if (!en) rows.push(['acc', ACC]);
+  if (TOUCH) { rows.push(['', [...'qwertyuiop']]); rows.push(['', [...'asdfghjkl']]); rows.push(['', ["'", ...'zxcvbnm', '-', '⌫']]); rows.push(['', [' ', '⏎']]); }
+  const k = document.createElement('div'); k.className = 'kb';
+  k.innerHTML = rows.map(([c, r]) => '<div class="r ' + c + '">' + r.map(x => '<button type="button" tabindex="-1" data-k="' + esc(x) + '" class="' + (x === ' ' ? 'wide' : x === '⏎' ? 'mid ent' : x === '⌫' ? 'mid' : '') + '">' + (x === ' ' ? '' : x === '⏎' ? ico('check') : x === '⌫' ? ico('back') : esc(x)) + '</button>').join('') + '</div>').join('');
+  const put = s => { const a = inp.selectionStart ?? inp.value.length, b = inp.selectionEnd ?? a; inp.value = inp.value.slice(0, a) + s + inp.value.slice(b); inp.selectionStart = inp.selectionEnd = a + s.length; };
+  let rep = 0;
+  const press = key => {
+    if (inp.readOnly) return;
+    if (key === '⏎') { const b = $('pK'); if (b && !b.disabled) b.click(); return; }
+    if (key === '⌫') { const a = inp.selectionStart ?? inp.value.length, b = inp.selectionEnd ?? a; if (a !== b) { inp.value = inp.value.slice(0, a) + inp.value.slice(b); inp.selectionStart = inp.selectionEnd = a; } else if (a > 0) { inp.value = inp.value.slice(0, a - 1) + inp.value.slice(a); inp.selectionStart = inp.selectionEnd = a - 1; } }
+    else put(key);
+    inp.dispatchEvent(new Event('input')); SFX.key();
+  };
+  k.addEventListener('pointerdown', ev => {
+    const b = ev.target.closest('button'); if (!b) return; ev.preventDefault();
+    b.classList.add('dn'); press(b.dataset.k);
+    if (b.dataset.k === '⌫') { clearTimeout(rep); const go = () => { press('⌫'); rep = setTimeout(go, 70); }; rep = setTimeout(go, 420); }
+    if (!TOUCH) inp.focus({ preventScroll: true });
+  });
+  const up = () => { clearTimeout(rep); k.querySelectorAll('.dn').forEach(x => x.classList.remove('dn')); };
+  k.addEventListener('pointerup', up); k.addEventListener('pointercancel', up); k.addEventListener('pointerleave', up);
+  $('kbx').innerHTML = ''; $('kbx').appendChild(k);
+  return k;
 }
 const hw = e => e.word;
 const formsLine = e => e.forms.length > 1 ? e.forms.slice(0, 4).join(' · ') : '';
 function intro(step, stg) {
   const e = E[step.w], x = step.s != null ? S[step.s] : null;
   const senses = e.senses.filter(s => s.g).slice(0, 3);
-  stg.innerHTML = '<div class="intro"><span class="tag newt">' + ico('spark') + '</span><div class="hw">' + esc(hw(e)) + '</div>' + (formsLine(e) ? '<div class="fm">' + esc(formsLine(e)) + '</div>' : '') +
+  stg.innerHTML = '<div class="intro"><span class="tag newt">' + ico('spark') + '</span><div class="hwrow"><div class="hw">' + esc(hw(e)) + '</div>' + spk(e.forms[0]) + '</div>' + (formsLine(e) ? '<div class="fm">' + esc(formsLine(e)) + '</div>' : '') +
     (e.posLabel ? '<span class="ps">' + esc(e.posLabel) + '</span>' : '') +
     '<div class="gl">' + senses.map((s, i) => (senses.length > 1 ? '<span style="color:var(--dim)">' + (i + 1) + '. </span>' : '') + esc(s.g)).join('<br>') + '</div>' +
-    (x ? '<div class="ex"><div class="kl">' + sentHTML(x, { hl: step.w }) + '</div><div class="tr">' + esc(x.t) + '</div></div>' : '') + '</div>';
+    (x ? '<div class="ex"><div class="kl">' + sentHTML(x, { hl: step.w }) + ' ' + spk(x.s, 'sm') + '</div><div class="tr">' + esc(x.t) + '</div></div>' : '') + '</div>';
   setFoot('<button class="btn pri" id="pK" type="button">Continue</button>').querySelector('#pK').onclick = () => { P.answered = true; P.i++; SFX.flip(); nextStep(); };
-  return { focus() { const b = $('pK'); if (b) b.focus({ preventScroll: true }); } };
+  setTimeout(() => TTS.say(e.forms[0], { end: x ? () => setTimeout(() => { if (P.cur && P.cur.intro === step) TTS.say(x.s); }, 350) : null }), 250);
+  return { intro: step, focus() { const b = $('pK'); if (b) b.focus({ preventScroll: true }); } };
 }
 function match(step, stg) {
   const ids = DK.shuffle(step.ids, Math.random), R2 = DK.shuffle(step.ids, Math.random);
@@ -1474,6 +1640,7 @@ function match(step, stg) {
   let sel = null, left = ids.length; const miss = new Set();
   stg.querySelectorAll('.mt').forEach(b => b.onclick = () => {
     if (b.classList.contains('gone')) return;
+    if (b.dataset.s === 'k') TTS.say(b.textContent, { fast: true });
     if (!sel) { sel = b; b.classList.add('sel'); SFX.tap(); return; }
     if (sel === b) { b.classList.remove('sel'); sel = null; return; }
     if (sel.dataset.s === b.dataset.s) { sel.classList.remove('sel'); sel = b; b.classList.add('sel'); SFX.tap(); return; }
@@ -1519,7 +1686,7 @@ function build(step, stg) {
     ctrl.update();
     fit(stg, 0.5);
   };
-  const addT = (i, rect) => { if (order.includes(i)) return; order.push(i); SFX.tap(); draw(rect, i); };
+  const addT = (i, rect) => { if (order.includes(i)) return; order.push(i); SFX.tap(); TTS.say(tiles[i], { fast: true }); draw(rect, i); };
   const remT = j => { const k = order.indexOf(j); if (k >= 0) order.splice(k, 1); SFX.tap(); draw(); };
   /* tap and drag */
   let drag = null;
@@ -1556,7 +1723,7 @@ function build(step, stg) {
     const got = order.map(j => tiles[j]).join(' '), want = expect.join(' ');
     const r = DK.gradeKL(got, [want]);
     aL.classList.add(r.ok ? 'ok' : 'bad');
-    return { ok: r.ok, near: r.near, ans: full, sub: step.phrase != null ? '' : '', show: false, targets: step.targets };
+    return { ok: r.ok, near: r.near, ans: full, sub: '', show: false, targets: step.targets, say: step.phrase != null ? E[step.phrase].forms[0] : S[step.s].s };
   };
   return ctrl;
 }
@@ -1569,7 +1736,7 @@ function typeEx(step, stg) {
     ansH = esc(e.word) + (e.forms.length > 1 ? ' <span style="color:var(--mid)">(' + esc(e.forms.join(', ')) + ')</span>' : '');
   } else {
     en = true;
-    promptH = '<div class="big">' + esc(e.word) + '</div>' + (e.posLabel ? '<div class="sm" style="font-style:italic">' + esc(e.posLabel) + '</div>' : '');
+    promptH = '<div class="hwrow" style="justify-content:flex-start"><div class="big">' + esc(e.word) + '</div>' + spk(e.forms[0]) + '</div>' + (e.posLabel ? '<div class="sm" style="font-style:italic">' + esc(e.posLabel) + '</div>' : '');
     answers = e.items;
     ansH = esc(e.senses.map(s => s.g).filter(Boolean).slice(0, 3).join('; '));
   }
@@ -1578,7 +1745,8 @@ function typeEx(step, stg) {
   inp.className = 'field'; inp.setAttribute('autocomplete', 'off'); inp.setAttribute('autocapitalize', 'off'); inp.setAttribute('autocorrect', 'off'); inp.spellcheck = false; inp.setAttribute('enterkeyhint', 'done');
   inp.lang = en ? 'en' : 'fr';
   stg.appendChild(inp);
-  if (!en) stg.appendChild(accentBar(() => inp));
+  keyboard(inp, en);
+  if (en) setTimeout(() => TTS.say(e.forms[0]), 250);
   const ctrl = { ready: () => inp.value.trim().length > 0, focus: () => inp.focus({ preventScroll: true }) };
   const btn = checkBtn(ctrl);
   inp.addEventListener('input', () => ctrl.update());
@@ -1587,7 +1755,7 @@ function typeEx(step, stg) {
     inp.blur(); btn.dataset.done = 1;
     const r = en ? DK.gradeEN(inp.value, answers, false) : DK.gradeKL(inp.value, answers);
     inp.classList.add(r.ok ? 'ok' : 'bad'); inp.readOnly = true;
-    return { ok: r.ok, near: r.near, ans: ansH, sub, accept: en && !r.ok, targets: step.targets };
+    return { ok: r.ok, near: r.near, ans: ansH, sub, accept: en && !r.ok, targets: step.targets, say: en ? null : e.forms[0] };
   };
   return ctrl;
 }
@@ -1597,7 +1765,7 @@ function fill(step, stg) {
   const width = Math.max(3, want.length + 1);
   stg.innerHTML = '<div class="pr"><div class="lg" id="fS">' + sentHTML(x, { blank: step.k, blankHTML: '<input class="blank" id="fI" size="' + width + '" style="width:' + (width + 1) + 'ch" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" lang="fr">', hide: step.w }) + '</div><div class="sm">' + esc(x.t) + '</div></div>';
   const inp = stg.querySelector('#fI');
-  stg.appendChild(accentBar(() => inp));
+  keyboard(inp, false);
   const ctrl = { ready: () => inp.value.trim().length > 0, focus: () => inp.focus({ preventScroll: true }) };
   const btn = checkBtn(ctrl);
   inp.addEventListener('input', () => { ctrl.update(); });
@@ -1607,18 +1775,52 @@ function fill(step, stg) {
     const r = DK.gradeKL(inp.value, [want]);
     inp.classList.add(r.ok ? 'ok' : 'bad'); inp.readOnly = true;
     if (r.ok) inp.value = want;
-    return { ok: r.ok, near: r.near, ans: sentHTML(x, { hl: step.w, plain: true }), sub: '', targets: step.targets };
+    return { ok: r.ok, near: r.near, ans: sentHTML(x, { hl: step.w, plain: true }), sub: '', targets: step.targets, say: x.s };
   };
   return ctrl;
 }
+const SRC = window.SpeechRecognition || window.webkitSpeechRecognition;
 function speak(step, stg) {
+  if (!SRC || P.noSR || window.__dkSR === false) return speakSelf(step, stg);
+  const x = step.s != null ? S[step.s] : null, e = step.w != null ? E[step.w] : null;
+  const target = x ? x.s : e.forms[0], ansH = x ? sentHTML(x, { plain: true }) : esc(e.word);
+  stg.innerHTML = '<div class="speak"><div class="bubble" style="align-self:center"><div class="md">' + esc(x ? x.t : e.prompt) + '</div></div><button class="mic btnm idle" id="pM" type="button" aria-label="Speak">' + ico('mic') + '</button><div class="heard" id="hd"></div></div>';
+  const f = setFoot('<button class="btn ghost" id="pCS" type="button">Can\'t speak now</button>');
+  f.querySelector('#pCS').onclick = () => { P.noSR = true; if (rec) try { rec.abort(); } catch (er) {} stg.innerHTML = ''; P.cur = speakSelf(step, stg); fit(stg, 0.5); };
+  const mic = stg.querySelector('#pM'), hd = stg.querySelector('#hd');
+  let rec = null, on = false, tries = 0, alts = [], done = false;
+  const judge = () => {
+    if (done || !alts.length) return;
+    const best = alts.reduce((m, a) => Math.max(m, DK.speechScore(a, target)), 0);
+    hd.textContent = '“' + alts[0] + '”';
+    if (best >= 0.58) { done = true; settle({ ok: true, near: best < 0.72, ans: ansH, show: true, sub: '“' + esc(alts[0]) + '”', say: target, targets: step.targets }); return; }
+    tries++; P.answered = true; hd.classList.add('bad'); SFX.bad(); buzz(40);
+    mic.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-8px)' }, { transform: 'translateX(8px)' }, { transform: 'translateX(0)' }], { duration: 300 });
+    if (tries >= 2) { done = true; settle({ ok: false, ans: ansH, sub: '“' + esc(alts[0]) + '”', say: target, targets: step.targets }); }
+  };
+  const start = () => {
+    if (done) return;
+    if (on) { try { rec.stop(); } catch (er) {} return; }
+    TTS.stop(); alts = []; hd.classList.remove('bad'); hd.textContent = '';
+    try { rec = new SRC(); } catch (er) { f.querySelector('#pCS').click(); return; }
+    rec.lang = 'fr-FR'; rec.interimResults = true; rec.maxAlternatives = 5; rec.continuous = false;
+    rec.onresult = ev => { const r = ev.results[ev.results.length - 1]; if (r.isFinal) { alts = [...r].map(a => a.transcript).filter(Boolean); } else hd.textContent = r[0].transcript; };
+    rec.onerror = ev => { if (/not-allowed|service-not-allowed|audio-capture|network/.test(ev.error || '')) { P.noSR = true; done = true; stg.innerHTML = ''; P.cur = speakSelf(step, stg); fit(stg, 0.5); } };
+    rec.onend = () => { on = false; mic.classList.remove('on'); mic.classList.add('idle'); if (!done) { if (alts.length) judge(); } };
+    try { rec.start(); on = true; mic.classList.add('on'); mic.classList.remove('idle'); SFX.tap(); } catch (er) { f.querySelector('#pCS').click(); }
+  };
+  mic.onclick = start;
+  return { focus() { mic.focus({ preventScroll: true }); } };
+}
+function speakSelf(step, stg) {
   const x = step.s != null ? S[step.s] : null, e = step.w != null ? E[step.w] : null;
   const promptH = x ? esc(x.t) : esc(e.prompt);
   stg.innerHTML = '<div class="speak"><div class="mic">' + ico('mic') + '</div><div class="bubble" style="align-self:center"><div class="md">' + promptH + '</div></div><div id="rv"></div></div>';
   const f = setFoot('<button class="btn acc" id="pK" type="button">' + ico('eye') + 'Show</button>');
   const show = () => {
     SFX.flip(); P.answered = true;
-    stg.querySelector('#rv').innerHTML = '<div class="reveal"><div class="kl">' + (x ? sentHTML(x) : esc(e.word)) + '</div></div>';
+    stg.querySelector('#rv').innerHTML = '<div class="reveal"><div class="kl">' + (x ? sentHTML(x) : esc(e.word)) + ' ' + spk(x ? x.s : e.forms[0]) + '</div></div>';
+    TTS.say(x ? x.s : e.forms[0]);
     stg.querySelector('.mic').style.animation = 'none';
     fit(stg, 0.5);
     const f2 = setFoot('<button class="btn badb" id="pA" type="button">' + ico('x') + '</button><button class="btn okb" id="pG" type="button">' + ico('check') + '</button>');
@@ -1741,13 +1943,13 @@ function stepEntry(d) { const L = ENT.list, i = L.indexOf(ENT.id); if (i < 0) re
 function copyText(t) { const ok = () => toast('Copied'); if (navigator.clipboard) navigator.clipboard.writeText(t).then(ok, () => {}); else { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); ok(); } catch (e) {} a.remove(); } }
 function entryBlocks(e) {
   const blocks = [];
-  blocks.push('<div class="hw">' + esc(e.word) + '</div>' + (formsLine(e) ? '<div class="fm">' + esc(formsLine(e)) + '</div>' : '') + (e.note ? '<div class="fm">' + esc(e.note) + '</div>' : '') + (e.posLabel ? '<span class="ps">' + esc(e.posLabel) + '</span>' : ''));
+  blocks.push('<div class="hwrow" style="justify-content:flex-start"><div class="hw">' + esc(e.word) + '</div>' + spk(e.forms[0]) + '</div>' + (formsLine(e) ? '<div class="fm">' + esc(formsLine(e)) + '</div>' : '') + (e.note ? '<div class="fm">' + esc(e.note) + '</div>' : '') + (e.posLabel ? '<span class="ps">' + esc(e.posLabel) + '</span>' : ''));
   e.senses.forEach((s, i) => {
     let h = '<div class="s">' + (e.senses.length > 1 ? '<span class="n">' + (s.n || i + 1) + '</span>' : '') + '<div style="flex:1;min-width:0"><div class="g">' + esc(s.g) + (s.pos ? ' <span style="color:var(--mid);font-style:italic;font-size:.85em">' + esc(s.pos) + '</span>' : '') + '</div>';
     blocks.push(h + '</div></div>');
-    s.ex.forEach(x => { const sx = S.find(y => y.owner === e.id && y.s === x.s); blocks.push('<div class="x"><div class="kl">' + (sx ? sentHTML(sx, { hl: e.id }) : esc(x.s)) + '</div><div class="tr">' + esc(x.t) + '</div></div>'); });
+    s.ex.forEach(x => { const sx = S.find(y => y.owner === e.id && y.s === x.s); blocks.push('<div class="x"><div class="kl">' + (sx ? sentHTML(sx, { hl: e.id }) : esc(x.s)) + ' ' + spk(x.s, 'sm') + '</div><div class="tr">' + esc(x.t) + '</div></div>'); });
   });
-  e.general.forEach(x => { const sx = S.find(y => y.owner === e.id && y.s === x.s); blocks.push('<div class="x"><div class="kl">' + (sx ? sentHTML(sx, { hl: e.id }) : esc(x.s)) + '</div><div class="tr">' + esc(x.t) + '</div></div>'); });
+  e.general.forEach(x => { const sx = S.find(y => y.owner === e.id && y.s === x.s); blocks.push('<div class="x"><div class="kl">' + (sx ? sentHTML(sx, { hl: e.id }) : esc(x.s)) + ' ' + spk(x.s, 'sm') + '</div><div class="tr">' + esc(x.t) + '</div></div>'); });
   const r = recOf(e.id);
   if (r) { const due = r[1] * 6e4, dd = Math.max(0, Math.round((due - now()) / 864e5)); blocks.push('<div class="lv">' + barsHTML(r) + '<span>' + (due <= endOfToday() ? 'Due today' : 'Next review in ' + dd + (dd === 1 ? ' day' : ' days')) + '</span></div>'); }
   return blocks;
@@ -1798,13 +2000,16 @@ function drawSheet() {
   b.innerHTML = acct +
     '<div class="kv"><div><b>' + xpTotal() + '</b><small>total XP</small></div><div><b>' + learnedN() + '</b><small>words</small></div><div><b>' + bestStreak() + '</b><small>best streak</small></div></div>' +
     '<div class="srow"><span class="lb">Daily goal</span><span class="seg">' + gs.map(g => '<button type="button" data-g="' + g + '" aria-pressed="' + (st.set.goal === g) + '">' + g + '</button>').join('') + '</span></div>' +
+    '<div class="srow"><span class="lb">Voice</span><button type="button" class="tg" id="sVoi" aria-pressed="' + (st.set.voice !== 0) + '" aria-label="Voice"></button></div>' +
     '<div class="srow"><span class="lb">Sounds</span><button type="button" class="tg" id="sSnd" aria-pressed="' + (!!st.set.snd) + '" aria-label="Sounds"></button></div>' +
-    '<div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap"><button class="lnk" type="button" id="sExp">Export starred words</button><button class="lnk red" type="button" id="sRst">' + (resetArm ? 'Tap again to erase all progress' : 'Reset progress') + '</button></div>';
+    '<div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap"><button class="lnk" type="button" id="sPl">Placement test</button><button class="lnk" type="button" id="sExp">Export starred words</button><button class="lnk red" type="button" id="sRst">' + (resetArm ? 'Tap again to erase all progress' : 'Reset progress') + '</button></div>';
   if ($('sIn')) $('sIn').onclick = signIn;
   if ($('sOut')) $('sOut').onclick = () => { try { firebase.auth().signOut(); } catch (e) {} };
   b.querySelectorAll('[data-g]').forEach(x => x.onclick = () => { st.set.goal = +x.dataset.g; st.set.t = now(); save(); SFX.tap(); drawSheet(); renderLearn(); });
   $('sSnd').onclick = () => { st.set.snd = st.set.snd ? 0 : 1; st.set.t = now(); save(); SFX.tap(); drawSheet(); };
   $('sExp').onclick = exportStars;
+  $('sVoi').onclick = () => { st.set.voice = st.set.voice === 0 ? 1 : 0; st.set.t = now(); save(); drawSheet(); if (st.set.voice) TTS.say('Bonjou'); };
+  $('sPl').onclick = () => { closeOv('sheet'); startPlacement(); };
   $('sRst').onclick = () => { if (!resetArm) { resetArm = 1; drawSheet(); setTimeout(() => { resetArm = 0; drawSheet(); }, 4000); return; } resetArm = 0; resetAll(); drawSheet(); };
   fit(b, 0.6);
 }
@@ -1820,7 +2025,9 @@ function resetAll() { const keep = { set: st.set, stars: st.stars }; st = Object
 
 /* ================================================================ sync */
 const FB_CONFIG = { apiKey: "AIzaSyArsiLnB_B__5gIXn9RTdFWR7hYE2zXXVw", authDomain: "stages-5b440.firebaseapp.com", projectId: "stages-5b440", storageBucket: "stages-5b440.firebasestorage.app", messagingSenderId: "850080442646", appId: "1:850080442646:web:e7e25684927f41b2e70837" };
-const FB = { user: null, db: null, loading: false, ready: false, status: '', pushT: 0, busy: null };
+const FB = { user: null, db: null, loading: false, ready: false, status: '', pushT: 0, busy: null, decided: false, failed: false };
+FB.decidedP = new Promise(r => { FB.res = r; });
+const decide = () => { if (!FB.decided) { FB.decided = true; FB.res(); } };
 function loadFb() {
   if (FB.loading || FB.ready) return; FB.loading = true;
   const add = src => new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = src; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); });
@@ -1833,16 +2040,22 @@ function loadFb() {
     firebase.auth().onAuthStateChanged(u => {
       FB.user = u;
       try { if (u) localStorage.setItem('7stages.member', '1'); else localStorage.removeItem('7stages.member'); } catch (e) {}
-      if (u) push(); else { FB.status = ''; renderHeader(); drawSheet(); }
+      if (u) {
+        if (st.uid && st.uid !== u.uid) { st = Object.assign(fresh(), { mig: 1 }); viewU = null; touch(); }
+        st.uid = u.uid; save(false);
+        hideGate();
+        if (READY && FB.decided) push().then(afterSync);
+      } else { FB.status = ''; renderHeader(); if ($('sheet')) closeOv('sheet'); if (READY && FB.decided) { if (P.on) { P.on = false; TTS.stop(); closeOv('pl', true); } closeOv('place', true); showGate(); } }
+      decide();
     });
-  }).catch(() => { FB.loading = false; });
+  }).catch(() => { FB.loading = false; FB.failed = true; decide(); if (READY && !FB.user) showGate('Connect to the internet to sign in'); });
 }
 function signIn() {
   loadFb();
   const go = async () => { const pr = new firebase.auth.GoogleAuthProvider(); try { await firebase.auth().signInWithPopup(pr); } catch (e) { if (e && /popup-closed|cancelled-popup/.test(e.code || '')) return; try { await firebase.auth().signInWithRedirect(pr); } catch (_) { toast('Sign-in did not go through'); } } };
   if (FB.ready) go(); else { const t = setInterval(() => { if (FB.ready) { clearInterval(t); go(); } }, 200); setTimeout(() => clearInterval(t), 12000); }
 }
-const wire = () => JSON.stringify({ v: 1, rst: st.rst || 0, w: st.w, days: st.days, set: st.set, stars: st.stars });
+const wire = () => JSON.stringify({ v: 1, rst: st.rst || 0, w: st.w, days: st.days, set: st.set, stars: st.stars, placed: st.placed || 0 });
 function mergeRemote(dk) {
   if (!dk) return false;
   let changed = false;
@@ -1854,13 +2067,14 @@ function mergeRemote(dk) {
     const cut = r.rst / 6e4, rd = dayKey(r.rst), w = {}, days = {};
     for (const k in st.w) if (st.w[k][5] > cut) w[k] = st.w[k];
     for (const d in st.days) if (d >= rd) days[d] = st.days[d];
-    st = Object.assign(fresh(), { rst: r.rst, mig: 1, migR: 1, stars: st.stars, set: st.set, w, days }); changed = true;
+    st = Object.assign(fresh(), { rst: r.rst, mig: 1, migR: 1, stars: st.stars, set: st.set, w, days, uid: st.uid }); changed = true;
   }
   else if ((r.rst || 0) < (st.rst || 0)) return true;
   for (const k in (r.w || {})) { const a = st.w[k], b = r.w[k]; if (!Array.isArray(b)) continue; if (!a || b[5] > a[5] || (b[5] === a[5] && b[3] > a[3])) { st.w[k] = b; changed = true; } }
   for (const d in (r.days || {})) { const v = +r.days[d] || 0; if (v > (st.days[d] || 0)) { st.days[d] = v; changed = true; } }
   if (r.set && (r.set.t || 0) > (st.set.t || 0)) { st.set = Object.assign({}, st.set, r.set); changed = true; }
   for (const k in (r.stars || {})) { const a = +st.stars[k] || 0, b = +r.stars[k] || 0; if (Math.abs(b) > Math.abs(a)) { st.stars[k] = b; changed = true; } }
+  if ((r.placed || 0) > (st.placed || 0)) { st.placed = r.placed; changed = true; }
   return changed;
 }
 async function push() {
@@ -1887,7 +2101,45 @@ async function push() {
 }
 function pushLater() { if (!FB.user) return; clearTimeout(FB.pushT); FB.pushT = setTimeout(push, 2500); }
 document.addEventListener('visibilitychange', () => { if (FB.user) push(); });
-try { if (localStorage.getItem('7stages.member') === '1') loadFb(); } catch (e) {}
+loadFb();
+setTimeout(decide, 15000);
+/* sign-in is required: nothing opens until the learner is signed in */
+function showGate(msg) {
+  let g = $('gate');
+  if (!g) {
+    g = document.createElement('div'); g.id = 'gate'; g.className = 'ov gate';
+    g.innerHTML = '<div class="gc"><img src="/icon.png" alt=""><h2>Diksyonær</h2><button class="gbtn" type="button" id="gIn"><span class="gg">G</span>Sign in with Google</button><small id="gMsg"></small></div>';
+    document.body.appendChild(g);
+    g.querySelector('#gIn').onclick = () => { $('gMsg').textContent = ''; signIn(); };
+  }
+  $('gMsg').textContent = msg || '';
+}
+function hideGate() { const g = $('gate'); if (g) g.remove(); }
+function afterSync() {
+  if (!READY || !FB.user) return;
+  if (!st.placed) { if (learnedN() > 0) { st.placed = now(); save(); } else if (!P.on) openPlace(); }
+  renderAll();
+}
+function openPlace() {
+  if ($('place') || !FB.user) return;
+  const el = document.createElement('div'); el.id = 'place'; el.className = 'ov gate';
+  el.innerHTML = '<div class="gc"><img src="/icon.png" alt=""><h2>Placement test</h2><p>A few questions to find where you start.</p><button class="btn pri" type="button" id="plGo">Start</button></div>';
+  document.body.appendChild(el);
+  el.querySelector('#plGo').onclick = () => { el.remove(); startPlacement(); };
+}
+function startPlacement() { startSession('place', K.unitTest(0, { seed: rnd(900) + 1 }), { pl: { pass: -1, fail: null, u: 0, rounds: 0, res: [] } }); }
+/* adaptive: climb units 1, 3, 7, 15... until a miss, then narrow down between the last pass and the miss */
+function placeRound() {
+  const pl = P.meta.pl, ok = pl.res.filter(Boolean).length >= 2, last = C.units.length - 1;
+  pl.res = []; pl.rounds++;
+  if (ok) pl.pass = Math.max(pl.pass, pl.u); else pl.fail = pl.fail == null ? pl.u : Math.min(pl.fail, pl.u);
+  let nx;
+  if (pl.fail == null) nx = pl.u >= last ? null : Math.min(last, pl.u * 2 + 2);
+  else { const lo = pl.pass + 1, hi = pl.fail - 1; nx = lo > hi ? null : (lo + hi) >> 1; }
+  if (nx == null || pl.rounds >= 10) return false;
+  pl.u = nx; K.unitTest(nx, { seed: rnd(900) + 1 }).forEach(s => P.steps.push(s));
+  return true;
+}
 
 /* ============================================================= wiring */
 function setTab(t) {
@@ -1920,11 +2172,16 @@ async function boot() {
   READY = true;
   touch();
   renderAll();
-  setTab(document.body.classList.contains('wide') ? 'learn' : 'learn');
+  setTab('learn');
+  await FB.decidedP;
+  let member = false; try { member = localStorage.getItem('7stages.member') === '1'; } catch (e) {}
+  if (FB.user) { hideGate(); push().then(afterSync); }
+  else if (FB.failed && member && st.uid) { /* offline with a known account: carry on with this device's progress */ }
+  else showGate(FB.failed ? 'Connect to the internet to sign in' : '');
   $('boot').classList.add('out'); setTimeout(() => $('boot').remove(), 400);
   const w = new URLSearchParams(location.search).get('w');
   if (w) { const f = DK.fold(w); const e = E.find(x => DK.fold(x.word) === f) || E.find(x => x.forms.some(y => DK.fold(y) === f)); if (e) openEntry(e.id, [e.id]); }
-  window.__dk = { E, S, C, K, st: () => st, P, D, recs, FB, push, loadFb, reset: resetAll, mergeRemote, startLesson, startReview, startJump, setTab, firstOpen };
+  window.__dk = { E, S, C, K, st: () => st, P, D, recs, FB, push, loadFb, reset: resetAll, mergeRemote, startLesson, startReview, startJump, startPlacement, setTab, firstOpen, TTS, rerender: nextStep };
 }
 if (ROOT && 'serviceWorker' in navigator) { addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {})); const m = document.createElement('link'); m.rel = 'manifest'; m.href = 'manifest.webmanifest'; document.head.appendChild(m); }
 boot();
