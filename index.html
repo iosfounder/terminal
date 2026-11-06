@@ -405,6 +405,31 @@ body:not(.tts) .spk{display:none}
 .gc small{color:var(--bad);min-height:1.2em}
 .gc .btn,.gc .gbtn{width:100%}
 .gg{display:inline-flex;width:24px;height:24px;border-radius:50%;background:#000;color:#fff;align-items:center;justify-content:center;font-size:.85rem}
+.ov#quit{z-index:95}
+.dkb{flex:0 0 auto!important;padding:0 1rem;color:var(--mid);font-size:.95rem!important}
+.btn.sq{width:50px;padding:0;color:var(--gold)}
+.acts{grid-template-columns:1fr 1fr auto}
+.combo.low{color:var(--bad);animation:bump .5s infinite}
+.node.trophy .c{border-radius:30%}
+.node.trophy.open .c{background:var(--gold);border-color:var(--gold);color:#2a1f00}
+.node.trophy.done .c{background:var(--gold-a);border-color:var(--gold);color:var(--gold)}
+.play{display:flex;align-items:center;justify-content:center;gap:1rem;padding:calc(.4rem*var(--k)) 0}
+.pbig{width:calc(5.4rem*var(--k));height:calc(5.4rem*var(--k));border-radius:24px;background:var(--accent);color:#120f17;display:flex;align-items:center;justify-content:center;box-shadow:0 5px 0 #6f6690;transition:transform .1s}
+.pbig:active{transform:translateY(3px);box-shadow:0 2px 0 #6f6690}
+.pbig svg.i{width:46%;height:46%}
+.pbig.go{animation:bump .4s}
+.pslow{width:calc(3.4rem*var(--k));height:calc(3.4rem*var(--k));border-radius:18px;background:var(--accent-a);color:var(--accent);display:flex;align-items:center;justify-content:center}
+.pslow svg.i{width:55%;height:55%}
+body:not(.tts) .play{display:none}
+.fb .ans .ys{margin-top:.2rem;color:var(--mid);text-decoration:line-through;text-decoration-color:rgba(255,143,134,.5);font-size:.95em}
+.fb .ans .yours{margin-top:.25rem;font-size:.95em}
+.fb .ans .dk{background:rgba(134,220,172,.28);border-radius:3px;color:var(--ok)}
+.fb .ans .df{background:rgba(255,143,134,.28);border-radius:3px;color:var(--bad)}
+.story{display:flex;flex-direction:column;gap:calc(.9rem*var(--k));width:100%}
+.story .ln{padding:calc(.6rem*var(--k)) calc(.8rem*var(--k));border-radius:14px;border:1px solid var(--line);background:var(--panel);transition:border-color .2s,background .2s}
+.story .ln.on{border-color:var(--accent);background:var(--accent-a)}
+.story .kl{font-size:calc(1.3rem*var(--k))}
+.story .tr{font-size:calc(.95rem*var(--k));color:var(--mid);margin-top:.2rem}
 @media (min-height:700px) and (min-width:860px){.stage{justify-content:center}.akeys{margin-top:.2rem}.bank{margin-top:1.6rem}.mgrid{margin:0}}
 @media (max-height:600px){#vLearn .stats{display:none}#vLearn{gap:.5rem;padding-top:.5rem;padding-bottom:.5rem}.uh{padding:.35rem .5rem .3rem}}
 @media (max-width:400px){.acts .btn{padding:0 .55rem;gap:.35rem;font-size:.95rem}.acts .btn svg.i{display:none}.stat{padding:.45rem .45rem;gap:.4rem}.stat .ic,.stat .ring{width:28px;height:28px}}
@@ -441,6 +466,9 @@ body:not(.tts) .spk{display:none}
   <symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 3v12"/><polyline points="7.5 10.5 12 15 16.5 10.5"/><path d="M5 19.5h14"/></symbol>
   <symbol id="i-out" viewBox="0 0 24 24"><path d="M15 4h3.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H15"/><polyline points="10 8 6 12 10 16"/><line x1="6" y1="12" x2="16" y2="12"/></symbol>
   <symbol id="i-filter" viewBox="0 0 24 24"><polygon points="3.5 5 20.5 5 14 12.6 14 19 10 21 10 12.6"/></symbol>
+ <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4.5a2.5 2.5 0 0 0 2.6 3.6M17 6h2.5a2.5 2.5 0 0 1-2.6 3.6"/><line x1="12" y1="14" x2="12" y2="18"/><path d="M8.5 21h7l-.8-3h-5.4z"/></symbol>
+  <symbol id="i-turtle" viewBox="0 0 24 24"><path d="M4 15.5c0-3.9 3.1-7 7-7s7 3.1 7 7z"/><path d="M18 13.5h1.5a2 2 0 0 0 0-4H18"/><path d="M6.5 15.5l-1 3M15.5 15.5l1 3M9 8.8l1.5 6.7M13 8.8l-1.5 6.7"/></symbol>
+  <symbol id="i-bksp" viewBox="0 0 24 24"><path d="M21 6H9l-6 6 6 6h12z"/><line x1="16.5" y1="9.5" x2="11.5" y2="14.5"/><line x1="11.5" y1="9.5" x2="16.5" y2="14.5"/></symbol>
   <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18.5h10.5a4 4 0 0 0 .6-8 6 6 0 0 0-11.6 1.4A3.4 3.4 0 0 0 7 18.5z"/></symbol>
 </svg>
 
@@ -624,6 +652,23 @@ function parseTSV(text) {
     e.sk = fold(forms[0]).replace(/^[^\p{L}\p{N}]+/u, '') || fold(forms[0]);
     E.push(e);
   });
+  return applyDialect(E);
+}
+
+/* --------------------------------------------------------- dialect */
+/* Lord's Kréyòl Lalwizyan: no ap/apé progressive; "can / be able" is pe, never ka. */
+const DIALECT = {
+  exclude: ['ka (v. mod.)'],
+  forms: { 'pœ (v. mod)': ['pe', 'pè'] }
+};
+function applyDialect(E) {
+  const ex = new Set(DIALECT.exclude);
+  E.forEach(e => {
+    e.skip = ex.has(e.raw);
+    const add = DIALECT.forms[e.raw];
+    if (add) { e.forms = uniq([...add, ...e.forms]); e.single = e.forms.filter(f => !/\s/.test(f)); e.teach = add[0]; e.fk = new Set(e.single.flatMap(f => { const a = fold(f); return [a, a.replace(/^-+|-+$/g, '')]; })); }
+    if (!e.teach && /^-\S/.test(e.word) && !/\s/.test(e.word)) e.teach = e.word.replace(/^-+/, '');
+  });
   return E;
 }
 
@@ -698,11 +743,24 @@ function Lexicon(E) {
 
 /* -------------------------------------------------------- sentences */
 function makeSentence(lex, s, t, owner, comp) {
-  const { parts, words } = tokenize(s);
+  const tk = tokenize(s), parts = [], words = [];
+  tk.parts.forEach(p => {
+    if (p.w < 0) { parts.push({ x: p.x, w: -1 }); return; }
+    const x = p.x;
+    if (x.includes('-') && !/['’]/.test(x) && lex.one(low(x), owner) < 0) {
+      x.split('-').forEach((q, i) => {
+        if (i > 0) parts.push({ x: '-', w: -1 });
+        if (!q) return;
+        parts.push({ x: q, w: words.length }); words.push({ x: q, sub: i > 0 });
+      });
+    } else { parts.push({ x, w: words.length }); words.push({ x }); }
+  });
   const req = new Set(); let oov = 0;
   words.forEach((w, k) => {
     w.low = low(w.x);
-    const ids = lex.lem(w.x, owner);
+    let ids;
+    if (w.sub) { let r = lex.one('-' + w.low, owner); if (r < 0) r = lex.one(w.low, owner); ids = [r]; }
+    else ids = lex.lem(w.x, owner);
     w.ids = ids.filter(x => x >= 0);
     w.oov = ids.some(x => x < 0);
     w.free = false;
@@ -715,8 +773,9 @@ function makeSentence(lex, s, t, owner, comp) {
     const al = lex.alts(w.x); if (al.length < 2 || al.includes(owner)) return;
     if (!tw) tw = new Set(enWords(t || ''));
     let best = -1, bs = 0, tie = false;
-    al.forEach(i => { const g = new Set(lex.E[i].items.flatMap(x => enWords(x))); let sc = 0; g.forEach(x => { if (tw.has(x)) sc++; }); if (sc > bs) { bs = sc; best = i; tie = false; } else if (sc === bs && sc > 0) tie = true; });
-    if (best >= 0 && !tie) w.ids = [best];
+    const pref = i => !!DIALECT.forms[lex.E[i].raw];
+    al.forEach(i => { const g = new Set(lex.E[i].items.flatMap(x => enWords(x)).filter(x => x !== 'not' && x !== 'no')); let sc = 0; g.forEach(x => { if (tw.has(x)) sc++; }); if (sc > bs || (sc === bs && sc > 0 && pref(i) && !pref(best))) { if (sc > bs) tie = false; bs = sc; best = i; } else if (sc === bs && sc > 0 && !pref(best)) tie = true; });
+    if (best >= 0 && (!tie || pref(best))) w.ids = [best];
   });
   if (owner != null && owner >= 0 && !lex.E[owner].multi && !words.some(w => w.ids.includes(owner))) {
     const oe = lex.E[owner];
@@ -753,11 +812,12 @@ const START = ['je (pron.)','to (pron.)','li (pron.)','koné (1. v., 2. aux)','p
   'yé (pron.)','olé (voulé) (v.)','ça (pron.)','alé (v.)','té (pvm.)',
   'kwa (conj.)','ki (conj.)','kan (adv. interr., conj., n.)','kòfær (conj.)','komen (conj., adj.)',
   'kèl (conj.)','moun (n.)','wa (v.)','gin (v.)','ki lè li yé? (exp.)',
-  'fé (v.)','di (v.)','çé (v.)','bon (adj.)','byin (1. adj., 2. adv)',
+  'fé (v.)','di (v.)','çé (v.)','bon (adj.)','pœ (v. mod)',
   'mò, mwa (pron.)','twa (1. n., 2. pron.)','mô (det.)','tô (det.)','(la)mézon (n.)',
   'va, a (pvm., v.)','vini, vyin (v.)','isit (prep.)','avèk (conj.)','sô (det.)'];
 const LESSON = 5, UNIT = 5;
 function buildCourse(E, lex, S, coreKeys) {
+  S.forEach(x => { x.bad = x.words.some(w => w.ids.some(i => E[i].skip)); });
   const f = new Float64Array(E.length);
   S.forEach(x => { if (x.comp) return; x.words.forEach(w => w.ids.forEach(i => { f[i] += 1; })); });
   E.forEach(e => { e.f = f[e.id]; });
@@ -776,12 +836,12 @@ function buildCourse(E, lex, S, coreKeys) {
       req[e.id] = [...r];
     }
   });
-  const usable = S.filter(x => x.oov === 0 && x.n <= 9 && !x.comp);
+  const usable = S.filter(x => x.oov === 0 && x.n <= 9 && !x.comp && !x.bad);
   const unk = usable.map(x => new Set(x.req)), inv = E.map(() => []);
   usable.forEach((x, k) => x.req.forEach(i => inv[i].push(k)));
   const r = new Int32Array(E.length);
   unk.forEach(st => { if (st.size === 1) r[[...st][0]]++; });
-  const known = new Uint8Array(E.length), order = [], left = new Set(E.map(e => e.id));
+  const known = new Uint8Array(E.length), order = [], left = new Set(E.filter(e => !e.skip).map(e => e.id));
   const take = b => {
     left.delete(b); known[b] = 1; order.push(b);
     inv[b].forEach(k => { const st = unk[k]; if (!st.has(b)) return; if (st.size === 1) r[b]--; st.delete(b); if (st.size === 1) r[[...st][0]]++; });
@@ -802,9 +862,9 @@ function buildCourse(E, lex, S, coreKeys) {
   const units = [];
   for (let i = 0; i < lessons.length; i += UNIT) { const ls = lessons.slice(i, i + UNIT); ls.forEach(l => { l.u = units.length; }); units.push({ i: units.length, ls: ls.map(l => l.i), core: ls.some(l => l.ids.some(x => core.has(x))) }); }
   // sentence readiness: lesson at which every required word has been taught
-  S.forEach(x => { let m = -1; if (x.oov) m = 1e9; else x.req.forEach(i => { m = Math.max(m, lessonOf[i]); }); x.ready = m; });
+  S.forEach(x => { let m = -1; if (x.oov || x.bad) m = 1e9; else x.req.forEach(i => { m = Math.max(m, lessonOf[i] < 0 ? 1e9 : lessonOf[i]); }); x.ready = m; });
   const hasIdx = E.map(() => []);
-  S.forEach(x => x.has.forEach(i => hasIdx[i].push(x.id)));
+  S.forEach(x => { if (!x.bad) x.has.forEach(i => hasIdx[i].push(x.id)); });
   const readyAt = lessons.map(() => []);
   S.forEach(x => { if (x.ready >= 0 && x.ready < lessons.length) readyAt[x.ready].push(x.id); });
   return { order, lessons, units, lessonOf, core, hasIdx, readyAt, coreCount: [...core].length };
@@ -821,7 +881,7 @@ const lev = (a, b) => {
   for (let i = 1; i <= a.length; i++) { const c = [i]; for (let j = 1; j <= b.length; j++) c[j] = Math.min(p[j] + 1, c[j - 1] + 1, p[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); p = c; }
   return p[b.length];
 };
-const normKL = s => low(s).replace(/[«»“”"¿?¡!.,;:()\[\]…]/g, ' ').replace(/\s*-\s*/g, '-').replace(/\s+/g, ' ').trim();
+const normKL = s => low(s).replace(/[«»“”"¿?¡!.,;:()\[\]…]/g, ' ').replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
 /* answers: array of acceptable Kréyòl strings */
 function gradeKL(input, answers) {
   const a = normKL(input);
@@ -936,16 +996,18 @@ function toFr(text) {
 }
 /* rough sound key so a French transcript can be compared with the Kréyòl target */
 function sndKey(t) {
-  let s = String(t || '').toLowerCase().replace(/ç/g, 's').replace(/œ/g, 'e');
+  let s = String(t || '').toLowerCase().replace(/ç/g, 's').replace(/œ/g, 'e').replace(/\bc['’]/g, 's').replace(/\bqu['’]/g, 'k');
   s = s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/['’\-]/g, ' ').replace(/[^a-z ]+/g, ' ');
   return s.split(/\s+/).filter(Boolean).map(w => {
     w = w.replace(/tch/g, 'S').replace(/ch/g, 'S').replace(/sh/g, 'S').replace(/ph/g, 'f').replace(/gn/g, 'N').replace(/qu/g, 'k').replace(/gu(?=[eiy])/g, 'g')
       .replace(/c(?=[eiy])/g, 's').replace(/c/g, 'k').replace(/x/g, 'ks').replace(/h/g, '')
       .replace(/eaux?|aux?/g, 'o').replace(/oi/g, 'wa').replace(/ou/g, 'U').replace(/U(?=[aeioy])/g, 'w')
+      .replace(/(ain|ein)(?![aeiouyU])/g, 'I')
       .replace(/aient$|ais$|ait$|ai|ei|ey/g, 'e').replace(/(er|ez|et)$/g, 'e')
       .replace(/(ain|ein|in|im|yn|un)(?![aeiouyU])/g, 'I').replace(/(an|am|en|em)(?![aeiouyU])/g, 'A').replace(/(on|om)(?![aeiouyU])/g, 'O')
       .replace(/y/g, 'i').replace(/([a-zA-Z])\1+/g, '$1');
-    w = w.replace(/([aeiouIAOU])(s|t|d|z|p)$/, '$1').replace(/([^aeiouIAOU])e$/, '$1').replace(/eu/g, 'e');
+    w = w.replace(/eu/g, 'e').replace(/([aeiouIAOU])(s|t|d|z|p)$/, '$1');
+    if (w.length > 2) w = w.replace(/([^aeiouIAOU])e$/, '$1');
     return w;
   }).join(' ');
 }
@@ -1064,8 +1126,21 @@ function Course(E, lex, S, course) {
     return out.length >= 3 ? { type: 'match', ids: out.slice(0, 5), targets: out.slice(0, 5) } : null;
   }
   const typeStep = (id, dir) => ({ type: 'type', dir, w: id, targets: [id] });
+  /* sentence fully known by knownFn, short, containing one of ids, for listening */
+  function listenStep(ids, knownFn, used, R, pool, maxN = 8) {
+    for (const id of ids) {
+      const x = C.hasIdx[id].map(sentOf).filter(x => !used.has(x.id) && x.n >= 2 && x.n <= maxN && hasW(x, id) && sentKnownBy(x, knownFn)).sort((a, b) => a.n - b.n)[0];
+      if (x) { used.add(x.id); return Object.assign(buildEx(x, id, pool, R), { listen: true }); }
+    }
+    return null;
+  }
+  const repeatStep = id => ({ type: 'speak', repeat: true, w: id, targets: [] });
+  const dictStep = id => ({ type: 'type', dir: 'dict', w: id, targets: [id] });
+  /* A lesson: meet each word, hear it, say it, use it in sentences straight away,
+     then pull it back from memory in mixed formats. opts.warm = older words due for review. */
   function lesson(L, opts = {}) {
     const R = rng((opts.seed || 7) * 7919 + L * 104729);
+    const audio = opts.audio !== false, mic = !!opts.mic;
     const ids = C.lessons[L].ids.slice();
     const before = new Set(); for (let i = 0; i < L; i++) C.lessons[i].ids.forEach(x => before.add(x));
     const lessonSet = new Set(ids);
@@ -1083,26 +1158,64 @@ function Course(E, lex, S, course) {
       return { type: 'intro', w: id, s: best ? best.x.id : null, targets: [] };
     };
     const known3 = shuffle(prior.filter(i => !E[i].multi), R);
-    ids.forEach((id, k) => {
-      push(intro(id));
-      if (k === 1) push(matchStep([ids[0], ids[1], ...known3.slice(0, 3)], R) || null);
-      if (k === 2 && !steps.some(s => s.type === 'match')) push(matchStep(ids.slice(0, 3).concat(known3.slice(0, 2)), R));
-      if (k >= 1) push(sent(ids[k - 1], k % 2 ? 'build' : 'fill') || typeStep(ids[k - 1], 'en2kl'));
-      if (k === 2) push(typeStep(ids[0], 'en2kl'));
-      if (k === 3) push(typeStep(ids[1], 'kl2en'));
-    });
-    const last = ids[ids.length - 1];
-    push(sent(last, 'build') || typeStep(last, 'en2kl'));
+    // warm-up: older words that are due, pulled from memory before anything new
+    (opts.warm || []).slice(0, 2).forEach((id, k) => { if (E[id] && !lessonSet.has(id)) push(Object.assign(k ? typeStep(id, 'en2kl') : typeStep(id, 'kl2en'), { warm: true })); });
+    const [w0, w1, w2, w3, w4] = ids;
+    push(intro(w0)); if (mic && !E[w0].multi) push(repeatStep(w0));
+    if (w1 != null) { push(intro(w1)); push(matchStep([w0, w1, ...known3.slice(0, 3)], R)); }
+    push(sent(w0, 'build') || typeStep(w0, 'en2kl'));
+    if (w2 != null) { push(intro(w2)); if (mic && !E[w2].multi) push(repeatStep(w2)); if (!steps.some(s => s.type === 'match')) push(matchStep([w0, w1, w2, ...known3.slice(0, 2)].filter(x => x != null), R)); }
+    push(typeStep(w0, 'en2kl'));
+    if (w1 != null) push(sent(w1, 'fill') || typeStep(w1, 'kl2en'));
+    if (w3 != null) push(intro(w3));
+    push((audio && listenStep([w2, w3, w1, w0].filter(x => x != null), knownFn, used, R, pool)) || (w2 != null ? sent(w2, 'build') : null));
+    if (w1 != null) push(typeStep(w1, 'kl2en'));
+    if (w4 != null) push(intro(w4));
+    if (w3 != null) push(sent(w3, 'fill') || typeStep(w3, 'en2kl'));
     push(matchStep(shuffle(ids, R).concat(known3.slice(3, 6)), R));
-    if (ids[3] != null) push(typeStep(ids[3], 'en2kl'));
-    // sentence that joins two or more of this lesson's words
+    const last = ids[ids.length - 1];
+    push(audio && !E[last].multi ? dictStep(last) : typeStep(last, 'en2kl'));
+    // a sentence that joins two or more of this lesson's words
     const joint = C.readyAt[L].map(sentOf).filter(x => !used.has(x.id) && x.n <= 9 && x.n >= 2 && [...lessonSet].filter(i => hasW(x, i)).length >= 2).sort((a, b) => a.n - b.n)[0];
     if (joint) { used.add(joint.id); push(buildEx(joint, ids.find(i => hasW(joint, i)), pool, R)); }
-    else push(sent(ids[R() * ids.length | 0], 'fill'));
+    else push(sent(last, 'build') || sent(ids[R() * ids.length | 0], 'fill'));
     const sp = C.readyAt[L].map(sentOf).filter(x => x.n <= 9 && x.n >= 2 && [...lessonSet].some(i => hasW(x, i)))[0];
-    push(sp ? { type: 'speak', s: sp.id, targets: ids.filter(i => hasW(sp, i)) } : { type: 'speak', w: ids[0], targets: [ids[0]] });
+    push(sp ? { type: 'speak', s: sp.id, targets: ids.filter(i => hasW(sp, i)) } : { type: 'speak', w: w0, targets: [w0] });
     return steps;
   }
+  /* end-of-unit review: read and hear the unit in context, then mixed recall of every word */
+  function unitReview(U, opts = {}) {
+    const R = rng((opts.seed || 11) * 977 + U * 31);
+    const audio = opts.audio !== false;
+    const lastL = C.units[U].ls[C.units[U].ls.length - 1];
+    const ids = []; C.units[U].ls.forEach(l => ids.push(...C.lessons[l].ids));
+    const knownFn = i => C.lessonOf[i] >= 0 && C.lessonOf[i] <= lastL;
+    const pool = ids.slice();
+    const used = new Set(), steps = [];
+    const story = shuffle(C.hasIdx.length ? ids.flatMap(id => C.hasIdx[id]) : [], R).map(sentOf).filter((x, k, a) => a.indexOf(x) === k && x.n >= 3 && x.n <= 11 && sentKnownBy(x, knownFn)).slice(0, 4);
+    story.forEach(x => used.add(x.id));
+    const W = shuffle(ids.filter(i => !E[i].multi), R), Ph = ids.filter(i => E[i].multi);
+    const mix = [];
+    for (let i = 0; i + 3 <= W.length && mix.filter(s => s.type === 'match').length < 2; i += 5) { const m = matchStep(W.slice(i, i + 5), R); if (m) mix.push(m); }
+    const plan = ['listen', 'build', 'fill', 'en2kl', 'dict', 'listen', 'kl2en', 'fill', 'build', 'en2kl', 'speak', 'speak'];
+    plan.forEach((t, k) => {
+      const id = W[(k + 2) % Math.max(1, W.length)] ?? ids[k % ids.length];
+      let st = null;
+      if (t === 'listen') st = audio ? listenStep(shuffle(ids, R), knownFn, used, R, pool, 9) : null;
+      else if (t === 'dict') st = audio ? dictStep(id) : null;
+      else if (t === 'en2kl' || t === 'kl2en') st = typeStep(id, t);
+      else if (t === 'speak') { const x = C.hasIdx[id].map(sentOf).find(x => !used.has(x.id) && x.n >= 2 && x.n <= 9 && sentKnownBy(x, knownFn)); if (x) { used.add(x.id); st = { type: 'speak', s: x.id, targets: [id] }; } }
+      else st = sentenceStep(id, lastL, knownFn, used, R, t, pool);
+      if (st) mix.push(st);
+    });
+    Ph.slice(0, 2).forEach(id => { const st = sentenceStep(id, lastL, knownFn, used, R, 'build', pool); if (st) mix.push(st); });
+    const out = story.length >= 2 ? [{ type: 'read', ss: story.map(x => x.id), targets: [] }] : [];
+    const bag = shuffle(mix, R);
+    while (bag.length) { const prev = out.length ? out[out.length - 1].type + (out[out.length - 1].dir || '') + (out[out.length - 1].listen ? 'l' : '') : ''; let j = bag.findIndex(s => s.type + (s.dir || '') + (s.listen ? 'l' : '') !== prev); if (j < 0) j = 0; out.push(bag.splice(j, 1)[0]); }
+    return out;
+  }
+  /* speed round board: five learned words to pair at speed */
+  function blitzBoard(learned, R) { return matchStep(shuffle(learned.filter(i => E[i] && !E[i].multi), R).slice(0, 12), R); }
   /* review: recs maps entry id -> record */
   function review(recs, now, mode, opts = {}) {
     const R = rng(opts.seed || (now / 6e4 | 0));
@@ -1123,8 +1236,11 @@ function Course(E, lex, S, course) {
     pick.filter(i => !inMatch.has(i)).forEach((id, k) => {
       const s = recs[id][0], L = C.lessonOf[id];
       let st = null;
-      const want = s < 3 ? ['kl2en', 'fill', 'build'][k % 3] : s < 12 ? ['fill', 'en2kl', 'build'][k % 3] : ['speak', 'en2kl', 'build'][k % 3];
-      if (want === 'kl2en' || want === 'en2kl') st = typeStep(id, want);
+      let want = s < 3 ? ['kl2en', 'fill', 'build', 'dict'][k % 4] : s < 12 ? ['fill', 'en2kl', 'listen', 'build'][k % 4] : ['speak', 'en2kl', 'listen', 'build'][k % 4];
+      if (opts.audio === false) want = want === 'dict' ? 'en2kl' : want === 'listen' ? 'build' : want;
+      if (want === 'dict') st = E[id].multi ? typeStep(id, 'en2kl') : dictStep(id);
+      else if (want === 'listen') st = listenStep([id], knownFn, used, R, pool, 9) || sentenceStep(id, L, knownFn, used, R, 'build', pool);
+      else if (want === 'kl2en' || want === 'en2kl') st = typeStep(id, want);
       else if (want === 'speak') {
         const x = C.hasIdx[id].map(sentOf).filter(x => !used.has(x.id) && x.n >= 2 && x.n <= 9 && hasW(x, id) && sentKnownBy(x, knownFn))[0];
         if (x) { used.add(x.id); st = { type: 'speak', s: x.id, targets: [id] }; }
@@ -1169,10 +1285,10 @@ function Course(E, lex, S, course) {
     });
     return steps;
   }
-  return { lesson, review, jump, unitTest, answersFor, words };
+  return { lesson, review, jump, unitTest, unitReview, blitzBoard, answersFor, words };
 }
 
-G.DK = { toFr, sndKey, speechScore, dec, fold, loose, low, uniq, parseTSV, tokenize, Lexicon, buildSentences, makeSentence, buildCourse, Course, gradeKL, gradeEN, enWords, normKL, lev, rng, shuffle, recNew, recall, schedule, strength, isWeak, DAY, CATS, START, LESSON, UNIT };
+G.DK = { DIALECT, toFr, sndKey, speechScore, dec, fold, loose, low, uniq, parseTSV, tokenize, Lexicon, buildSentences, makeSentence, buildCourse, Course, gradeKL, gradeEN, enWords, normKL, lev, rng, shuffle, recNew, recall, schedule, strength, isWeak, DAY, CATS, START, LESSON, UNIT };
 })(typeof globalThis !== 'undefined' ? globalThis : window);
 
 </script>
@@ -1195,7 +1311,7 @@ const ROOT = /\/(index\.html)?$/.test(location.pathname);
 
 /* ================================================================ state */
 const LS = 'dk2-state';
-const fresh = () => ({ v: 1, rst: 0, w: {}, days: {}, set: { goal: 50, snd: 1, voice: 1, t: 0 }, stars: {}, mig: 0, uid: '', placed: 0, t: 0 });
+const fresh = () => ({ v: 1, rst: 0, w: {}, days: {}, set: { goal: 50, snd: 1, voice: 1, t: 0 }, stars: {}, mig: 0, uid: '', placed: 0, cp: {}, best: {}, t: 0 });
 let st = (() => { try { const v = JSON.parse(localStorage.getItem(LS)); if (v && v.v === 1) { const f = fresh(); return Object.assign(f, v, { set: Object.assign(f.set, v.set || {}) }); } } catch (e) {} return fresh(); })();
 function save(push = true) { st.t = now(); try { localStorage.setItem(LS, JSON.stringify(st)); } catch (e) {} if (push) pushLater(); }
 if (!st.mig) { try { (JSON.parse(localStorage.getItem('dk-stars') || '[]') || []).forEach(k => { const a = String(k).split('|')[0]; if (a && !(a in st.stars)) st.stars[a] = 1; }); } catch (e) {} st.mig = 1; save(false); }
@@ -1373,19 +1489,21 @@ function statsHTML() {
 function actsHTML() {
   const d = dueN(), w = weakN(), any = learnedN() > 0;
   return '<div class="acts"><button class="btn' + (d ? ' acc' : '') + '" id="bRev" type="button"' + (any ? '' : ' disabled') + '>' + ico('rev') + 'Review<span class="cnt' + (d ? '' : ' z') + '">' + d + '</span></button>' +
-    '<button class="btn" id="bWeak" type="button"' + (any ? '' : ' disabled') + '>' + ico('target') + 'Weak words<span class="cnt z">' + w + '</span></button></div>';
+    '<button class="btn" id="bWeak" type="button"' + (any ? '' : ' disabled') + '>' + ico('target') + 'Weak words<span class="cnt z">' + w + '</span></button>' +
+    '<button class="btn sq" id="bBlz" type="button" aria-label="Speed round" title="Speed round"' + (learnedN() >= 5 ? '' : ' disabled') + '>' + ico('bolt', 'f') + '</button></div>';
 }
 function weekHTML() {
   const d = new Date(); d.setDate(d.getDate() - 6); let h = '<div class="week">';
   for (let i = 0; i < 7; i++) { const k = dayKey(d.getTime()), on = st.days[k] > 0, td = i === 6; h += '<div><i class="' + (on ? 'on' : '') + (td ? ' td' : '') + '">' + (on ? ico('check') : '') + '</i>' + 'SMTWTFS'[d.getDay()] + '</div>'; d.setDate(d.getDate() + 1); }
   return h + '</div>';
 }
+const tw = e => (e.teach || e.single[0] || e.forms[0]).replace(/^-+/, '');
 function nextHTML(fo) {
   if (fo >= C.lessons.length) return '';
   const ids = C.lessons[fo].ids;
-  return '<div class="next"><small>Up next</small><b>Unit ' + (C.lessons[fo].u + 1) + ' · Lesson ' + (fo - C.units[C.lessons[fo].u].ls[0] + 1) + '</b><div class="ws">' + ids.map(i => '<span>' + esc(E[i].single[0] || E[i].forms[0]) + '</span>').join('') + '</div><button class="btn pri" id="bNext" type="button">Start</button></div>';
+  return '<div class="next"><small>Up next</small><b>Unit ' + (C.lessons[fo].u + 1) + ' · Lesson ' + (fo - C.units[C.lessons[fo].u].ls[0] + 1) + '</b><div class="ws">' + ids.map(i => '<span>' + esc(tw(E[i])) + '</span>').join('') + '</div><button class="btn pri" id="bNext" type="button">Start</button></div>';
 }
-function unitTitle(u) { const ids = C.lessons[C.units[u].ls[0]].ids.slice(0, 4); return ids.map(i => E[i].single[0] || E[i].forms[0]).join(' · '); }
+function unitTitle(u) { const ids = C.lessons[C.units[u].ls[0]].ids.slice(0, 4); return ids.map(i => tw(E[i])).join(' · '); }
 function renderLearn() {
   if (!READY) return;
   const fo = firstOpen(), cu = fo < C.lessons.length ? C.lessons[fo].u : C.units.length - 1;
@@ -1406,28 +1524,35 @@ function renderLearn() {
   if ($('bJump')) $('bJump').onclick = () => startJump(viewU);
   document.querySelectorAll('#bRev').forEach(b => b.onclick = () => startReview('review'));
   document.querySelectorAll('#bWeak').forEach(b => b.onclick = () => startReview('weak'));
+  document.querySelectorAll('#bBlz').forEach(b => b.onclick = startBlitz);
   layoutPath();
   renderHeader();
 }
 function layoutPath() {
   const box = $('path'); if (!box || !C) return;
   const u = C.units[viewU], fo = firstOpen();
-  const W = box.clientWidth, H = box.clientHeight, n = u.ls.length;
+  const W = box.clientWidth, H = box.clientHeight, n = u.ls.length + 1;
   if (!W || !H) return;
   const top = 30, slot = (H - top - 4) / n, ns = Math.max(38, Math.min(74, slot * 0.58, W * 0.2));
   box.style.setProperty('--ns', ns + 'px');
-  const amp = Math.min(W * 0.26, 120), offs = [0, 0.7, 0.15, -0.7, -0.1];
-  const pts = u.ls.map((L, k) => ({ L, x: W / 2 + offs[k % 5] * amp, y: top + slot * (k + 0.5) - 8 }));
+  const amp = Math.min(W * 0.26, 120), offs = [0, 0.7, 0.15, -0.7, -0.35, 0.3];
+  const pts = u.ls.concat(['T']).map((L, k) => ({ L, x: W / 2 + offs[k % 6] * amp, y: top + slot * (k + 0.5) - 8 }));
   let svg = '<svg class="trail" viewBox="0 0 ' + W + ' ' + H + '"><path d="' + pts.map((p, k) => (k ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1)).join(' ') + '"/></svg>';
   let h = svg;
+  const allDone = u.ls.every(lessonDone), cpDone = !!(st.cp && st.cp[viewU]);
   pts.forEach((p, k) => {
+    if (p.L === 'T') {
+      h += '<button class="node trophy ' + (cpDone ? 'done' : allDone ? 'open' : 'lock') + '" type="button" data-t="1" style="left:' + p.x.toFixed(1) + 'px;top:' + p.y.toFixed(1) + 'px">' + (allDone && !cpDone ? '<span class="go">Review</span>' : '') + '<span class="c">' + ico(allDone ? 'trophy' : 'lock') + '</span><span class="lb">Unit review</span></button>';
+      return;
+    }
     const L = p.L, done = lessonDone(L), open = L === fo, lock = !done && !open;
     const cls = 'node ' + (done ? 'done' : open ? 'open' : 'lock');
-    const lbl = C.lessons[L].ids.slice(0, 2).map(i => E[i].single[0] || E[i].forms[0]).join(' · ');
+    const lbl = C.lessons[L].ids.slice(0, 2).map(i => tw(E[i])).join(' · ');
     h += '<button class="' + cls + '" type="button" data-l="' + L + '" style="left:' + p.x.toFixed(1) + 'px;top:' + p.y.toFixed(1) + 'px">' + (open ? '<span class="go">Start</span>' : '') + '<span class="c">' + ico(done ? 'check' : lock ? 'lock' : 'spark') + '</span><span class="lb">' + esc(lbl) + '</span></button>';
   });
   box.innerHTML = h;
   box.querySelectorAll('.node').forEach(b => b.onclick = () => {
+    if (b.dataset.t) { if (b.classList.contains('lock')) { b.animate([{ transform: 'translate(-50%,-50%) rotate(0)' }, { transform: 'translate(-50%,-50%) rotate(-8deg)' }, { transform: 'translate(-50%,-50%) rotate(8deg)' }, { transform: 'translate(-50%,-50%) rotate(0)' }], { duration: 300 }); return; } startUnitReview(viewU); return; }
     const L = +b.dataset.l;
     if (b.classList.contains('lock')) { b.animate([{ transform: 'translate(-50%,-50%) rotate(0)' }, { transform: 'translate(-50%,-50%) rotate(-8deg)' }, { transform: 'translate(-50%,-50%) rotate(8deg)' }, { transform: 'translate(-50%,-50%) rotate(0)' }], { duration: 300 }); buzz(30); return; }
     startLesson(L);
@@ -1456,9 +1581,13 @@ function openUnits() {
 
 /* ============================================================== player */
 const P = { on: false };
-function startLesson(L) { const steps = K.lesson(L, { seed: (now() / 1000 | 0) % 997 + 1 }); startSession('lesson', steps, { L }); }
+const canMic = () => !!SRC && !P.noSR && window.__dkSR !== false;
+function warmIds(L) { const r = recs(), t = now(), mine = new Set(C.lessons[L].ids); return Object.keys(r).map(Number).filter(i => !mine.has(i) && r[i][1] * 6e4 <= t && !E[i].multi).sort((a, b) => DK.recall(r[a], t) - DK.recall(r[b], t)).slice(0, 2); }
+function startLesson(L) { const steps = K.lesson(L, { seed: (now() / 1000 | 0) % 997 + 1, audio: TTS.has(), mic: canMic(), warm: warmIds(L) }); startSession('lesson', steps, { L }); }
+function startUnitReview(U) { startSession('unit', K.unitReview(U, { seed: (now() / 1000 | 0) % 997 + 1, audio: TTS.has() }), { U }); }
+function startBlitz() { const ids = Object.keys(recs()).map(Number).filter(i => !E[i].multi); if (ids.length < 5) return; const b = K.blitzBoard(ids, Math.random); if (!b) return; startSession('blitz', [b], {}); }
 function startReview(mode) {
-  let steps = K.review(recs(), now(), mode, { until: endOfToday() });
+  let steps = K.review(recs(), now(), mode, { until: endOfToday(), audio: TTS.has() });
   let m = mode;
   if (!steps.length && mode === 'review') { steps = K.review(recs(), now(), 'weak'); m = 'weak'; }
   if (!steps.length) { steps = K.review(recs(), now(), 'practice'); m = 'practice'; }
@@ -1473,11 +1602,12 @@ function startSession(mode, steps, meta) {
   const el = overlay('pl', '<div class="ph"><button class="rb" id="pX" type="button" aria-label="Close">' + ico('x') + '</button><div class="pbar"><i id="pB"></i></div><div class="combo" id="pC"></div><div class="hearts" id="pH"></div></div><div class="stage" id="stg"></div><div id="kbx"></div><div class="pf" id="pf"></div><div class="fb" id="fb"><div class="in"></div></div>', '');
   el.querySelector('#pX').onclick = quitAsk;
   hearts();
+  if (mode === 'blitz') { P.left = 60; P.pairs = 0; clearInterval(P.clock); const tick = () => { const c = $('pC'); if (!P.on || P.fin) { clearInterval(P.clock); return; } if (c) { c.innerHTML = ico('bolt', 'f') + P.left + 's'; c.classList.toggle('low', P.left <= 10); } if (P.left <= 0) { clearInterval(P.clock); finish(); return; } P.left--; }; tick(); P.clock = setInterval(tick, 1000); }
   nextStep();
 }
 function hearts() { const h = $('pH'); if (!h) return; if (P.lives == null) { h.innerHTML = ''; return; } h.innerHTML = [0, 1, 2].map(i => ico('heart', i < P.lives ? 'f' : 'lost')).join(''); }
 function progress() { const b = $('pB'); if (b) b.style.width = (P.i / P.steps.length * 100).toFixed(1) + '%'; }
-function combo() { const c = $('pC'); if (!c) return; if (P.combo >= 3) { c.innerHTML = ico('bolt', 'f') + P.combo; c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump'); } else c.innerHTML = ''; }
+function combo() { const c = $('pC'); if (!c || P.mode === 'blitz') return; if (P.combo >= 3) { c.innerHTML = ico('bolt', 'f') + P.combo; c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump'); } else c.innerHTML = ''; }
 function quitAsk() {
   if (!P.on) return;
   if (!P.answered || P.fin) { endPlayer(); return; }
@@ -1486,27 +1616,31 @@ function quitAsk() {
   el.querySelector('[data-k]').onclick = () => closeOv('quit');
   el.querySelector('[data-q]').onclick = () => { closeOv('quit'); endPlayer(); };
 }
-function endPlayer() { const wasPlace = P.mode === 'place' && !P.fin; P.on = false; TTS.stop(); closeOv('pl', true); closeOv('quit', true); renderAll(); if (wasPlace) openPlace(); }
+function endPlayer() { const wasPlace = P.mode === 'place' && !P.fin; P.on = false; clearInterval(P.clock); TTS.stop(); closeOv('pl', true); closeOv('quit', true); renderAll(); if (wasPlace) openPlace(); }
 function setFoot(html) { const f = $('pf'); f.innerHTML = html; return f; }
 function nextStep() {
   if (!P.on) return;
   progress();
   if (P.mode === 'jump' && P.lives <= 0) return finish();
   if (P.mode === 'place' && P.i >= P.steps.length && !placeRound()) return finish();
+  if (P.mode === 'blitz' && P.i >= P.steps.length) { if (P.left <= 0) return finish(); const b = K.blitzBoard(Object.keys(recs()).map(Number), Math.random); if (b) P.steps.push(b); }
   if (P.i >= P.steps.length) return finish();
-  const step = P.steps[P.i];
+  let step = P.steps[P.i];
+  const noMic = !SRC || P.noSR || window.__dkSR === false;
+  if (step.repeat && noMic) { P.i++; return nextStep(); }
+  if (!TTS.has() && (step.listen || step.dir === 'dict')) { step = P.steps[P.i] = Object.assign({}, step, step.listen ? { listen: false } : { dir: 'en2kl' }); }
   TTS.stop(); $('kbx').innerHTML = '';
   const stg = $('stg');
-  stg.className = 'stage' + (step.type === 'intro' || step.type === 'speak' ? ' mid' : ''); void stg.offsetWidth; stg.classList.add('enter');
+  stg.className = 'stage' + (step.type === 'intro' || step.type === 'speak' || step.type === 'read' ? ' mid' : ''); void stg.offsetWidth; stg.classList.add('enter');
   stg.innerHTML = '';
   $('fb').className = 'fb';
-  const R = { intro, match, build, type: typeEx, fill, speak }[step.type];
+  const R = step.repeat ? repeat : { intro, match, build, type: typeEx, fill, speak, read }[step.type];
   P.cur = R(step, stg);
   fit(stg, 0.5);
   const cur = P.cur; if (cur && cur.focus) setTimeout(() => { if (P.cur === cur && P.on) cur.focus(); }, 60);
 }
 function checkBtn(ctrl) {
-  const f = setFoot((P.mode === 'place' ? '<button class="btn ghost" id="pD" type="button">Don\'t know</button>' : '') + '<button class="btn pri" id="pK" type="button" disabled>Check</button>');
+  const f = setFoot('<button class="btn ghost dkb" id="pD" type="button">Don\'t know</button><button class="btn pri" id="pK" type="button" disabled>Check</button>');
   const b = f.querySelector('#pK');
   const dk = f.querySelector('#pD');
   if (dk) dk.onclick = () => { b.dataset.done = 1; const res = ctrl.check(); res.ok = false; res.near = false; settle(res); };
@@ -1519,7 +1653,7 @@ function settle(res) {
   P.answered = true; P.tried++;
   let xp = 0;
   if (res.ok) { P.ok++; P.combo++; P.best = Math.max(P.best, P.combo); xp = first ? 2 : 1; P.xp += xp; SFX.ok(); }
-  else { P.mistakes++; P.combo = 0; if (P.lives != null) { P.lives--; hearts(); } if (first && step.type !== 'match' && P.mode !== 'jump' && P.mode !== 'place') P.steps.push(Object.assign({}, step, { req: 1 })); SFX.bad(); buzz(60); }
+  else { P.mistakes++; P.combo = 0; if (P.lives != null) { P.lives--; hearts(); } if (first && step.type !== 'match' && !step.repeat && P.mode !== 'jump' && P.mode !== 'place' && P.mode !== 'blitz') P.steps.push(Object.assign({}, step, { req: 1 })); SFX.bad(); buzz(60); }
   if (P.mode === 'place') P.meta.pl.res.push(!!res.ok);
   const g = res.ok ? ((res.near || !first) ? 1 : 2) : 0;
   (res.grades || (step.targets || []).map(id => [id, g])).forEach(([id, gg]) => { const c = P.grades.get(id); P.grades.set(id, c == null ? gg : Math.min(c, gg)); });
@@ -1556,6 +1690,11 @@ function finish() {
   if (mode === 'lesson') {
     C.lessons[P.meta.L].ids.forEach(id => { const g = P.grades.has(id) ? P.grades.get(id) : 2, k = E[id].key, r = st.w[k]; st.w[k] = r ? DK.schedule(r, g, t) : DK.recNew(t, g === 2 ? 1 : g === 1 ? 0.7 : 0.5); });
     P.xp += 5 + (P.mistakes ? 0 : 5);
+  } else if (mode === 'blitz') {
+    P.xp = P.pairs; st.best = st.best || {}; P.newBest = P.pairs > (st.best.blitz || 0); if (P.newBest) st.best.blitz = P.pairs;
+  } else if (mode === 'unit') {
+    P.grades.forEach((g, id) => { const k = E[id].key; if (st.w[k]) st.w[k] = DK.schedule(st.w[k], g, t); });
+    st.cp = st.cp || {}; st.cp[P.meta.U] = t; P.xp += 15;
   } else if (mode === 'place') {
     const h = P.meta.pl.pass; let k = 0;
     if (h >= 0) { const lastL = C.units[h].ls[C.units[h].ls.length - 1]; for (let L = 0; L <= lastL; L++) C.lessons[L].ids.forEach(id => { const key = E[id].key; if (st.w[key]) return; const g = P.grades.get(id); st.w[key] = DK.recNew(t, g === 2 ? 7 + (k % 10) : 3 + (k % 12)); k++; }); }
@@ -1576,14 +1715,19 @@ function finish() {
   const goalNow = before < st.set.goal && xpToday() >= st.set.goal;
   progress(); $('pB').style.width = '100%';
   const secs = Math.round((t - P.t0) / 1000), acc = P.tried ? Math.round(P.ok / P.tried * 100) : 100;
-  const title = mode === 'place' ? 'You start at Unit ' + (viewU + 1) : mode === 'lesson' ? 'Lesson complete' : mode === 'jump' ? (pass ? 'Unit ' + (P.meta.U + 1) + ' unlocked' : 'Not yet') : 'Review complete';
-  const ws = mode === 'lesson' ? C.lessons[P.meta.L].ids : mode === 'place' ? [] : [...P.grades.keys()].slice(0, 14);
+  const title = mode === 'blitz' ? (P.newBest ? 'New best' : 'Speed round') : mode === 'unit' ? 'Unit ' + (P.meta.U + 1) + ' reviewed' : mode === 'place' ? 'You start at Unit ' + (viewU + 1) : mode === 'lesson' ? 'Lesson complete' : mode === 'jump' ? (pass ? 'Unit ' + (P.meta.U + 1) + ' unlocked' : 'Not yet') : 'Review complete';
+  const ws = mode === 'lesson' ? C.lessons[P.meta.L].ids : mode === 'place' || mode === 'blitz' ? [] : [...P.grades.keys()].slice(0, 14);
   const stg = $('stg'); $('fb').className = 'fb'; stg.className = 'stage mid';
   stg.innerHTML = '<div class="res"><div class="medal"><img src="/icon.png" alt=""></div><h2>' + esc(title) + '</h2>' +
-    '<div class="tiles3"><div class="x"><small>XP</small><b id="rX">+0</b></div><div class="a"><small>Accuracy</small><b>' + acc + '%</b></div><div class="s"><small>Time</small><b>' + Math.floor(secs / 60) + ':' + pad(secs % 60) + '</b></div></div>' +
-    (ws.length ? '<div class="wl">' + ws.map(id => '<span>' + esc(E[id].single[0] || E[id].word) + '</span>').join('') + '</div>' : '') +
+    (mode === 'blitz' ? '<div class="tiles3"><div class="x"><small>XP</small><b id="rX">+0</b></div><div class="a"><small>Pairs</small><b>' + P.pairs + '</b></div><div class="s"><small>Best</small><b>' + (st.best.blitz || 0) + '</b></div></div>'
+      : '<div class="tiles3"><div class="x"><small>XP</small><b id="rX">+0</b></div><div class="a"><small>Accuracy</small><b>' + acc + '%</b></div><div class="s"><small>Time</small><b>' + Math.floor(secs / 60) + ':' + pad(secs % 60) + '</b></div></div>') +
+    (ws.length ? '<div class="wl">' + ws.map(id => '<span>' + esc(tw(E[id])) + '</span>').join('') + '</div>' : '') +
     '<div class="gm">' + ico('flame', 'f') + '<span>' + streak() + '</span>' + (goalNow ? '<span>·</span><span>Daily goal reached</span>' : '') + '</div></div>';
-  setFoot('<button class="btn pri" id="pN" type="button">Continue</button>').querySelector('#pN').onclick = endPlayer;
+  const due = dueN(), fo2 = firstOpen();
+  const nextBtn = mode === 'place' || mode === 'jump' ? '' : due >= 5 && mode === 'lesson' ? '<button class="btn" id="pR" type="button">' + ico('rev') + 'Review<span class="cnt">' + due + '</span></button>' : mode !== 'lesson' && fo2 < C.lessons.length ? '<button class="btn" id="pR" type="button">' + ico('spark') + 'Next lesson</button>' : '';
+  const ff = setFoot(nextBtn + '<button class="btn pri" id="pN" type="button">Continue</button>');
+  ff.querySelector('#pN').onclick = endPlayer;
+  const pr = ff.querySelector('#pR'); if (pr) pr.onclick = () => { const go = due >= 5 && mode === 'lesson' ? () => startReview('review') : () => startLesson(fo2); P.on = false; closeOv('pl', true); go(); };
   fit(stg, 0.5);
   let n = 0; const tgt = P.xp, x = $('rX'); const tick = () => { n = Math.min(tgt, n + Math.max(1, Math.ceil(tgt / 25))); if (x) x.textContent = '+' + n; if (n < tgt) setTimeout(tick, 28); }; tick();
   if (pass) { SFX.done(); confetti(); if (goalNow) setTimeout(() => { SFX.goal(); confetti(70); }, 900); } else SFX.bad();
@@ -1599,7 +1743,7 @@ function keyboard(inp, en) {
   if (!en) rows.push(['acc', ACC]);
   if (TOUCH) { rows.push(['', [...'qwertyuiop']]); rows.push(['', [...'asdfghjkl']]); rows.push(['', ["'", ...'zxcvbnm', '-', '⌫']]); rows.push(['', [' ', '⏎']]); }
   const k = document.createElement('div'); k.className = 'kb';
-  k.innerHTML = rows.map(([c, r]) => '<div class="r ' + c + '">' + r.map(x => '<button type="button" tabindex="-1" data-k="' + esc(x) + '" class="' + (x === ' ' ? 'wide' : x === '⏎' ? 'mid ent' : x === '⌫' ? 'mid' : '') + '">' + (x === ' ' ? '' : x === '⏎' ? ico('check') : x === '⌫' ? ico('back') : esc(x)) + '</button>').join('') + '</div>').join('');
+  k.innerHTML = rows.map(([c, r]) => '<div class="r ' + c + '">' + r.map(x => '<button type="button" tabindex="-1" data-k="' + esc(x) + '" class="' + (x === ' ' ? 'wide' : x === '⏎' ? 'mid ent' : x === '⌫' ? 'mid' : '') + '">' + (x === ' ' ? '' : x === '⏎' ? ico('check') : x === '⌫' ? ico('bksp') : esc(x)) + '</button>').join('') + '</div>').join('');
   const put = s => { const a = inp.selectionStart ?? inp.value.length, b = inp.selectionEnd ?? a; inp.value = inp.value.slice(0, a) + s + inp.value.slice(b); inp.selectionStart = inp.selectionEnd = a + s.length; };
   let rep = 0;
   const press = key => {
@@ -1620,7 +1764,38 @@ function keyboard(inp, en) {
   $('kbx').innerHTML = ''; $('kbx').appendChild(k);
   return k;
 }
-const hw = e => e.word;
+const hw = e => (e.teach || e.word);
+const playHTML = () => '<div class="play"><button class="pbig" type="button" id="pPl" aria-label="Play">' + ico('snd') + '</button><button class="pslow" type="button" id="pSl" aria-label="Slow">' + ico('turtle') + '</button></div>';
+function wirePlay(stg, text) { const a = stg.querySelector('#pPl'), b = stg.querySelector('#pSl'); if (a) a.onclick = () => { a.classList.remove('go'); void a.offsetWidth; a.classList.add('go'); TTS.say(text, { fast: true }); }; if (b) b.onclick = () => TTS.say(text, { slow: true }); }
+/* what you typed against the right answer: wrong letters red, missing letters green */
+function diffHTML(a, b) {
+  const A = [...a], B = [...b], n = A.length, m = B.length, L = Array.from({ length: n + 1 }, () => new Int16Array(m + 1));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) L[i][j] = A[i].toLowerCase() === B[j].toLowerCase() ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+  let i = 0, j = 0, yours = '', right = '';
+  while (i < n || j < m) {
+    if (i < n && j < m && A[i].toLowerCase() === B[j].toLowerCase()) { yours += esc(A[i]); right += esc(B[j]); i++; j++; }
+    else if (j < m && (i >= n || L[i][j + 1] >= L[i + 1][j])) { right += '<span class="dk">' + esc(B[j]) + '</span>'; j++; }
+    else { yours += '<span class="df">' + esc(A[i]) + '</span>'; i++; }
+  }
+  return '<div>' + right + '</div><div class="ys">' + yours + '</div>';
+}
+function read(step, stg) {
+  const xs = step.ss.map(i => S[i]);
+  stg.innerHTML = '<div class="story">' + xs.map((x, k) => '<div class="ln" data-k="' + k + '"><div class="kl">' + sentHTML(x) + ' ' + spk(x.s, 'sm') + '</div><div class="tr">' + esc(x.t) + '</div></div>').join('') + '</div>';
+  const lines = stg.querySelectorAll('.ln');
+  let k = 0;
+  const next = () => { lines.forEach(l => l.classList.remove('on')); if (k >= xs.length || !P.on || P.cur !== ctrl) return; lines[k].classList.add('on'); TTS.say(xs[k].s, { end: () => setTimeout(() => { k++; next(); }, 300) }); };
+  const ctrl = { focus() { const b = $('pK'); if (b) b.focus({ preventScroll: true }); } };
+  setFoot('<button class="btn pri" id="pK" type="button">Continue</button>').querySelector('#pK').onclick = () => { P.answered = true; P.i++; SFX.flip(); nextStep(); };
+  setTimeout(next, 300);
+  return ctrl;
+}
+function repeat(step, stg) {
+  const e = E[step.w], target = e.forms[0];
+  stg.innerHTML = '<div class="speak"><div class="hwrow"><div class="big" style="font-size:calc(3rem*var(--k))">' + esc(hw(e)) + '</div>' + spk(target) + '</div><div class="sm" style="color:var(--mid);font-size:calc(1.05rem*var(--k))">' + esc(e.prompt) + '</div><button class="mic btnm idle" id="pM" type="button" aria-label="Speak">' + ico('mic') + '</button><div class="heard" id="hd"></div></div>';
+  setTimeout(() => TTS.say(target), 250);
+  return listenFor(step, stg, target, esc(hw(e)));
+}
 const formsLine = e => e.forms.length > 1 ? e.forms.slice(0, 4).join(' · ') : '';
 function intro(step, stg) {
   const e = E[step.w], x = step.s != null ? S[step.s] : null;
@@ -1635,7 +1810,7 @@ function intro(step, stg) {
 }
 function match(step, stg) {
   const ids = DK.shuffle(step.ids, Math.random), R2 = DK.shuffle(step.ids, Math.random);
-  stg.innerHTML = '<div class="mgrid">' + ids.map((id, k) => '<button type="button" class="mt kl" data-s="k" data-id="' + id + '" style="grid-column:1;grid-row:' + (k + 1) + '">' + esc(E[id].single[0] || E[id].forms[0]) + '</button>' + '<button type="button" class="mt" data-s="e" data-id="' + R2[k] + '" style="grid-column:2;grid-row:' + (k + 1) + '">' + esc(E[R2[k]].short) + '</button>').join('') + '</div>';
+  stg.innerHTML = '<div class="mgrid">' + ids.map((id, k) => '<button type="button" class="mt kl" data-s="k" data-id="' + id + '" style="grid-column:1;grid-row:' + (k + 1) + '">' + esc(tw(E[id])) + '</button>' + '<button type="button" class="mt" data-s="e" data-id="' + R2[k] + '" style="grid-column:2;grid-row:' + (k + 1) + '">' + esc(E[R2[k]].short) + '</button>').join('') + '</div>';
   setFoot('');
   let sel = null, left = ids.length; const miss = new Set();
   stg.querySelectorAll('.mt').forEach(b => b.onclick = () => {
@@ -1648,13 +1823,14 @@ function match(step, stg) {
     P.answered = true;
     if (a.dataset.id === b.dataset.id) {
       [a, b].forEach(x => { x.classList.add('good'); setTimeout(() => { x.classList.remove('good'); x.classList.add('gone'); }, 380); });
-      SFX.match(); left--;
+      SFX.match(); left--; if (P.mode === 'blitz') P.pairs++;
       if (!left) setTimeout(() => settle({ ok: true, near: miss.size > 0, silent: true, grades: step.ids.map(id => [id, miss.has(id) ? 1 : 2]) }), 360);
     } else {
       [a, b].forEach(x => { x.classList.remove('no'); void x.offsetWidth; x.classList.add('no'); });
       const kId = +(a.dataset.s === 'k' ? a.dataset.id : b.dataset.id); miss.add(kId);
       const eId = +(a.dataset.s === 'e' ? a.dataset.id : b.dataset.id); miss.add(eId);
       SFX.bad(); buzz(40);
+      if (P.mode === 'blitz') P.left = Math.max(0, P.left - 2);
     }
   });
   return {};
@@ -1663,7 +1839,7 @@ function build(step, stg) {
   let prompt, expect, before = '', after = '', full;
   if (step.phrase != null) { const e = E[step.phrase]; prompt = esc(e.prompt); expect = step.tiles.slice(); full = esc(e.word); }
   else {
-    const x = S[step.s]; prompt = esc(x.t); expect = step.tiles.slice();
+    const x = S[step.s]; prompt = step.listen ? '' : esc(x.t); expect = step.tiles.slice();
     const a = step.a, b = step.b;
     const pre = x.parts.filter(p => p.w < 0 ? false : p.w < a), post = x.parts.filter(p => p.w >= b);
     if (a > 0) { const i0 = x.parts.findIndex(p => p.w === a); before = x.parts.slice(0, i0).map(p => esc(p.x)).join(''); }
@@ -1672,10 +1848,11 @@ function build(step, stg) {
     void pre; void post;
   }
   const tiles = DK.shuffle(expect.concat(step.extra || []), Math.random);
-  stg.innerHTML = '<div class="pr"><div class="bubble"><div class="md">' + prompt + '</div></div></div>' +
+  stg.innerHTML = (step.listen ? playHTML() : '<div class="pr"><div class="bubble"><div class="md">' + prompt + '</div></div></div>') +
     '<div class="ans-line" id="aL">' + (before ? '<span class="fx">' + before.trim() + '</span>' : '') + '<span id="aS" style="display:contents"></span>' + (after ? '<span class="fx">' + after.trim() + '</span>' : '') + '</div>' +
     '<div class="bank" id="bK">' + tiles.map((t, i) => '<button type="button" class="tile" data-i="' + i + '">' + esc(t) + '</button>').join('') + '</div>';
   const aS = stg.querySelector('#aS'), bK = stg.querySelector('#bK'), aL = stg.querySelector('#aL');
+  if (step.listen) { wirePlay(stg, S[step.s].s); setTimeout(() => TTS.say(S[step.s].s), 250); }
   const order = [];
   const ctrl = { ready: () => order.length > 0 };
   const btn = checkBtn(ctrl);
@@ -1686,7 +1863,7 @@ function build(step, stg) {
     ctrl.update();
     fit(stg, 0.5);
   };
-  const addT = (i, rect) => { if (order.includes(i)) return; order.push(i); SFX.tap(); TTS.say(tiles[i], { fast: true }); draw(rect, i); };
+  const addT = (i, rect) => { if (order.includes(i)) return; order.push(i); SFX.tap(); if (!step.listen) TTS.say(tiles[i], { fast: true }); draw(rect, i); };
   const remT = j => { const k = order.indexOf(j); if (k >= 0) order.splice(k, 1); SFX.tap(); draw(); };
   /* tap and drag */
   let drag = null;
@@ -1723,20 +1900,21 @@ function build(step, stg) {
     const got = order.map(j => tiles[j]).join(' '), want = expect.join(' ');
     const r = DK.gradeKL(got, [want]);
     aL.classList.add(r.ok ? 'ok' : 'bad');
-    return { ok: r.ok, near: r.near, ans: full, sub: '', show: false, targets: step.targets, say: step.phrase != null ? E[step.phrase].forms[0] : S[step.s].s };
+    return { ok: r.ok, near: r.near, ans: full, sub: step.listen ? esc(S[step.s].t) : '', show: !!step.listen, targets: step.targets, say: step.phrase != null ? E[step.phrase].forms[0] : S[step.s].s };
   };
   return ctrl;
 }
 function typeEx(step, stg) {
   const e = step.w != null ? E[step.w] : null;
   let promptH, answers, ansH, sub = '', sentence = false, en = false;
-  if (step.dir === 'en2kl') {
-    promptH = '<div class="bubble"><div class="md">' + esc(e.prompt) + '</div></div>';
+  if (step.dir === 'en2kl' || step.dir === 'dict') {
+    promptH = step.dir === 'dict' ? playHTML() : '<div class="bubble"><div class="md">' + esc(e.prompt) + '</div></div>';
     answers = e.forms.concat(e.forms.map(f => f.replace(/[.,;:!?]/g, '')));
-    ansH = esc(e.word) + (e.forms.length > 1 ? ' <span style="color:var(--mid)">(' + esc(e.forms.join(', ')) + ')</span>' : '');
+    ansH = esc(hw(e)) + (e.forms.length > 1 ? ' <span style="color:var(--mid)">(' + esc(e.forms.join(', ')) + ')</span>' : '');
+    if (step.dir === 'dict') sub = esc(e.prompt);
   } else {
     en = true;
-    promptH = '<div class="hwrow" style="justify-content:flex-start"><div class="big">' + esc(e.word) + '</div>' + spk(e.forms[0]) + '</div>' + (e.posLabel ? '<div class="sm" style="font-style:italic">' + esc(e.posLabel) + '</div>' : '');
+    promptH = '<div class="hwrow" style="justify-content:flex-start"><div class="big">' + esc(hw(e)) + '</div>' + spk(e.forms[0]) + '</div>' + (e.posLabel ? '<div class="sm" style="font-style:italic">' + esc(e.posLabel) + '</div>' : '');
     answers = e.items;
     ansH = esc(e.senses.map(s => s.g).filter(Boolean).slice(0, 3).join('; '));
   }
@@ -1746,7 +1924,7 @@ function typeEx(step, stg) {
   inp.lang = en ? 'en' : 'fr';
   stg.appendChild(inp);
   keyboard(inp, en);
-  if (en) setTimeout(() => TTS.say(e.forms[0]), 250);
+  if (en || step.dir === 'dict') { setTimeout(() => TTS.say(e.forms[0]), 250); wirePlay(stg, e.forms[0]); }
   const ctrl = { ready: () => inp.value.trim().length > 0, focus: () => inp.focus({ preventScroll: true }) };
   const btn = checkBtn(ctrl);
   inp.addEventListener('input', () => ctrl.update());
@@ -1755,7 +1933,8 @@ function typeEx(step, stg) {
     inp.blur(); btn.dataset.done = 1;
     const r = en ? DK.gradeEN(inp.value, answers, false) : DK.gradeKL(inp.value, answers);
     inp.classList.add(r.ok ? 'ok' : 'bad'); inp.readOnly = true;
-    return { ok: r.ok, near: r.near, ans: ansH, sub, accept: en && !r.ok, targets: step.targets, say: en ? null : e.forms[0] };
+    const yours = !en && inp.value.trim() && (!r.ok || r.near) ? diffHTML(inp.value.trim(), r.best || answers[0]) : '';
+    return { ok: r.ok, near: r.near, ans: yours || ansH, sub, accept: en && !r.ok, targets: step.targets, say: en ? null : e.forms[0] };
   };
   return ctrl;
 }
@@ -1774,8 +1953,9 @@ function fill(step, stg) {
     inp.blur(); btn.dataset.done = 1;
     const r = DK.gradeKL(inp.value, [want]);
     inp.classList.add(r.ok ? 'ok' : 'bad'); inp.readOnly = true;
+    const typed = inp.value.trim();
     if (r.ok) inp.value = want;
-    return { ok: r.ok, near: r.near, ans: sentHTML(x, { hl: step.w, plain: true }), sub: '', targets: step.targets, say: x.s };
+    return { ok: r.ok, near: r.near, ans: sentHTML(x, { hl: step.w, plain: true }) + (typed && (!r.ok || r.near) ? '<div class="yours">' + diffHTML(typed, want) + '</div>' : ''), sub: '', targets: step.targets, say: x.s };
   };
   return ctrl;
 }
@@ -1785,8 +1965,11 @@ function speak(step, stg) {
   const x = step.s != null ? S[step.s] : null, e = step.w != null ? E[step.w] : null;
   const target = x ? x.s : e.forms[0], ansH = x ? sentHTML(x, { plain: true }) : esc(e.word);
   stg.innerHTML = '<div class="speak"><div class="bubble" style="align-self:center"><div class="md">' + esc(x ? x.t : e.prompt) + '</div></div><button class="mic btnm idle" id="pM" type="button" aria-label="Speak">' + ico('mic') + '</button><div class="heard" id="hd"></div></div>';
+  return listenFor(step, stg, target, ansH);
+}
+function listenFor(step, stg, target, ansH) {
   const f = setFoot('<button class="btn ghost" id="pCS" type="button">Can\'t speak now</button>');
-  f.querySelector('#pCS').onclick = () => { P.noSR = true; if (rec) try { rec.abort(); } catch (er) {} stg.innerHTML = ''; P.cur = speakSelf(step, stg); fit(stg, 0.5); };
+  f.querySelector('#pCS').onclick = () => { P.noSR = true; if (rec) try { rec.abort(); } catch (er) {} if (step.repeat) { P.i++; nextStep(); return; } stg.innerHTML = ''; P.cur = speakSelf(step, stg); fit(stg, 0.5); };
   const mic = stg.querySelector('#pM'), hd = stg.querySelector('#hd');
   let rec = null, on = false, tries = 0, alts = [], done = false;
   const judge = () => {
@@ -1805,7 +1988,7 @@ function speak(step, stg) {
     try { rec = new SRC(); } catch (er) { f.querySelector('#pCS').click(); return; }
     rec.lang = 'fr-FR'; rec.interimResults = true; rec.maxAlternatives = 5; rec.continuous = false;
     rec.onresult = ev => { const r = ev.results[ev.results.length - 1]; if (r.isFinal) { alts = [...r].map(a => a.transcript).filter(Boolean); } else hd.textContent = r[0].transcript; };
-    rec.onerror = ev => { if (/not-allowed|service-not-allowed|audio-capture|network/.test(ev.error || '')) { P.noSR = true; done = true; stg.innerHTML = ''; P.cur = speakSelf(step, stg); fit(stg, 0.5); } };
+    rec.onerror = ev => { if (/not-allowed|service-not-allowed|audio-capture|network/.test(ev.error || '')) { P.noSR = true; done = true; if (step.repeat) { P.i++; nextStep(); return; } stg.innerHTML = ''; P.cur = speakSelf(step, stg); fit(stg, 0.5); } };
     rec.onend = () => { on = false; mic.classList.remove('on'); mic.classList.add('idle'); if (!done) { if (alts.length) judge(); } };
     try { rec.start(); on = true; mic.classList.add('on'); mic.classList.remove('idle'); SFX.tap(); } catch (er) { f.querySelector('#pCS').click(); }
   };
@@ -2055,7 +2238,7 @@ function signIn() {
   const go = async () => { const pr = new firebase.auth.GoogleAuthProvider(); try { await firebase.auth().signInWithPopup(pr); } catch (e) { if (e && /popup-closed|cancelled-popup/.test(e.code || '')) return; try { await firebase.auth().signInWithRedirect(pr); } catch (_) { toast('Sign-in did not go through'); } } };
   if (FB.ready) go(); else { const t = setInterval(() => { if (FB.ready) { clearInterval(t); go(); } }, 200); setTimeout(() => clearInterval(t), 12000); }
 }
-const wire = () => JSON.stringify({ v: 1, rst: st.rst || 0, w: st.w, days: st.days, set: st.set, stars: st.stars, placed: st.placed || 0 });
+const wire = () => JSON.stringify({ v: 1, rst: st.rst || 0, w: st.w, days: st.days, set: st.set, stars: st.stars, placed: st.placed || 0, cp: st.cp || {}, best: st.best || {} });
 function mergeRemote(dk) {
   if (!dk) return false;
   let changed = false;
@@ -2075,6 +2258,9 @@ function mergeRemote(dk) {
   if (r.set && (r.set.t || 0) > (st.set.t || 0)) { st.set = Object.assign({}, st.set, r.set); changed = true; }
   for (const k in (r.stars || {})) { const a = +st.stars[k] || 0, b = +r.stars[k] || 0; if (Math.abs(b) > Math.abs(a)) { st.stars[k] = b; changed = true; } }
   if ((r.placed || 0) > (st.placed || 0)) { st.placed = r.placed; changed = true; }
+  st.cp = st.cp || {}; st.best = st.best || {};
+  for (const k in (r.cp || {})) if ((+r.cp[k] || 0) > (st.cp[k] || 0)) { st.cp[k] = +r.cp[k]; changed = true; }
+  for (const k in (r.best || {})) if ((+r.best[k] || 0) > (st.best[k] || 0)) { st.best[k] = +r.best[k]; changed = true; }
   return changed;
 }
 async function push() {
@@ -2181,7 +2367,7 @@ async function boot() {
   $('boot').classList.add('out'); setTimeout(() => $('boot').remove(), 400);
   const w = new URLSearchParams(location.search).get('w');
   if (w) { const f = DK.fold(w); const e = E.find(x => DK.fold(x.word) === f) || E.find(x => x.forms.some(y => DK.fold(y) === f)); if (e) openEntry(e.id, [e.id]); }
-  window.__dk = { E, S, C, K, st: () => st, P, D, recs, FB, push, loadFb, reset: resetAll, mergeRemote, startLesson, startReview, startJump, startPlacement, setTab, firstOpen, TTS, rerender: nextStep };
+  window.__dk = { E, S, C, K, st: () => st, P, D, recs, FB, push, loadFb, reset: resetAll, mergeRemote, startLesson, startReview, startJump, startPlacement, startUnitReview, startBlitz, setTab, firstOpen, TTS, rerender: nextStep };
 }
 if (ROOT && 'serviceWorker' in navigator) { addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {})); const m = document.createElement('link'); m.rel = 'manifest'; m.href = 'manifest.webmanifest'; document.head.appendChild(m); }
 boot();
