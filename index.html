@@ -421,6 +421,8 @@ body:not(.tts) .spk{display:none}
 .pslow{width:calc(3.4rem*var(--k));height:calc(3.4rem*var(--k));border-radius:18px;background:var(--accent-a);color:var(--accent);display:flex;align-items:center;justify-content:center}
 .pslow svg.i{width:55%;height:55%}
 body:not(.tts) .play{display:none}
+.nolisten{align-self:center;display:inline-flex;align-items:center;gap:.4rem;padding:.45rem .9rem;border-radius:999px;border:1px solid var(--line2);background:var(--panel);color:var(--soft);font-size:calc(.92rem*var(--k));flex:none}
+.nolisten svg.i{width:17px;height:17px}
 .fb .ans .ys{margin-top:.2rem;color:var(--mid);text-decoration:line-through;text-decoration-color:rgba(255,143,134,.5);font-size:.95em}
 .fb .ans .yours{margin-top:.25rem;font-size:.95em}
 .fb .ans .dk{background:rgba(134,220,172,.28);border-radius:3px;color:var(--ok)}
@@ -1628,7 +1630,7 @@ function nextStep() {
   let step = P.steps[P.i];
   const noMic = !SRC || P.noSR || window.__dkSR === false;
   if (step.repeat && noMic) { P.i++; return nextStep(); }
-  if (!TTS.has() && (step.listen || step.dir === 'dict')) { step = P.steps[P.i] = Object.assign({}, step, step.listen ? { listen: false } : { dir: 'en2kl' }); }
+  if ((!TTS.has() || P.noAudio || st.set.voice === 0) && (step.listen || step.dir === 'dict')) { step = P.steps[P.i] = Object.assign({}, step, step.listen ? { listen: false } : { dir: 'en2kl' }); }
   TTS.stop(); $('kbx').innerHTML = '';
   const stg = $('stg');
   stg.className = 'stage' + (step.type === 'intro' || step.type === 'speak' || step.type === 'read' ? ' mid' : ''); void stg.offsetWidth; stg.classList.add('enter');
@@ -1765,8 +1767,8 @@ function keyboard(inp, en) {
   return k;
 }
 const hw = e => (e.teach || e.word);
-const playHTML = () => '<div class="play"><button class="pbig" type="button" id="pPl" aria-label="Play">' + ico('snd') + '</button><button class="pslow" type="button" id="pSl" aria-label="Slow">' + ico('turtle') + '</button></div>';
-function wirePlay(stg, text) { const a = stg.querySelector('#pPl'), b = stg.querySelector('#pSl'); if (a) a.onclick = () => { a.classList.remove('go'); void a.offsetWidth; a.classList.add('go'); TTS.say(text, { fast: true }); }; if (b) b.onclick = () => TTS.say(text, { slow: true }); }
+const playHTML = () => '<div class="play"><button class="pbig" type="button" id="pPl" aria-label="Play">' + ico('snd') + '</button><button class="pslow" type="button" id="pSl" aria-label="Slow">' + ico('turtle') + '</button></div><button class="nolisten" type="button" id="pNL">' + ico('eye') + 'Can\'t listen now</button>';
+function wirePlay(stg, text) { const nl = stg.querySelector('#pNL'); if (nl) nl.onclick = () => { P.noAudio = true; TTS.stop(); nextStep(); }; const a = stg.querySelector('#pPl'), b = stg.querySelector('#pSl'); if (a) a.onclick = () => { a.classList.remove('go'); void a.offsetWidth; a.classList.add('go'); TTS.say(text, { fast: true }); }; if (b) b.onclick = () => TTS.say(text, { slow: true }); }
 /* what you typed against the right answer: wrong letters red, missing letters green */
 function diffHTML(a, b) {
   const A = [...a], B = [...b], n = A.length, m = B.length, L = Array.from({ length: n + 1 }, () => new Int16Array(m + 1));
