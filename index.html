@@ -643,12 +643,164 @@ body.admin .admb{display:inline-flex!important}
 .admrow .btn{height:40px;padding:0 .8rem;font-size:.9rem}
 .ov#edit{z-index:96}
 
+/* ================= the district map */
+#vLearn{padding:0}
+body:not(.wide) #vLearn .lmain{gap:0}
+body.wide #vLearn{padding:.8rem calc(.9rem + var(--sr)) .8rem .9rem}
+.lmain{position:relative}
+.map{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;position:relative;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.map::-webkit-scrollbar{display:none}
+body.wide .map{border-radius:var(--r2);border:1px solid var(--line)}
+.mapin{position:relative;width:100%}
+.mbar{position:absolute;left:0;right:0;bottom:0;z-index:5;display:flex;gap:.5rem;align-items:center;padding:.6rem calc(.9rem + var(--sr)) .7rem calc(.9rem + var(--sl));background:linear-gradient(transparent,rgba(0,0,0,.75) 45%);pointer-events:none}
+.mbar>*{pointer-events:auto}
+.mbar .acts{flex:1}
+.mbar .here{width:52px;height:52px;flex:none;border-radius:50%;background:var(--panel);border:1px solid var(--line2);animation:pop .3s}
+body.wide .mbar .acts{display:none}
+body.wide .mbar{background:none;justify-content:flex-end}
+.dist{position:absolute;left:0;right:0;overflow:hidden}
+.dist .sky{position:absolute;inset:0}
+.dist::after{content:'';position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(transparent,var(--nextc,transparent));pointer-events:none}
+.dban{position:absolute;left:50%;top:34px;transform:translateX(-50%);min-width:200px;padding:.7rem 1.6rem .8rem;text-align:center;border-radius:18px;background:rgba(0,0,0,.42);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:2}
+.dban .dn{display:block;font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--dc,#f3c969)}
+.dban b{display:block;font-weight:400;font-size:1.65rem;line-height:1.15;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.5)}
+.dban small{display:block;color:rgba(255,255,255,.7);font-size:.85rem}
+.dban .seal{position:absolute;right:-14px;top:-14px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff6d2,#f3c969 45%,#b47c1f);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(0,0,0,.5)}
+.dban .seal svg.fl{width:24px;height:24px;fill:#3a2808}
+.prop{position:absolute;z-index:1;pointer-events:none;filter:drop-shadow(0 8px 10px rgba(0,0,0,.4));animation:bob 4.2s ease-in-out infinite}
+.prop.a1{animation-name:sway;animation-duration:5s}.prop.a2{animation-name:bob;animation-duration:3.6s}.prop.a3{animation-name:drift;animation-duration:7s}
+@keyframes bob{50%{transform:translateY(-9px)}}
+@keyframes sway{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+@keyframes drift{0%,100%{transform:translate(0,0)}50%{transform:translate(8px,-6px) rotate(4deg)}}
+.dist:not(.live) *,.dist:not(.live)::before{animation-play-state:paused!important}
+@media (prefers-reduced-motion:reduce){.dist *,.un *{animation:none!important}}
+.road{position:absolute;left:0;top:0;z-index:2;pointer-events:none;overflow:visible}
+.road path{fill:none;stroke-linecap:round}
+.road .r0{stroke:rgba(0,0,0,.45);stroke-width:30}
+.road .r1{stroke:rgba(255,255,255,.18);stroke-width:22;stroke-dasharray:2 14}
+.road .r2{stroke:#f3c969;stroke-width:8;opacity:.85;filter:drop-shadow(0 0 6px rgba(243,201,105,.6))}
+.un{position:absolute;z-index:3;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:.3rem;-webkit-tap-highlight-color:transparent}
+.un .c{position:relative;width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#1c1c22;border:3px solid rgba(255,255,255,.25);box-shadow:0 7px 0 rgba(0,0,0,.45),0 12px 24px rgba(0,0,0,.35);transition:transform .12s}
+.un:active .c{transform:translateY(4px);box-shadow:0 3px 0 rgba(0,0,0,.45)}
+.un .c img.pic{width:46px;height:46px}
+.un .c svg.i{width:28px;height:28px;color:rgba(255,255,255,.55)}
+.un .c svg.fl{width:44px;height:44px}
+.un .lb{font-size:.74rem;letter-spacing:.06em;color:#fff;background:rgba(0,0,0,.5);border-radius:999px;padding:.08rem .55rem;white-space:nowrap}
+.un.done .c{background:radial-gradient(circle at 35% 30%,#fff6d2,#f3c969 50%,#b47c1f);border-color:#ffe7a0}
+.un.done .ck{position:absolute;right:-4px;bottom:-4px;width:24px;height:24px;border-radius:50%;background:#2a1d06;border:2px solid #f3c969;display:flex;align-items:center;justify-content:center}
+.un.done .ck svg.i{width:13px;height:13px;color:#f3c969;stroke-width:3}
+.un.open .c{background:var(--fg)}
+.un.cur .c{background:#fff;border-color:#fff;width:84px;height:84px}
+.un.cur .c img.pic{width:56px;height:56px;animation:bob 2.4s ease-in-out infinite}
+.un.cur .pr{position:absolute;top:-10px;left:50%;width:104px;height:104px;transform:translateX(-50%) rotate(-90deg);pointer-events:none}
+.un.cur .pr circle{fill:none;stroke-width:5}
+.un.cur .pr .b{stroke:rgba(255,255,255,.2)}
+.un.cur .pr .f{stroke:#f3c969;stroke-linecap:round;transition:stroke-dashoffset .8s}
+.un.cur .go{position:absolute;top:-46px;left:50%;transform:translateX(-50%);background:#fff;color:#000;font-size:.9rem;padding:.3rem .8rem;border-radius:12px;white-space:nowrap;animation:hop 1.5s ease-in-out infinite;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.un.cur .go::after{content:'';position:absolute;left:50%;bottom:-6px;margin-left:-6px;border:6px solid transparent;border-top-color:#fff;border-bottom:0}
+.un.lock .c{background:#141418;border-color:rgba(255,255,255,.12)}
+.un.reveal .c{animation:unlockpop .9s cubic-bezier(.2,.9,.3,1.5)}
+@keyframes unlockpop{0%{transform:scale(.4);filter:brightness(3)}60%{transform:scale(1.18)}100%{transform:none}}
+.fog{position:absolute;left:-10%;right:-10%;height:300px;z-index:4;pointer-events:none;background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.85) 55%,#000 80%)}
+.fog i{position:absolute;width:60%;height:120px;border-radius:50%;background:radial-gradient(ellipse,rgba(200,200,220,.18),transparent 70%);animation:fogm 14s ease-in-out infinite}
+.fog i:nth-child(1){left:0;top:70px}.fog i:nth-child(2){left:40%;top:120px;animation-delay:-5s}.fog i:nth-child(3){left:15%;top:170px;animation-delay:-9s}
+@keyframes fogm{50%{transform:translateX(12%)}}
+.map-king{position:absolute;z-index:3;width:92px;height:115px;filter:drop-shadow(0 8px 12px rgba(0,0,0,.45));animation:bob 3s ease-in-out infinite}
+.map-say{position:absolute;z-index:3;background:#fff;color:#000;font-size:.95rem;padding:.35rem .7rem;border-radius:14px 14px 14px 4px;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+svg.king{display:block}
+
+/* district scenery */
+.d-bayou .sky{background:radial-gradient(ellipse at 20% 0%,rgba(140,220,170,.18),transparent 55%),linear-gradient(#0b2a22,#10382c 40%,#0d3a3a 75%,#0b2e33)}
+.d-pleri .sky{background:radial-gradient(circle at 85% 6%,rgba(255,220,120,.45),transparent 30%),linear-gradient(#2a3b14,#4a5a1c 35%,#6b6a20 70%,#3e4a14)}
+.d-lavil .sky{background:radial-gradient(ellipse at 50% 0%,rgba(180,120,255,.25),transparent 60%),linear-gradient(#1a0f2e,#2a1546 45%,#3a1a4a 80%,#1f1030)}
+.d-lamaer .sky{background:radial-gradient(circle at 80% 4%,rgba(255,250,200,.35),transparent 28%),linear-gradient(#0d3a66,#0f5788 40%,#1b7aa5 70%,#c9b27a 96%)}
+.d-kann .sky{background:radial-gradient(circle at 50% 4%,rgba(255,150,80,.5),transparent 35%),linear-gradient(#3a1a1a,#6a2c1c 35%,#3e4a18 70%,#25300f)}
+.d-dibwa .sky{background:radial-gradient(ellipse at 30% 0%,rgba(255,170,80,.25),transparent 50%),linear-gradient(#2a1608,#3e2410 40%,#2e3a14 75%,#1d2a0e)}
+.d-lafet .sky{background:radial-gradient(circle at 15% 10%,rgba(160,80,220,.45),transparent 35%),radial-gradient(circle at 85% 40%,rgba(80,200,120,.3),transparent 35%),radial-gradient(circle at 30% 80%,rgba(243,201,105,.35),transparent 35%),linear-gradient(#2a0f3a,#1a1030)}
+.d-sipri .sky{background:radial-gradient(circle at 78% 5%,rgba(230,235,255,.4),transparent 14%),linear-gradient(#050a1c,#0a1530 45%,#0b2026 80%,#071418)}
+.d-riv .sky{background:radial-gradient(circle at 50% 2%,rgba(255,190,90,.6),transparent 30%),linear-gradient(#4a1f2a,#8a3a2c 30%,#3a3a5a 60%,#1c2a4a)}
+.d-bayou{--dc:#9be3b5}.d-pleri{--dc:#ffe08a}.d-lavil{--dc:#d6b0ff}.d-lamaer{--dc:#9fe0ff}.d-kann{--dc:#ffb27a}.d-dibwa{--dc:#ffc27a}.d-lafet{--dc:#f3c969}.d-sipri{--dc:#cfd8ff}.d-riv{--dc:#ffcf8a}
+.fx{position:absolute;inset:0;pointer-events:none}
+.fx i{position:absolute;display:block}
+.fx-flies i,.fx-stars i{width:6px;height:6px;border-radius:50%;background:#e9ff9a;box-shadow:0 0 10px 3px rgba(220,255,120,.7);animation:fly 6s ease-in-out infinite;transform:scale(var(--s))}
+.fx-stars i{background:#fff;box-shadow:0 0 6px 2px rgba(255,255,255,.6);width:3px;height:3px;animation:twinkle 3s ease-in-out infinite}
+@keyframes fly{0%,100%{transform:translate(0,0) scale(var(--s));opacity:.2}25%{opacity:1}50%{transform:translate(22px,-18px) scale(var(--s));opacity:.4}75%{transform:translate(-14px,10px) scale(var(--s));opacity:1}}
+@keyframes twinkle{50%{opacity:.15}}
+.fx-grass i{width:3px;height:26px;border-radius:3px;background:linear-gradient(#e8d070,#8a8a20);transform-origin:bottom;animation:sway 3s ease-in-out infinite;opacity:.6}
+.fx-notes i::before{content:'♪';color:rgba(230,200,255,.75);font-size:calc(22px*var(--s))}
+.fx-notes i{animation:rise 5s linear infinite}
+.fx-notes i:nth-child(2n)::before{content:'♫'}
+@keyframes rise{0%{transform:translateY(20px);opacity:0}20%{opacity:1}100%{transform:translateY(-90px);opacity:0}}
+.fx-waves i{width:120px;height:14px;border-radius:50%;border-top:3px solid rgba(255,255,255,.35);animation:wave 4s ease-in-out infinite}
+@keyframes wave{50%{transform:translateX(26px)}}
+.fx-smoke i{width:40px;height:40px;border-radius:50%;background:radial-gradient(circle,rgba(220,200,190,.25),transparent 70%);animation:rise 7s linear infinite;transform:scale(var(--s))}
+.fx-leaves i{width:12px;height:8px;border-radius:0 80% 0 80%;background:#e07a2a;animation:fall 7s linear infinite}
+.fx-leaves i:nth-child(3n){background:#c9452a}.fx-leaves i:nth-child(3n+1){background:#f0b030}
+@keyframes fall{0%{transform:translate(0,-60px) rotate(0);opacity:0}15%{opacity:1}100%{transform:translate(40px,160px) rotate(300deg);opacity:0}}
+.fx-confetti i{width:7px;height:11px;border-radius:2px;background:#f3c969;animation:fall 5s linear infinite}
+.fx-confetti i:nth-child(3n){background:#9b5de5}.fx-confetti i:nth-child(3n+1){background:#3fbf7f}
+
+/* unit screen and notes */
+.unitc,.notec{position:relative;overflow:hidden}
+.unitc::before,.notec::before{content:'';position:absolute;inset:0;opacity:.35;pointer-events:none}
+.unitc.d-bayou::before,.notec.d-bayou::before{background:linear-gradient(#10382c,transparent 60%)}
+.unitc.d-pleri::before,.notec.d-pleri::before{background:linear-gradient(#4a5a1c,transparent 60%)}
+.unitc.d-lavil::before,.notec.d-lavil::before{background:linear-gradient(#2a1546,transparent 60%)}
+.unitc.d-lamaer::before,.notec.d-lamaer::before{background:linear-gradient(#0f5788,transparent 60%)}
+.unitc.d-kann::before,.notec.d-kann::before{background:linear-gradient(#6a2c1c,transparent 60%)}
+.unitc.d-dibwa::before,.notec.d-dibwa::before{background:linear-gradient(#3e2410,transparent 60%)}
+.unitc.d-lafet::before,.notec.d-lafet::before{background:linear-gradient(#3a1050,transparent 60%)}
+.unitc.d-sipri::before,.notec.d-sipri::before{background:linear-gradient(#0a1530,transparent 60%)}
+.unitc.d-riv::before,.notec.d-riv::before{background:linear-gradient(#8a3a2c,transparent 60%)}
+.ov#unit .card,.ov#notes .card{height:100%}
+.ut{flex:1;text-align:center;min-width:0}
+.ut small{display:block;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.ut b{display:block;font-weight:400;font-size:1.2rem}
+.ch .nb{position:relative}
+.ch .nb.has::after{content:'';position:absolute;right:4px;top:4px;width:9px;height:9px;border-radius:50%;background:var(--gold)}
+.cb.ub{display:flex;flex-direction:column;gap:.6rem;position:relative}
+.uw{display:flex;flex-wrap:wrap;gap:.35rem;justify-content:center}
+.uw span{display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .6rem;border-radius:999px;background:var(--raised);border:1px solid var(--line);font-size:.92rem}
+.cb.ub .path{flex:1;min-height:300px}
+#uJ{display:flex;justify-content:center}
+.ov#unit{z-index:55}
+.ov#notes{z-index:58}
+.notec .np{flex:1;min-height:0;padding:.3rem 1rem}
+.notec .gnav{padding-bottom:calc(.4rem + var(--sb))}
+.gex.kp .r{grid-template-columns:auto minmax(0,1.05fr) minmax(0,1fr);align-items:center}
+.gex.kp img.kpi{width:2.4rem;height:2.4rem}
+@media (max-width:560px){.gex.kp .r{grid-template-columns:auto 1fr}.gex.kp .e{grid-column:2}}
+
+/* proverbs */
+.pvc{display:flex;align-items:center;gap:.8rem;padding:calc(.8rem*var(--k)) .9rem;background:var(--panel);border:1px solid rgba(243,201,105,.3);border-radius:var(--r2)}
+.pvc img.pvi{width:calc(3rem*var(--k));height:calc(3rem*var(--k));flex:none}
+.pvt{flex:1;min-width:0}
+.pvt b{display:block;font-weight:400;font-size:1.1rem;color:var(--gold)}
+.pvt small{display:block;color:var(--soft);font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pvc .btn{height:44px;padding:0 1rem}
+.res .pvr{max-width:520px;text-align:center;display:flex;flex-direction:column;gap:.3rem;padding:.8rem 1rem;border:1px solid rgba(243,201,105,.35);border-radius:16px;background:var(--gold-a)}
+.res .pvr .k{color:var(--gold);font-size:calc(1.2rem*var(--k))}
+.res .pvr .e{color:var(--fg);font-size:calc(1rem*var(--k))}
+.res .pvr .m{color:var(--mid);font-size:calc(.9rem*var(--k));font-style:italic}
+.story .nt{color:var(--gold);font-style:italic;font-size:calc(.95rem*var(--k));margin-top:.2rem}
+.story.one{align-items:center;text-align:center}
+.row.pvrow{align-items:flex-start;cursor:default}
+.row.pvrow .m2{color:var(--dim);font-size:.82rem;font-style:italic}
+.row.pvrow img.pic.xs{width:2rem;height:2rem}
+.gc svg.king{width:120px;height:150px;animation:pop .5s cubic-bezier(.2,.9,.3,1.3)}
+.gold .gking{position:absolute;z-index:3;width:min(28vw,120px);height:min(35vw,150px);left:6%;bottom:110px;animation:kingin .8s 1.2s cubic-bezier(.2,.9,.3,1.4) both}
+@keyframes kingin{from{transform:translateY(60px) rotate(-10deg);opacity:0}to{transform:none;opacity:1}}
+.res.out svg.king{width:90px;height:112px;opacity:.9;filter:grayscale(.3)}
+img.pic.li,.pic.li.ph{width:2.1rem;height:2.1rem;flex:none}
+.pic.li.ph{display:block;border-radius:50%;background:radial-gradient(circle,rgba(179,166,214,.12),transparent 70%)}
+
 </style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <defs><linearGradient id="dkg" gradientUnits="userSpaceOnUse" x1="0" y1="2" x2="0" y2="88"><stop offset="0" stop-color="#fff3c4"/><stop offset=".45" stop-color="#f3c969"/><stop offset="1" stop-color="#c38a2a"/></linearGradient></defs>
+  <defs><linearGradient id="kg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset=".5" stop-color="#f3c969"/><stop offset="1" stop-color="#c38a2a"/></linearGradient><linearGradient id="kc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d5fd0"/><stop offset="1" stop-color="#1d327f"/></linearGradient><radialGradient id="ks" cx="50%" cy="50%" r="50%"><stop offset=".55" stop-color="#f3c969" stop-opacity=".55"/><stop offset="1" stop-color="#f3c969" stop-opacity="0"/></radialGradient><linearGradient id="dkg" gradientUnits="userSpaceOnUse" x1="0" y1="2" x2="0" y2="88"><stop offset="0" stop-color="#fff3c4"/><stop offset=".45" stop-color="#f3c969"/><stop offset="1" stop-color="#c38a2a"/></linearGradient></defs>
   <symbol id="i-fleur" viewBox="0 0 100 100"><path d="M50 3.5 C57.5 13,63 24,63 35.5 C63 45.5,58 52.5,55.5 60 L44.5 60 C42 52.5,37 45.5,37 35.5 C37 24,42.5 13,50 3.5 Z"/><path d="M55.5 60 C56 45,63 30,76.5 25.5 C87 22,96.5 28,96.5 37.5 C96.5 45,91 50,84 49.5 C88.5 46.5,90.5 41.5,88 38 C85 34,78.5 34,74 38 C69 43,67 51,67 60 Z"/><path d="M54 67 C55.5 76,62.5 82.5,72 82 C80 81.5,84 75,81.5 69.5 C80.5 74,76.5 76.5,72.5 75.5 C66.5 74.5,63.5 71,63.5 67 Z"/><path transform="matrix(-1 0 0 1 100 0)" d="M55.5 60 C56 45,63 30,76.5 25.5 C87 22,96.5 28,96.5 37.5 C96.5 45,91 50,84 49.5 C88.5 46.5,90.5 41.5,88 38 C85 34,78.5 34,74 38 C69 43,67 51,67 60 Z"/><path transform="matrix(-1 0 0 1 100 0)" d="M54 67 C55.5 76,62.5 82.5,72 82 C80 81.5,84 75,81.5 69.5 C80.5 74,76.5 76.5,72.5 75.5 C66.5 74.5,63.5 71,63.5 67 Z"/><rect x="31" y="57.5" width="38" height="10" rx="3.5"/><path d="M45.5 67 C45.5 74,47.5 80,50 86 C52.5 80,54.5 74,54.5 67 Z"/><g fill="none" stroke="#9a6a1c" stroke-width=".7" opacity=".5"><path d="M50 12 C50 30,50 45,50 57"/><line x1="31.5" y1="62.5" x2="68.5" y2="62.5"/></g></symbol>
+  <symbol id="i-king" viewBox="0 0 120 150"><g id="sun" opacity=".9"><circle cx="60" cy="52" r="50" fill="url(#ks)"/><g stroke="#f3c969" stroke-width="3" stroke-linecap="round" opacity=".55"><line x1="60" y1="0" x2="60" y2="10"/><line x1="8" y1="52" x2="18" y2="52"/><line x1="102" y1="52" x2="112" y2="52"/><line x1="23" y1="15" x2="30" y2="22"/><line x1="97" y1="15" x2="90" y2="22"/><line x1="23" y1="89" x2="30" y2="82"/><line x1="97" y1="89" x2="90" y2="82"/></g></g><path d="M12 150 C14 120 32 104 60 104 C88 104 106 120 108 150 Z" fill="url(#kc)"/><g fill="#f3c969" opacity=".9"><path d="M30 132 l2.2 -5 2.2 5 -2.2 2z"/><path d="M86 132 l2.2 -5 2.2 5 -2.2 2z"/><path d="M58 142 l2.2 -5 2.2 5 -2.2 2z"/><path d="M42 146 l2 -4.5 2 4.5 -2 1.8z"/><path d="M74 146 l2 -4.5 2 4.5 -2 1.8z"/></g><path d="M30 112 C44 122 76 122 90 112 L84 104 C70 110 50 110 36 104 Z" fill="#fbf7ef"/><g fill="#1a1a1a"><circle cx="44" cy="113" r="1.3"/><circle cx="56" cy="116" r="1.3"/><circle cx="68" cy="115" r="1.3"/><circle cx="79" cy="111" r="1.3"/></g><path d="M54 104 L60 116 L66 104 Z" fill="#fbf7ef"/><path d="M57 106 L60 113 L63 106Z" fill="#e8e0d0"/><g fill="#5a3216"><circle cx="31" cy="60" r="14"/><circle cx="27" cy="77" r="13"/><circle cx="29" cy="93" r="12.5"/><circle cx="36" cy="106" r="10"/><circle cx="89" cy="60" r="14"/><circle cx="93" cy="77" r="13"/><circle cx="91" cy="93" r="12.5"/><circle cx="84" cy="106" r="10"/><circle cx="42" cy="44" r="14"/><circle cx="78" cy="44" r="14"/><circle cx="60" cy="40" r="15"/></g><g fill="#7a4620"><circle cx="29" cy="58" r="8"/><circle cx="25" cy="76" r="7.5"/><circle cx="28" cy="92" r="7"/><circle cx="35" cy="104" r="5.5"/><circle cx="91" cy="58" r="8"/><circle cx="95" cy="76" r="7.5"/><circle cx="92" cy="92" r="7"/><circle cx="85" cy="104" r="5.5"/><circle cx="44" cy="41" r="7.5"/><circle cx="76" cy="41" r="7.5"/></g><ellipse cx="60" cy="68" rx="21" ry="24" fill="#f7d5b5"/><circle cx="48" cy="77" r="4.2" fill="#f29b8f" opacity=".55"/><circle cx="72" cy="77" r="4.2" fill="#f29b8f" opacity=".55"/><g class="eyes"><ellipse cx="51.5" cy="67" rx="2.6" ry="3.2" fill="#2a1a10"/><ellipse cx="68.5" cy="67" rx="2.6" ry="3.2" fill="#2a1a10"/><circle cx="52.3" cy="66" r=".9" fill="#fff"/><circle cx="69.3" cy="66" r=".9" fill="#fff"/></g><path d="M46.5 61.5 Q51.5 59 55.5 61" stroke="#5a3216" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M64.5 61 Q68.5 59 73.5 61.5" stroke="#5a3216" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M60 69 Q62.5 74 59.5 75" stroke="#d9a07c" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M54 80 Q60 85 66 80" stroke="#8a3a22" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M40 38 L42 18 L51 29 L60 11 L69 29 L78 18 L80 38 Z" fill="url(#kg)" stroke="#a87418" stroke-width="1"/><rect x="39" y="34" width="42" height="7" rx="2.5" fill="url(#kg)" stroke="#a87418" stroke-width="1"/><circle cx="60" cy="26" r="3.2" fill="#d6304a"/><circle cx="46" cy="30" r="2" fill="#2f6be0"/><circle cx="74" cy="30" r="2" fill="#2f6be0"/><g fill="#fff3c4"><circle cx="42" cy="18" r="2"/><circle cx="60" cy="11" r="2.2"/><circle cx="78" cy="18" r="2"/></g><g fill="#d6304a"><circle cx="47" cy="37.5" r="1.4"/><circle cx="60" cy="37.5" r="1.4"/><circle cx="73" cy="37.5" r="1.4"/></g></symbol>
   <symbol id="i-gram" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="16" rx="2.5"/><line x1="3.5" y1="9" x2="20.5" y2="9"/><line x1="10" y1="9" x2="10" y2="20"/><line x1="10" y1="14.5" x2="20.5" y2="14.5"/></symbol>
   <symbol id="i-back" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></symbol>
   <symbol id="i-fwd" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></symbol>
@@ -1555,6 +1707,7 @@ const starOn = id => (st.stars[E[id].key] || 0) > 0;
 /* ================================================================ sound */
 const SFX = (() => {
   let ctx = null;
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {} // iPhone: play sounds even with the ringer switch off
   const ac = () => { if (!st.set.snd) return null; if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } } if (ctx.state === 'suspended') ctx.resume(); return ctx; };
   const tone = (f, at, d, type = 'sine', g = 0.05, f2) => { const c = ac(); if (!c) return; const t = c.currentTime + at, o = c.createOscillator(), v = c.createGain(); o.type = type; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d); v.gain.setValueAtTime(0.0001, t); v.gain.exponentialRampToValueAtTime(g, t + 0.012); v.gain.exponentialRampToValueAtTime(0.0001, t + d); o.connect(v).connect(c.destination); o.start(t); o.stop(t + d + 0.02); };
   return {
@@ -1566,7 +1719,15 @@ const SFX = (() => {
     flip: () => tone(523, 0, 0.18, 'sine', 0.045, 784),
     done: () => [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, i * 0.09, 0.32, 'triangle', 0.05)),
     /* the gap in a cloze sentence: a soft two-note blip */
-    blank: () => { tone(660, 0, 0.11, 'sine', 0.07); tone(660, 0.16, 0.11, 'sine', 0.07); },
+    blank: () => { // a buzzer for the missing word
+      const c = ac(); if (!c) return;
+      const t = c.currentTime + 0.01, v = c.createGain(), lp = c.createBiquadFilter(), am = c.createOscillator(), amg = c.createGain();
+      lp.type = 'lowpass'; lp.frequency.value = 1400;
+      v.gain.setValueAtTime(0.0001, t); v.gain.exponentialRampToValueAtTime(0.16, t + 0.02); v.gain.setValueAtTime(0.16, t + 0.34); v.gain.exponentialRampToValueAtTime(0.0001, t + 0.42);
+      am.frequency.value = 28; amg.gain.value = 0.07; am.connect(amg).connect(v.gain);
+      [[118, 'sawtooth'], [177, 'square']].forEach(([f, ty]) => { const o = c.createOscillator(); o.type = ty; o.frequency.value = f; o.connect(lp); o.start(t); o.stop(t + 0.45); });
+      lp.connect(v).connect(c.destination); am.start(t); am.stop(t + 0.45);
+    },
     strike: () => { tone(196, 0, 0.16, 'square', 0.03, 140); tone(98, 0.02, 0.2, 'sine', 0.08, 70); },
     out: () => [392, 349, 311, 262].forEach((f, i) => tone(f, i * 0.2, i === 3 ? 0.7 : 0.24, 'triangle', 0.06, i === 3 ? 196 : 0)),
     /* unit complete: an original brass fanfare with timpani and a bell shimmer */
@@ -1639,7 +1800,7 @@ const TTS = (() => {
       if (g !== gen) return;
       if (k >= items.length) { if (o.end) o.end(); return; }
       const it = items[k++];
-      if (it && it.fx) { SFX[it.fx](); setTimeout(next, 420); return; }
+      if (it && it.fx) { SFX[it.fx](); setTimeout(next, 560); return; }
       const s = String(it || '').trim();
       if (!/[\p{L}\p{N}]/u.test(s)) { next(); return; }
       try { speechSynthesis.speak(utter(s, o.slow, () => setTimeout(next, 90))); } catch (e) { next(); }
@@ -1654,15 +1815,30 @@ document.addEventListener('click', ev => { const b = ev.target.closest && ev.tar
 
 /* ============================================================= pictures */
 /* Microsoft Fluent Emoji (MIT licence), matched only for concrete nouns by their first English meaning */
-const PIC = {"dog":"dog","cat":"cat","cow":"cow","horse":"horse","pig":"pig","hog":"pig","chicken":"chicken","hen":"chicken","rooster":"rooster","duck":"duck","bird":"bird","fish":"fish","catfish":"fish","crab":"crab","shrimp":"shrimp","crawfish":"lobster","lobster":"lobster","alligator":"crocodile","mosquito":"mosquito","mouse":"mouse","rat":"rat","sheep":"ewe","owl":"owl","raccoon":"raccoon","squirrel":"chipmunk","deer":"deer","wolf":"wolf","monkey":"monkey","spider":"spider","ant":"ant","fly":"fly","worm":"worm","oyster":"oyster","egg":"egg","eggs":"egg","buzzard":"bird","vulture":"bird","pelican":"bird","goose":"goose","house":"house","home":"house","church":"church","school":"school","hospital":"hospital","store":"convenience-store","bank":"bank","city":"cityscape","door":"door","window":"window","bed":"bed","chair":"chair","key":"key","box":"package","bottle":"bottle-with-popping-cork","cup":"teacup-without-handle","bowl":"bowl-with-spoon","spoon":"spoon","knife":"kitchen-knife","fork":"fork-and-knife","plate":"fork-and-knife-with-plate","pot":"pot-of-food","broom":"broom","bucket":"bucket","candle":"candle","lamp":"light-bulb","light":"light-bulb","clock":"mantelpiece-clock","watch":"watch","phone":"mobile-phone","book":"closed-book","pencil":"pencil","paper":"page-facing-up","money":"money-bag","gift":"wrapped-gift","present":"wrapped-gift","hammer":"hammer","axe":"axe","car":"automobile","truck":"pickup-truck","boat":"canoe","pirogue":"canoe","ship":"ship","airplane":"airplane","bicycle":"bicycle","bike":"bicycle","road":"motorway","sun":"sun","moon":"crescent-moon","star":"star","cloud":"cloud","rain":"cloud-with-rain","snow":"snowflake","wind":"wind-face","storm":"cloud-with-lightning-and-rain","hurricane":"cyclone","lightning":"high-voltage","thunder":"cloud-with-lightning","fire":"fire","water":"droplet","sea":"water-wave","ocean":"water-wave","river":"water-wave","tree":"deciduous-tree","oak":"deciduous-tree","flower":"hibiscus","leaf":"leaf-fluttering-in-wind","grass":"herb","mountain":"mountain","world":"globe-showing-americas","apple":"red-apple","orange":"tangerine","lemon":"lemon","banana":"banana","peach":"peach","pear":"pear","strawberry":"strawberry","fig":"red-apple","peanut":"peanuts","tomato":"tomato","potato":"potato","sweet potato":"roasted-sweet-potato","onion":"onion","garlic":"garlic","pepper":"hot-pepper","carrot":"carrot","corn":"ear-of-corn","bean":"beans","beans":"beans","cabbage":"leafy-green","eggplant":"eggplant","cucumber":"cucumber","mushroom":"mushroom","rice":"cooked-rice","bread":"bread","cornbread":"bread","cake":"shortcake","pie":"pie","butter":"butter","cheese":"cheese-wedge","milk":"glass-of-milk","coffee":"hot-beverage","tea":"teacup-without-handle","beer":"beer-mug","wine":"wine-glass","whiskey":"tumbler-glass","meat":"cut-of-meat","sausage":"hot-dog","soup":"pot-of-food","gumbo":"pot-of-food","honey":"honey-pot","ice":"ice","child":"child","boy":"boy","girl":"girl","man":"man","woman":"woman","old man":"old-man","teacher":"teacher","farmer":"farmer","police":"police-officer","student":"student","hand":"raised-hand","foot":"foot","leg":"leg","arm":"flexed-biceps","eye":"eye","ear":"ear","mouth":"mouth","lip":"mouth","tooth":"tooth","teeth":"tooth","tongue":"tongue","heart":"red-heart","brain":"brain","bone":"bone","finger":"backhand-index-pointing-up","thumb":"thumbs-up","shirt":"t-shirt","dress":"dress","hat":"billed-cap","shoe":"mans-shoe","shoes":"mans-shoe","boots":"womans-boot","boot":"womans-boot","coat":"coat","pants":"jeans","sock":"socks","socks":"socks","glasses":"glasses","glove":"gloves","gloves":"gloves","umbrella":"umbrella","music":"musical-notes","song":"musical-note","guitar":"guitar","drum":"drum","banjo":"banjo","dance":"woman-dancing","ball":"soccer-ball","game":"game-die","card":"joker","cards":"joker","birthday":"birthday-cake","christmas":"christmas-tree","bible":"closed-book","cross":"latin-cross","angel":"baby-angel","picture":"framed-picture","calendar":"calendar","medicine":"pill","pill":"pill","soap":"soap","needle":"sewing-needle","garden":"seedling","seed":"seedling","wood":"wood","beach":"beach-with-umbrella","night":"night-with-stars","morning":"sunrise","evening":"sunset","summer":"sun","winter":"snowflake","spring":"cherry-blossom","fall":"fallen-leaf","autumn":"fallen-leaf","year":"calendar","week":"spiral-calendar","day":"sun"};
+const PIC = {"dog":"dog","cat":"cat","cow":"cow","horse":"horse","pig":"pig","hog":"pig","chicken":"chicken","hen":"chicken","rooster":"rooster","duck":"duck","bird":"bird","fish":"fish","catfish":"fish","crab":"crab","shrimp":"shrimp","crawfish":"lobster","lobster":"lobster","snake":"snake","alligator":"crocodile","turtle":"turtle","frog":"frog","mosquito":"mosquito","bee":"honeybee","butterfly":"butterfly","rabbit":"rabbit","mouse":"mouse","rat":"rat","goat":"goat","sheep":"ewe","donkey":"donkey","owl":"owl","raccoon":"raccoon","squirrel":"chipmunk","deer":"deer","bear":"bear","fox":"fox","wolf":"wolf","monkey":"monkey","spider":"spider","ant":"ant","fly":"fly","worm":"worm","snail":"snail","oyster":"oyster","egg":"egg","eggs":"egg","turkey":"turkey","eagle":"eagle","buzzard":"bird","vulture":"bird","pelican":"bird","goose":"goose","swan":"swan","parrot":"parrot","beaver":"beaver","bat":"bat","skunk":"skunk","cricket":"cricket","house":"house","home":"house","church":"church","school":"school","hospital":"hospital","store":"convenience-store","bank":"bank","city":"cityscape","door":"door","window":"window","bed":"bed","chair":"chair","key":"key","lock":"locked","box":"package","bottle":"bottle-with-popping-cork","cup":"teacup-without-handle","bowl":"bowl-with-spoon","spoon":"spoon","knife":"kitchen-knife","fork":"fork-and-knife","plate":"fork-and-knife-with-plate","pot":"pot-of-food","broom":"broom","bucket":"bucket","candle":"candle","lamp":"light-bulb","light":"light-bulb","clock":"mantelpiece-clock","watch":"watch","phone":"mobile-phone","telephone":"telephone","book":"closed-book","letter":"envelope","pen":"pen","pencil":"pencil","paper":"page-facing-up","money":"money-bag","ring":"ring","gift":"wrapped-gift","present":"wrapped-gift","hammer":"hammer","axe":"axe","saw":"carpentry-saw","ladder":"ladder","car":"automobile","truck":"pickup-truck","boat":"canoe","pirogue":"canoe","ship":"ship","airplane":"airplane","train":"locomotive","bicycle":"bicycle","bike":"bicycle","road":"motorway","bridge":"bridge-at-night","sun":"sun","moon":"crescent-moon","star":"star","cloud":"cloud","rain":"cloud-with-rain","snow":"snowflake","wind":"wind-face","storm":"cloud-with-lightning-and-rain","hurricane":"cyclone","lightning":"high-voltage","thunder":"cloud-with-lightning","fire":"fire","water":"droplet","sea":"water-wave","ocean":"water-wave","river":"water-wave","tree":"deciduous-tree","oak":"deciduous-tree","flower":"hibiscus","leaf":"leaf-fluttering-in-wind","grass":"herb","rose":"rose","mountain":"mountain","island":"desert-island","world":"globe-showing-americas","rainbow":"rainbow","apple":"red-apple","orange":"tangerine","lemon":"lemon","banana":"banana","grape":"grapes","grapes":"grapes","peach":"peach","pear":"pear","watermelon":"watermelon","strawberry":"strawberry","fig":"red-apple","peanut":"peanuts","tomato":"tomato","potato":"potato","sweet potato":"roasted-sweet-potato","onion":"onion","garlic":"garlic","pepper":"hot-pepper","carrot":"carrot","corn":"ear-of-corn","bean":"beans","beans":"beans","cabbage":"leafy-green","eggplant":"eggplant","cucumber":"cucumber","mushroom":"mushroom","rice":"cooked-rice","bread":"bread","cornbread":"bread","cake":"shortcake","pie":"pie","candy":"candy","salt":"salt","butter":"butter","cheese":"cheese-wedge","milk":"glass-of-milk","coffee":"hot-beverage","tea":"teacup-without-handle","beer":"beer-mug","wine":"wine-glass","whiskey":"tumbler-glass","meat":"cut-of-meat","sausage":"hot-dog","soup":"pot-of-food","gumbo":"pot-of-food","honey":"honey-pot","ice":"ice","cookie":"cookie","baby":"baby","child":"child","boy":"boy","girl":"girl","man":"man","woman":"woman","old man":"old-man","old woman":"old-woman","doctor":"health-worker","teacher":"teacher","farmer":"farmer","cook":"cook","king":"crown","queen":"crown","police":"police-officer","student":"student","hand":"raised-hand","foot":"foot","leg":"leg","arm":"flexed-biceps","eye":"eye","eyes":"eyes","ear":"ear","mouth":"mouth","lip":"mouth","tooth":"tooth","teeth":"tooth","tongue":"tongue","heart":"red-heart","brain":"brain","bone":"bone","finger":"backhand-index-pointing-up","thumb":"thumbs-up","shirt":"t-shirt","dress":"dress","hat":"billed-cap","shoe":"mans-shoe","shoes":"mans-shoe","boots":"womans-boot","boot":"womans-boot","coat":"coat","pants":"jeans","sock":"socks","socks":"socks","glasses":"glasses","glove":"gloves","gloves":"gloves","umbrella":"umbrella","music":"musical-notes","song":"musical-note","guitar":"guitar","violin":"violin","fiddle":"violin","accordion":"accordion","drum":"drum","banjo":"banjo","dance":"woman-dancing","ball":"soccer-ball","game":"game-die","card":"joker","cards":"joker","party":"party-popper","birthday":"birthday-cake","christmas":"christmas-tree","bible":"closed-book","cross":"latin-cross","angel":"baby-angel","picture":"framed-picture","photo":"camera","camera":"camera","television":"television","tv":"television","radio":"radio","computer":"laptop","map":"world-map","flag":"triangular-flag","calendar":"calendar","medicine":"pill","pill":"pill","soap":"soap","basket":"basket","bag":"shopping-bags","gun":"water-pistol","needle":"sewing-needle","thread":"thread","rope":"knot","net":"fishing-pole","fishing pole":"fishing-pole","tent":"tent","garden":"seedling","seed":"seedling","farm":"tractor","tractor":"tractor","wood":"wood","stone":"rock","rock":"rock","beach":"beach-with-umbrella","night":"night-with-stars","morning":"sunrise","evening":"sunset","summer":"sun","winter":"snowflake","spring":"cherry-blossom","fall":"fallen-leaf","autumn":"fallen-leaf","year":"calendar","week":"spiral-calendar","day":"sun","cigarette":"cigarette","pipe":"cigarette","anchor":"anchor","bell":"bell","crown":"crown","v:eat":"fork-and-knife-with-plate","v:drink":"cup-with-straw","v:sleep":"sleeping-face","v:run":"person-running","v:walk":"person-walking","v:go":"person-walking","v:talk":"speaking-head","v:speak":"speaking-head","v:say":"speech-balloon","v:tell":"speech-balloon","v:sing":"microphone","v:dance":"man-dancing","v:read":"open-book","v:write":"writing-hand","v:see":"eyes","v:look":"eyes","v:watch":"eyes","v:hear":"ear","v:listen":"ear","v:cook":"cooking","v:work":"briefcase","v:play":"game-die","v:swim":"person-swimming","v:fish":"fishing-pole","v:hunt":"bow-and-arrow","v:buy":"shopping-cart","v:sell":"money-with-wings","v:pay":"dollar-banknote","v:give":"wrapped-gift","v:love":"red-heart","v:like":"thumbs-up","v:cry":"crying-face","v:laugh":"face-with-tears-of-joy","v:smile":"smiling-face-with-smiling-eyes","v:think":"thinking-face","v:know":"light-bulb","v:learn":"graduation-cap","v:teach":"teacher","v:call":"telephone-receiver","v:wash":"soap","v:drive":"automobile","v:sit":"chair","v:open":"door","v:wait":"hourglass-done","v:win":"trophy","v:fight":"boxing-glove","v:kiss":"kissing-face","v:pray":"folded-hands","v:rain":"cloud-with-rain","v:wake":"alarm-clock","v:wake up":"alarm-clock","v:marry":"ring","v:help":"handshake","v:build":"building-construction","v:fly":"airplane","v:jump":"person-bouncing-ball","v:climb":"person-climbing","v:plant":"seedling","v:grow":"seedling","v:sew":"sewing-needle","v:wear":"t-shirt","v:dress":"dress","v:shave":"razor","v:smoke":"cigarette","v:bake":"bread","v:fry":"cooking","v:boil":"pot-of-food","v:count":"abacus","v:study":"books","v:travel":"airplane","v:arrive":"airplane-arrival","v:leave":"airplane-departure","v:come":"waving-hand","v:hug":"people-hugging","v:shout":"loudspeaker","v:yell":"loudspeaker","v:whistle":"musical-note","v:dream":"thought-balloon","v:sweep":"broom","v:clean":"sparkles","v:cut":"scissors","v:break":"hammer","v:fix":"wrench","v:repair":"wrench","v:hurt":"adhesive-bandage","v:heal":"adhesive-bandage","v:burn":"fire","v:shine":"sun","v:snow":"snowflake","v:freeze":"cold-face","v:sweat":"hot-face","v:hide":"see-no-evil-monkey","v:steal":"ninja","v:lie":"lying-face","v:kill":"skull","v:die":"headstone","v:born":"baby","v:be born":"baby","v:celebrate":"party-popper","v:joke":"winking-face-with-tongue","v:forget":"face-with-spiral-eyes","v:remember":"light-bulb","v:understand":"light-bulb","v:ask":"red-question-mark","v:answer":"speech-balloon","v:send":"envelope-with-arrow","v:sign":"writing-hand","v:bring":"package","v:carry":"package","v:throw":"baseball","v:catch":"baseball","v:hit":"collision","v:knock":"door","v:ring":"bell","v:pour":"droplet","a:hot":"fire","a:cold":"cold-face","a:happy":"grinning-face","a:glad":"grinning-face","a:sad":"pensive-face","a:tired":"tired-face","a:sick":"face-with-thermometer","a:ill":"face-with-thermometer","a:good":"thumbs-up","a:bad":"thumbs-down","a:beautiful":"sparkles","a:pretty":"sparkles","a:old":"older-person","a:young":"child","a:new":"new-button","a:fast":"high-voltage","a:quick":"high-voltage","a:slow":"snail","a:rich":"money-bag","a:hungry":"face-savoring-food","a:angry":"angry-face","a:mad":"angry-face","a:afraid":"fearful-face","a:scared":"fearful-face","a:crazy":"zany-face","a:drunk":"woozy-face","a:strong":"flexed-biceps","a:clean":"sparkles","a:red":"red-circle","a:blue":"blue-circle","a:green":"green-circle","a:yellow":"yellow-circle","a:black":"black-circle","a:white":"white-circle","a:brown":"brown-circle","a:orange":"orange-circle","a:purple":"purple-circle","a:gray":"white-circle","a:big":"elephant","a:large":"elephant","a:small":"pinching-hand","a:little":"pinching-hand","a:tall":"giraffe","a:short":"pinching-hand","a:fat":"pig","a:thin":"pinching-hand","a:sweet":"candy","a:sour":"lemon","a:salty":"salt","a:spicy":"hot-pepper","a:wet":"droplet","a:dry":"sun","a:dark":"new-moon","a:bright":"sun","a:full":"full-moon","a:empty":"empty-nest","a:dead":"skull","a:alive":"seedling","a:smart":"brain","a:stupid":"clown-face","a:funny":"face-with-tears-of-joy","a:lazy":"sloth","a:proud":"smiling-face-with-sunglasses","a:kind":"smiling-face-with-halo","a:nice":"smiling-face-with-smiling-eyes","a:mean":"angry-face","a:jealous":"green-circle","a:married":"ring","a:pregnant":"pregnant-woman","a:blind":"sunglasses","a:late":"hourglass-done","a:early":"sunrise","a:free":"dove","a:hello":"waving-hand","a:hi":"waving-hand","a:goodbye":"waving-hand","a:bye":"waving-hand","a:thank you":"folded-hands","a:thanks":"folded-hands","a:thank":"folded-hands","a:please":"folded-hands","a:yes":"check-mark-button","a:no":"person-gesturing-no","a:good morning":"sunrise","a:good evening":"sunset","a:good night":"crescent-moon","a:today":"spiral-calendar","a:tomorrow":"tear-off-calendar","a:yesterday":"tear-off-calendar","a:now":"alarm-clock","a:always":"infinity","a:never":"prohibited","a:here":"round-pushpin","a:there":"backhand-index-pointing-right","a:up":"up-arrow","a:down":"down-arrow","a:outside":"house","a:inside":"house","a:one":"keycap-1","a:two":"keycap-2","a:three":"keycap-3","a:four":"keycap-4","a:five":"keycap-5","a:six":"keycap-6","a:seven":"keycap-7","a:eight":"keycap-8","a:nine":"keycap-9","a:ten":"keycap-10","a:hundred":"hundred-points","a:wow":"astonished-face","a:ouch":"face-with-head-bandage","mother":"woman","mom":"woman","mama":"woman","father":"man","dad":"man","papa":"man","brother":"boy","sister":"girl","grandmother":"old-woman","grandfather":"old-man","friend":"people-hugging","wife":"woman","husband":"man","son":"boy","daughter":"girl","person":"bust-in-silhouette","people":"busts-in-silhouette","priest":"church","soldier":"military-helmet","singer":"singer","musician":"saxophone","food":"pot-of-food","job":"briefcase","work":"briefcase","name":"name-badge","question":"red-question-mark","word":"speech-balloon","language":"speaking-head","story":"open-book","news":"newspaper","time":"alarm-clock","hour":"hourglass-done","minute":"stopwatch","month":"spiral-calendar","holiday":"party-popper","restaurant":"fork-and-knife-with-plate","kitchen":"cooking","room":"door","field":"sheaf-of-rice","swamp":"crocodile","prairie":"sheaf-of-rice","lake":"water-wave","nest":"nest-with-eggs","feather":"feather","sugar":"candy","towel":"roll-of-paper","smoke":"fog","boss":"briefcase","mask":"performing-arts","kitten":"cat","puppy":"dog","calf":"cow"};
 const picHead = g => String(g || '').replace(/<br\s*\/?>/gi, ';').replace(/^\s*\d+\.\s*/, '').split(/[;,\/]|\s\d+\./)[0].replace(/\([^)]*\)/g, '').trim().toLowerCase().replace(/^(a|an|the|to) /, '');
+/* nouns by their first meaning; verbs (v:) and other words (a:) from their own lists */
 function picOf(e) {
   if (!e) return '';
   if (e.pic !== undefined) return e.pic;
-  const noun = /^(noun|n\b)/i.test(e.posLabel || '') || (e.cats && e.cats.has('noun') && !e.cats.has('verb'));
-  return (e.pic = noun ? (PIC[picHead(e.senses && e.senses[0] && e.senses[0].g)] || '') : '');
+  const pl = (e.posLabel || '').toLowerCase(), h = picHead(e.senses && e.senses[0] && e.senses[0].g);
+  let p = '';
+  if (/^(noun|n\b)/.test(pl)) p = PIC[h] || '';
+  else if (/^verb/.test(pl)) p = PIC['v:' + h] || PIC['v:' + h.split(' ')[0]] || '';
+  else if (pl) p = PIC['a:' + h] || '';
+  if (!p && /noun/.test(pl)) p = PIC[h] || '';
+  return (e.pic = p);
 }
-const picHTML = (e, cls = '') => { const p = picOf(e); return p ? '<img class="pic ' + cls + '" src="dk-img/' + p + '.webp" alt="" draggable="false" onerror="this.remove()">' : ''; };
+const pimg = (p, cls = '') => p ? '<img class="pic ' + cls + '" src="dk-img/' + p + '.webp" alt="" draggable="false" onerror="this.remove()">' : '';
+const picHTML = (e, cls = '') => pimg(picOf(e), cls);
+/* a sentence takes the picture of its first concrete word, else its first verb or other pictured word */
+function sentPic(x) {
+  if (!x) return '';
+  if (x.pic !== undefined) return x.pic;
+  let best = '', rank = 9;
+  for (const w of x.words || []) for (const i of w.ids || []) { const e = E[i], p = picOf(e); if (!p) continue; const r = /^noun/i.test(e.posLabel || '') ? 0 : /^verb/i.test(e.posLabel || '') ? 1 : 2; if (r < rank) { rank = r; best = p; } }
+  return (x.pic = best);
+}
 
 /* ============================================================== viewport */
 const root = document.documentElement;
@@ -1675,7 +1851,7 @@ function vv() {
   document.body.classList.toggle('xwide', w >= 1180);
 }
 let rzT = 0;
-const onRz = () => { vv(); clearTimeout(rzT); rzT = setTimeout(() => { if (!READY) return; if (TAB === 'learn') layoutPath(); if (P.on) fit($('stg'), 0.5); if (TAB === 'dict') renderList(); if (TAB === 'x') renderX(); if (TAB === 'gram') { if (G.ch >= 0) { gPaginate(); gDraw(); } else renderGram(); } const xl = $('xlist'); if (xl && xl.draw) xl.draw(); fitOverlays(); }, 90); };
+const onRz = () => { vv(); clearTimeout(rzT); rzT = setTimeout(() => { if (!READY) return; if (TAB === 'learn') drawMap(); if (P.on) fit($('stg'), 0.5); if (TAB === 'dict') renderList(); if (TAB === 'x') renderX(); if (TAB === 'gram') { if (G.ch >= 0) { gPaginate(); gDraw(); } else renderGram(); } ['xlist', 'plist', 'notes'].forEach(id => { const o = $(id); if (o && o.draw) o.draw(); }); if ($('unit')) drawUnit(); fitOverlays(); }, 90); };
 addEventListener('resize', onRz);
 if (window.visualViewport) { visualViewport.addEventListener('resize', onRz); visualViewport.addEventListener('scroll', vv); }
 addEventListener('scroll', () => { if (scrollY) scrollTo(0, 0); });
@@ -1752,7 +1928,7 @@ function overlay(id, html, cls = 'dim') {
 function closeOv(id, silent) { const el = $(id); if (!el) return; el.remove(); const i = stack.lastIndexOf(id); if (i >= 0) stack.splice(i, 1); if (!silent && id === 'pl') P.on = false; }
 function closeTop() { const id = stack[stack.length - 1]; if (!id) return false; if (id === 'pl') { quitAsk(); return true; } closeOv(id); return true; }
 addEventListener('popstate', () => { if (stack.length) { const id = stack[stack.length - 1]; if (id === 'pl') { if (P.on && P.answered && !P.fin) { try { history.pushState({ ov: 'pl' }, ''); } catch (e) {} quitAsk(); } else endPlayer(); } else closeOv(id); } });
-function fitOverlays() { ['ent', 'units', 'sheet', 'kind', 'voices', 'credits', 'gtoc'].forEach(id => { const el = $(id); if (el) { const b = el.querySelector('.cb'); if (b && id !== 'ent') fit(b, 0.55); if (id === 'ent') layoutEntry(); } }); }
+function fitOverlays() { ['ent', 'units', 'sheet', 'kind', 'voices', 'credits', 'gtoc', 'edit'].forEach(id => { const el = $(id); if (el) { const b = el.querySelector('.cb'); if (b && id !== 'ent') fit(b, 0.55); if (id === 'ent') layoutEntry(); } }); }
 
 /* =============================================================== learn */
 /* the course is long, so it is shown a section (10 units) at a time, with no totals */
@@ -1775,29 +1951,7 @@ function weekHTML() {
 function nextHTML(fo) {
   if (fo >= C.lessons.length) return '';
   const L = C.lessons[fo], u = L.u, ids = L.ids, k = fo - C.units[u].ls[0];
-  return '<div class="next"><small>Section ' + (secOf(u) + 1) + ' · Unit ' + (u % SEC + 1) + '</small><div class="ldots">' + C.units[u].ls.map((_, j) => '<i class="' + (j < k ? 'on' : j === k ? 'cur' : '') + '"></i>').join('') + '</div><div class="ws">' + ids.map(i => '<span>' + picHTML(E[i], 'xs') + esc(tw(E[i])) + '</span>').join('') + '</div><button class="btn pri" id="bNext" type="button">Start</button></div>';
-}
-function renderLearn() {
-  if (!READY) return;
-  const fo = firstOpen(), cu = fo < C.lessons.length ? C.lessons[fo].u : C.units.length - 1;
-  if (viewU == null || !viewPinned) viewU = cu;
-  viewU = Math.max(0, Math.min(C.units.length - 1, viewU));
-  const u = C.units[viewU], locked = u.ls[0] > fo, all = unitAll(viewU);
-  $('vLearn').innerHTML = '<div class="lmain"><div class="unit' + (all ? ' gold' : '') + '" id="unit"><div class="uh"><button class="rb" id="uPrev" type="button" aria-label="Previous unit"' + (viewU ? '' : ' disabled') + '>' + ico('back') + '</button>' +
-    '<button class="nm" id="uName" type="button"><small>Section ' + (secOf(viewU) + 1) + '</small><b>Unit ' + (viewU % SEC + 1) + (all ? ' ' + ico('check', 'ck') : '') + '</b><span class="uw">' + esc(unitTitle(viewU)) + '</span></button>' +
-    '<button class="rb" id="uNext" type="button" aria-label="Next unit"' + (viewU < C.units.length - 1 ? '' : ' disabled') + '>' + ico('fwd') + '</button></div>' +
-    '<div class="path" id="path"></div>' +
-    (locked ? '<div class="ulock"><button class="btn acc" id="bJump" type="button">' + ico('jump') + 'Jump here</button></div>' : '') + '</div>' + actsHTML() + '</div>' +
-    '<div class="lside">' + nextHTML(fo) + weekHTML() + actsHTML() + '</div>';
-  const nb = $('bNext'); if (nb) nb.onclick = () => startLesson(fo);
-  $('uPrev').onclick = () => { if (viewU > 0) { viewU--; viewPinned = viewU !== cu; SFX.tap(); renderLearn(); } };
-  $('uNext').onclick = () => { if (viewU < C.units.length - 1) { viewU++; viewPinned = viewU !== cu; SFX.tap(); renderLearn(); } };
-  $('uName').onclick = openSections;
-  if ($('bJump')) $('bJump').onclick = () => startJump(viewU);
-  document.querySelectorAll('#bRev').forEach(b => b.onclick = () => startReview('review'));
-  document.querySelectorAll('#bBlz').forEach(b => b.onclick = startBlitz);
-  layoutPath();
-  renderHeader();
+  return '<div class="next"><small>' + esc(distOf(u).kr) + ' · Unit ' + (u % SEC + 1) + '</small><div class="ldots">' + C.units[u].ls.map((_, j) => '<i class="' + (j < k ? 'on' : j === k ? 'cur' : '') + '"></i>').join('') + '</div><div class="ws">' + ids.map(i => '<span>' + picHTML(E[i], 'xs') + esc(tw(E[i])) + '</span>').join('') + '</div><button class="btn pri" id="bNext" type="button">Start</button></div>';
 }
 function layoutPath() {
   const box = $('path'); if (!box || !C) return;
@@ -1865,11 +2019,120 @@ function openSections() {
   draw(el);
 }
 
+/* ================================================================= map */
+/* one long road from the top: each district of 10 units is a Louisiana place with its own scenery.
+   The road ends just below the learner's unit, so you can't scroll past where you are. */
+const DIST = [
+  { id: 'bayou', kr: 'Bayou', en: 'The bayou', fx: 'flies', props: ['crocodile', 'canoe', 'frog', 'turtle', 'lotus', 'fish', 'evergreen-tree', 'deciduous-tree'] },
+  { id: 'pleri', kr: 'Pléri', en: 'The prairie', fx: 'grass', props: ['cow', 'sheaf-of-rice', 'lobster', 'sunflower', 'tractor', 'horse', 'cowboy-hat-face', 'sun'] },
+  { id: 'lavil', kr: 'Lavil', en: 'New Orleans', fx: 'notes', props: ['saxophone', 'trumpet', 'performing-arts', 'red-paper-lantern', 'classical-building', 'musical-notes', 'doughnut', 'hot-beverage'] },
+  { id: 'lamaer', kr: 'Lamær', en: 'The Gulf', fx: 'waves', props: ['sailboat', 'crab', 'shrimp', 'bird', 'spiral-shell', 'tropical-fish', 'anchor', 'desert-island'] },
+  { id: 'kann', kr: 'Klo dikann', en: 'The cane fields', fx: 'smoke', props: ['tractor', 'fire', 'pickup-truck', 'candy', 'sunset', 'seedling', 'sheaf-of-rice', 'cloud'] },
+  { id: 'dibwa', kr: 'Dibwa', en: 'The woods', fx: 'leaves', props: ['deer', 'owl', 'fallen-leaf', 'maple-leaf', 'mushroom', 'evergreen-tree', 'chipmunk', 'raccoon'] },
+  { id: 'lafet', kr: 'Lafèt', en: 'The festival', fx: 'confetti', props: ['performing-arts', 'party-popper', 'confetti-ball', 'chicken', 'accordion', 'violin', 'crown', 'balloon'] },
+  { id: 'sipri', kr: 'Sipriyær', en: 'The cypress swamp', fx: 'stars', props: ['crescent-moon', 'frog', 'crocodile', 'owl', 'glowing-star', 'snake', 'mosquito', 'bat'] },
+  { id: 'riv', kr: 'Larivyær', en: 'The river', fx: 'waves', props: ['ship', 'fishing-pole', 'sunset', 'anchor', 'fish', 'canoe', 'bridge-at-night', 'trophy'] }
+];
+const distOf = u => DIST[Math.min(DIST.length - 1, secOf(u))];
+const unitPic = u => { if (C.units[u].pic !== undefined) return C.units[u].pic; for (const L of C.units[u].ls) for (const i of C.lessons[L].ids) { const p = picOf(E[i]); if (p && /^noun/i.test(E[i].posLabel || '')) return (C.units[u].pic = p); } for (const L of C.units[u].ls) for (const i of C.lessons[L].ids) { const p = picOf(E[i]); if (p) return (C.units[u].pic = p); } return (C.units[u].pic = ''); };
+function fxHTML(kind, h) {
+  const n = Math.round(h / 90), R = DK.rng(kind.length * 977 + h | 0); let o = '';
+  for (let i = 0; i < n; i++) {
+    const x = (R() * 100).toFixed(1), y = (R() * 100).toFixed(1), d = (R() * 6).toFixed(2), s = (0.7 + R() * 0.8).toFixed(2);
+    o += '<i style="left:' + x + '%;top:' + y + '%;animation-delay:-' + d + 's;--s:' + s + '"></i>';
+  }
+  return '<div class="fx fx-' + kind + '">' + o + '</div>';
+}
+let mapFirst = true, mapScroll = null, mapCu = -1;
+function renderLearn() {
+  if (!READY) return;
+  const fo = firstOpen();
+  const old = $('map'); if (old) mapScroll = old.scrollTop;
+  $('vLearn').innerHTML = '<div class="lmain"><div class="map" id="map"><div class="mapin" id="mapin"></div></div><div class="mbar"><button class="btn sq here" id="mHere" type="button" aria-label="My unit" hidden>' + ico('target') + '</button>' + actsHTML() + '</div></div>' +
+    '<div class="lside">' + nextHTML(fo) + weekHTML() + actsHTML() + '</div>';
+  const nb = $('bNext'); if (nb) nb.onclick = () => startLesson(fo);
+  document.querySelectorAll('#bRev').forEach(b => b.onclick = () => startReview('review'));
+  document.querySelectorAll('#bBlz').forEach(b => b.onclick = startBlitz);
+  drawMap();
+  renderHeader();
+}
+function drawMap(reveal) {
+  const map = $('map'), inn = $('mapin'); if (!map || !inn) return;
+  const W = map.clientWidth; if (!W) return;
+  const fo = firstOpen(), cu = fo < C.lessons.length ? C.lessons[fo].u : C.units.length - 1, last = Math.min(C.units.length - 1, cu + 1);
+  const STEP = 124, BAN = 190, amp = Math.min(W * 0.2, 140), cx = W / 2;
+  let y = 30, h = '', nodes = [], bands = '';
+  const dLast = secOf(last);
+  for (let d = 0; d <= dLast; d++) {
+    const D = DIST[Math.min(DIST.length - 1, d)], u0 = d * SEC, u1 = Math.min(C.units.length - 1, u0 + SEC - 1, last);
+    const top = y, done = C.units.slice(u0, u0 + SEC).every((_, k) => unitAll(u0 + k));
+    y += BAN;
+    for (let u = u0; u <= u1; u++) { const k = u - u0; nodes.push({ u, x: cx + Math.sin(k * 0.9 + d) * amp, y: y + STEP * 0.5 }); y += STEP; }
+    const bh = y - top + (d === dLast ? 260 : 20);
+    let props = '';
+    const R = DK.rng(d * 31 + 7);
+    for (let p = 0, py = BAN * 0.75; py < bh - 80; p++, py += 150 + R() * 70) {
+      const left = p % 2 === 0, src = D.props[p % D.props.length], sz = 46 + Math.round(R() * 22);
+      props += '<img class="prop a' + (p % 4) + '" src="dk-img/' + src + '.webp" alt="" onerror="this.remove()" style="' + (left ? 'left' : 'right') + ':' + (2 + R() * 6).toFixed(1) + '%;top:' + py.toFixed(0) + 'px;width:' + sz + 'px;height:' + sz + 'px;animation-delay:-' + (R() * 4).toFixed(2) + 's">';
+    }
+    bands += '<section class="dist d-' + D.id + (done ? ' done' : '') + '" style="top:' + top + 'px;height:' + bh + 'px"><div class="sky"></div>' + fxHTML(D.fx, bh) + props +
+      '<div class="dban"><span class="dn">District ' + (d + 1) + '</span><b>' + esc(D.kr) + '</b><small>' + esc(D.en) + '</small>' + (done ? '<span class="seal"><svg class="fl"><use href="#i-fleur"/></svg></span>' : '') + '</div></section>';
+  }
+  const endY = y + 40;
+  // the road: a smooth curve through every unit
+  let path = '';
+  nodes.forEach((n, i) => { if (!i) { path += 'M' + n.x.toFixed(1) + ' ' + (n.y - 70).toFixed(1) + ' L' + n.x.toFixed(1) + ' ' + n.y.toFixed(1); return; } const p = nodes[i - 1], my = (p.y + n.y) / 2; path += ' C' + p.x.toFixed(1) + ' ' + my.toFixed(1) + ',' + n.x.toFixed(1) + ' ' + my.toFixed(1) + ',' + n.x.toFixed(1) + ' ' + n.y.toFixed(1); });
+  const ci = nodes.findIndex(n => n.u === cu), cutY = ci >= 0 ? nodes[ci].y : endY;
+  h += bands + '<svg class="road" width="' + W + '" height="' + endY + '" viewBox="0 0 ' + W + ' ' + endY + '"><defs><clipPath id="rdone"><rect x="0" y="0" width="' + W + '" height="' + cutY.toFixed(0) + '"/></clipPath></defs><path class="r0" d="' + path + '"/><path class="r1" d="' + path + '"/><path class="r2" d="' + path + '" clip-path="url(#rdone)"/></svg>';
+  nodes.forEach(n => {
+    const u = n.u, all = unitAll(u), cur = u === cu && !all, lock = u > cu, ls = C.units[u].ls, dn = ls.filter(lessonDone).length, pic = unitPic(u);
+    const R = 34, CC = 2 * Math.PI * R;
+    h += '<button type="button" class="un ' + (all ? 'done' : cur ? 'cur' : lock ? 'lock' : 'open') + '" data-u="' + u + '" style="left:' + n.x.toFixed(1) + 'px;top:' + n.y.toFixed(1) + 'px">' +
+      (cur ? '<svg class="pr" viewBox="0 0 76 76"><circle cx="38" cy="38" r="' + R + '" class="b"/><circle cx="38" cy="38" r="' + R + '" class="f" stroke-dasharray="' + CC.toFixed(1) + '" stroke-dashoffset="' + (CC * (1 - dn / ls.length)).toFixed(1) + '"/></svg><span class="go">' + (dn ? 'Continue' : 'Start') + '</span>' : '') +
+      '<span class="c">' + (lock ? ico('lock') : pic ? pimg(pic) : all ? '<svg class="i fl"><use href="#i-fleur"/></svg>' : ico('spark')) + (all ? '<i class="ck">' + ico('check') + '</i>' : '') + '</span><span class="lb">Unit ' + (u % SEC + 1) + '</span></button>';
+  });
+  h += '<svg class="king map-king" style="left:3%;top:160px"><use href="#i-king"/></svg><div class="map-say" style="left:calc(3% + 84px);top:156px">Bonjou!</div>';
+  h += '<div class="fog" style="top:' + (endY - 300) + 'px"><i></i><i></i><i></i></div>';
+  inn.style.height = endY + 'px';
+  inn.innerHTML = h;
+  inn.querySelectorAll('.un').forEach(b => b.onclick = () => { const u = +b.dataset.u; if (b.classList.contains('lock') && u !== cu + 1) return; SFX.tap(); openUnit(u); });
+  // keep the scenery still when it is off screen
+  if (window.IntersectionObserver) { const io = new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('live', e.isIntersecting)), { root: map, rootMargin: '200px' }); inn.querySelectorAll('.dist').forEach(s => io.observe(s)); }
+  const curN = nodes[ci >= 0 ? ci : nodes.length - 1], here = $('mHere');
+  const toCur = smooth => map.scrollTo({ top: Math.max(0, curN.y - map.clientHeight * 0.55), behavior: smooth ? 'smooth' : 'auto' });
+  if (mapFirst || reveal != null || mapCu !== cu) { toCur(false); mapFirst = false; mapCu = cu; } else if (mapScroll != null) map.scrollTop = mapScroll;
+  const chk = () => { const off = Math.abs(curN.y - (map.scrollTop + map.clientHeight * 0.55)) > map.clientHeight * 0.6; here.hidden = !off; };
+  map.onscroll = chk; chk();
+  here.onclick = () => { SFX.tap(); toCur(true); };
+  if (reveal != null) { const b = inn.querySelector('.un[data-u="' + reveal + '"]'); if (b) { b.classList.add('reveal'); setTimeout(() => { SFX.unlock(); }, 350); } }
+}
+/* a unit: its lessons, its challenge and its notes */
+let unitU = 0;
+function openUnit(u) {
+  unitU = u;
+  const el = overlay('unit', '<div class="card unitc"><div class="ch"><button class="rb" type="button" data-x aria-label="Back">' + ico('back') + '</button><div class="ut"><small id="uD"></small><b id="uT"></b></div><button class="rb nb" type="button" id="uNotes" aria-label="Notes">' + ico('book') + '</button></div><div class="cb ub"><div class="uw" id="uW"></div><div class="path" id="path"></div><div id="uJ"></div></div></div>');
+  el.querySelector('[data-x]').onclick = () => closeOv('unit');
+  el.querySelector('#uNotes').onclick = () => openNotes(unitU);
+  drawUnit();
+}
+function drawUnit() {
+  const el = $('unit'); if (!el) return;
+  const u = unitU, D = distOf(u), fo = firstOpen(), locked = C.units[u].ls[0] > fo;
+  el.querySelector('.card').className = 'card unitc d-' + D.id;
+  $('uD').textContent = D.kr + ' · District ' + (secOf(u) + 1);
+  $('uT').textContent = 'Unit ' + (u % SEC + 1);
+  $('uW').innerHTML = C.units[u].ls.flatMap(L => C.lessons[L].ids).slice(0, 8).map(i => '<span>' + picHTML(E[i], 'xs') + esc(tw(E[i])) + '</span>').join('');
+  $('uJ').innerHTML = locked ? '<button class="btn acc" id="bJump" type="button">' + ico('jump') + 'Jump here</button>' : '';
+  if ($('bJump')) $('bJump').onclick = () => { closeOv('unit', true); startJump(u); };
+  const nd = notesFor(u); el.querySelector('#uNotes').classList.toggle('has', nd.length > 0);
+  viewU = u;
+  requestAnimationFrame(() => { layoutPath(); fit(el.querySelector('.cb'), 0.6); });
+}
 /* ============================================================== player */
 const P = { on: false };
 const canMic = () => !!SRC && !P.noSR && window.__dkSR !== false;
 /* three strikes and the session is over: lessons, unit challenges, jumps and new 101 words */
-const STRIKES = { lesson: 1, unit: 1, jump: 1, xlearn: 1 };
+const STRIKES = { lesson: 1, unit: 1, jump: 1, xlearn: 1, plearn: 1 };
 function warmIds(L) { const r = recs(), t = now(), mine = new Set(C.lessons[L].ids); return Object.keys(r).map(Number).filter(i => !mine.has(i) && r[i][1] * 6e4 <= t && !E[i].multi).sort((a, b) => DK.recall(r[a], t) - DK.recall(r[b], t)).slice(0, 2); }
 const seed = () => (now() / 1000 | 0) % 997 + 1;
 function startLesson(L) { const steps = K.lesson(L, { seed: seed(), audio: TTS.has(), mic: canMic(), warm: warmIds(L) }); startSession('lesson', steps, { L }); }
@@ -1888,7 +2151,7 @@ function retry() {
   const m = P.mode, M = P.meta || {};
   P.on = false; TTS.stop(); closeOv('pl', true);
   if (m === 'lesson') startLesson(M.L); else if (m === 'unit') startUnitReview(M.U); else if (m === 'jump') startJump(M.U);
-  else if (m === 'blitz') startBlitz(); else if (m === 'xlearn') xLearn(M.ids); else if (m === 'xreview') xReview(); else if (m === 'place') startPlacement();
+  else if (m === 'blitz') startBlitz(); else if (m === 'xlearn') xLearn(M.ids); else if (m === 'plearn') pLearn(M.pi); else if (m === 'xreview') xReview(); else if (m === 'place') startPlacement();
   else startReview(m === 'weak' || m === 'practice' ? m : 'review');
   if (!P.on) renderAll();
 }
@@ -1994,7 +2257,7 @@ function outScreen() {
   P.fin = true; clearInterval(P.clock); TTS.stop();
   $('kbx').innerHTML = ''; $('fb').className = 'fb';
   const stg = $('stg'); stg.className = 'stage mid';
-  stg.innerHTML = '<div class="res out"><div class="xxx">' + [0, 1, 2].map(i => '<i style="animation-delay:' + (i * 0.14) + 's">' + ico('x') + '</i>').join('') + '</div><h2>Three strikes</h2><p>' + (P.mode === 'lesson' ? 'Run it back and it will stick.' : 'Shake it off and go again.') + '</p></div>';
+  stg.innerHTML = '<div class="res out"><svg class="king"><use href="#i-king"/></svg><div class="xxx">' + [0, 1, 2].map(i => '<i style="animation-delay:' + (i * 0.14) + 's">' + ico('x') + '</i>').join('') + '</div><h2>Three strikes</h2><p>' + (P.mode === 'lesson' ? 'Run it back and it will stick.' : 'Shake it off and go again.') + '</p></div>';
   const f = setFoot('<button class="btn" id="pN" type="button">Close</button><button class="btn pri" id="pR" type="button">' + ico('rev') + 'Retry</button>');
   f.querySelector('#pN').onclick = endPlayer;
   f.querySelector('#pR').onclick = retry;
@@ -2028,7 +2291,10 @@ function finish() {
   } else if (mode === 'xlearn') {
     P.meta.ids.forEach(i => { const g = P.grades.has(i) ? P.grades.get(i) : 2, k = V[i].xk, r = st.x[k]; st.x[k] = r ? DK.schedule(r, g, t) : DK.recNew(t, g === 2 ? 1 : g === 1 ? 0.7 : 0.5); });
   } else if (mode === 'xreview') {
-    P.grades.forEach((g, i) => { const k = V[i].xk; if (st.x[k]) st.x[k] = DK.schedule(st.x[k], g, t); });
+    P.grades.forEach((g, i) => { const k = typeof i === 'string' ? 'p|' + PV[+i.slice(1)].key : V[i].xk; if (st.x[k]) st.x[k] = DK.schedule(st.x[k], g, t); });
+  } else if (mode === 'plearn') {
+    const p = PV[P.meta.pi], k = 'p|' + p.key, g = P.grades.has('P' + p.i) ? P.grades.get('P' + p.i) : 2;
+    st.x[k] = st.x[k] ? DK.schedule(st.x[k], g, t) : DK.recNew(t, g === 2 ? 1 : 0.6);
   } else {
     P.grades.forEach((g, id) => { const k = E[id].key; if (st.w[k]) st.w[k] = DK.schedule(st.w[k], g, t); });
   }
@@ -2037,14 +2303,15 @@ function finish() {
   touch(); save(); push();
   const sk = streak();
   progress(); $('pB').style.width = '100%';
-  const title = mode === 'blitz' ? (P.newBest ? 'New best' : 'Speed round') : mode === 'unit' ? 'Challenge complete' : mode === 'place' ? 'You start at Section ' + (secOf(viewU) + 1) + ', Unit ' + (viewU % SEC + 1) : mode === 'lesson' ? (P.strikes ? 'Lesson complete' : 'Flawless') : mode === 'jump' ? 'Unit unlocked' : mode === 'xlearn' ? 'New words' : 'Review complete';
+  const title = mode === 'blitz' ? (P.newBest ? 'New best' : 'Speed round') : mode === 'unit' ? 'Challenge complete' : mode === 'place' ? 'You start in ' + distOf(viewU).kr + ', Unit ' + (viewU % SEC + 1) : mode === 'lesson' ? (P.strikes ? 'Lesson complete' : 'Flawless') : mode === 'jump' ? 'Unit unlocked' : mode === 'xlearn' ? 'New words' : mode === 'plearn' ? 'Proverb learned' : 'Review complete';
   const isX = mode === 'xlearn' || mode === 'xreview';
-  const ws = mode === 'lesson' ? C.lessons[P.meta.L].ids : mode === 'xlearn' ? P.meta.ids : mode === 'place' || mode === 'blitz' ? [] : [...P.grades.keys()].slice(0, 14);
+  const ws = mode === 'lesson' ? C.lessons[P.meta.L].ids : mode === 'xlearn' ? P.meta.ids : mode === 'place' || mode === 'blitz' || mode === 'plearn' ? [] : [...P.grades.keys()].filter(k => typeof k === 'number').slice(0, 14);
   const W = i => isX ? V[i] : E[i];
   const stg = $('stg'); $('fb').className = 'fb'; stg.className = 'stage mid';
   const marks = STRIKES[mode] ? '<div class="smk">' + [0, 1, 2].map(i => '<i class="' + (i < P.strikes ? 'on' : '') + '">' + ico('x') + '</i>').join('') + '</div>' : '';
   stg.innerHTML = '<div class="res"><div class="medal' + (unitDoneNow != null ? ' gold' : '') + '"><svg class="fl"><use href="#i-fleur"/></svg></div><h2>' + esc(title) + '</h2>' + marks +
     (mode === 'blitz' ? '<div class="tiles2"><div class="a"><small>Pairs</small><b>' + P.pairs + '</b></div><div class="s"><small>Best</small><b>' + (st.best.blitz || 0) + '</b></div></div>' : '') +
+    (mode === 'plearn' ? (p => '<div class="pvr"><div class="k">' + esc(p.s) + '</div><div class="e">' + esc(p.t) + '</div>' + (p.m ? '<div class="m">' + esc(p.m) + '</div>' : '') + '</div>')(PV[P.meta.pi]) : '') +
     (ws.length ? '<div class="wl">' + ws.map(id => '<button type="button" class="wc" data-say="' + esc(W(id).forms[0]) + '">' + picHTML(W(id), 'xs') + esc(tw(W(id))) + '</button>').join('') + '</div>' : '') +
     (firstToday ? '<div class="gm">' + ico('flame', 'f') + '<span>' + (sk > 1 ? sk + '-day streak' : 'Streak started') + '</span></div>' : '') + '</div>';
   stg.querySelectorAll('.wc').forEach(b => b.onclick = () => { TTS.say(b.dataset.say, { tap: true }); b.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 220 }); });
@@ -2061,18 +2328,18 @@ function celebrate(u, jumped) {
   if ($('gold')) return;
   const nx = jumped ? u : u + 1, last = nx >= C.units.length;
   const el = document.createElement('div'); el.id = 'gold'; el.className = 'ov gold';
-  el.innerHTML = '<div class="rays"></div><canvas id="gfx"></canvas><div class="gw">' +
+  el.innerHTML = '<div class="rays"></div><canvas id="gfx"></canvas><svg class="king gking"><use href="#i-king"/></svg><div class="gw">' +
     '<div class="gmed"><div class="gring"></div><svg class="fl"><use href="#i-fleur"/></svg><i class="shine"></i></div>' +
     '<div class="gt1">' + (jumped ? 'Unit unlocked' : 'Unit complete') + '</div>' +
-    '<div class="gt2">' + (jumped ? 'Section ' + (secOf(u) + 1) + ' · Unit ' + (u % SEC + 1) : esc(unitTitle(u))) + '</div>' +
-    (!jumped && !last ? '<div class="gnext"><span class="lk">' + ico('lock') + '</span><span>' + (secOf(nx) !== secOf(u) ? 'Section ' + (secOf(nx) + 1) + ' open' : 'Unit ' + (nx % SEC + 1) + ' open') + '</span></div>' : '') +
+    '<div class="gt2">' + esc(distOf(u).kr) + ' · Unit ' + (u % SEC + 1) + '</div>' +
+    (!jumped && !last ? '<div class="gnext"><span class="lk">' + ico('lock') + '</span><span>' + (secOf(nx) !== secOf(u) ? 'New district: ' + esc(distOf(nx).kr) : 'Unit ' + (nx % SEC + 1) + ' open') + '</span></div>' : '') +
     '</div><div class="gf"><button class="btn gbtn2" type="button" id="gC">Continue</button></div>';
   document.body.appendChild(el);
   stack.push('gold');
   SFX.fanfare(); buzz([30, 50, 30, 50, 120]);
   goldRain(el.querySelector('#gfx'));
   setTimeout(() => { const lk = el.querySelector('.gnext'); if (lk) { lk.classList.add('open'); lk.querySelector('.lk').innerHTML = ico('check'); SFX.unlock(); } }, 1900);
-  const close = () => { el.classList.add('bye'); const i = stack.lastIndexOf('gold'); if (i >= 0) stack.splice(i, 1); setTimeout(() => { el.remove(); renderAll(); }, 260); };
+  const close = () => { el.classList.add('bye'); const i = stack.lastIndexOf('gold'); if (i >= 0) stack.splice(i, 1); closeOv('unit', true); setTab('learn'); setTimeout(() => { el.remove(); renderAll(); drawMap(nx); }, 260); };
   el.querySelector('#gC').onclick = close;
   setTimeout(() => { const b = $('gC'); if (b) b.focus({ preventScroll: true }); }, 50);
 }
@@ -2149,7 +2416,7 @@ function diffHTML(a, b) {
 }
 function read(step, stg) {
   const xs = step.ss.map(i => S[i]);
-  stg.innerHTML = '<div class="story">' + xs.map((x, k) => '<div class="ln" data-k="' + k + '"><div class="kl">' + sentHTML(x) + ' ' + spk(x.s, 'sm') + '</div><div class="tr">' + esc(x.t) + '</div></div>').join('') + '</div>';
+  stg.innerHTML = '<div class="story' + (xs.length === 1 ? ' one' : '') + '">' + (xs.length === 1 ? pimg(sentPic(xs[0]), 'big') : '') + xs.map((x, k) => '<div class="ln" data-k="' + k + '"><div class="kl">' + sentHTML(x) + ' ' + spk(x.s, 'sm') + '</div><div class="tr">' + esc(x.t) + '</div>' + (x.note ? '<div class="nt">' + esc(x.note) + '</div>' : '') + '</div>').join('') + '</div>';
   const lines = stg.querySelectorAll('.ln');
   let k = 0;
   const next = () => { lines.forEach(l => l.classList.remove('on')); if (k >= xs.length || !P.on || P.cur !== ctrl) return; lines[k].classList.add('on'); TTS.say(xs[k].s, { end: () => setTimeout(() => { k++; next(); }, 300) }); };
@@ -2217,7 +2484,8 @@ function build(step, stg) {
     void pre; void post;
   }
   const tiles = DK.shuffle(expect.concat(step.extra || []), Math.random);
-  stg.innerHTML = (step.listen ? playHTML() : '<div class="pr"><div class="bubble"><div class="md">' + prompt + '</div></div></div>') +
+  const bp = step.phrase != null ? picHTML(E[step.phrase], 'mid') : pimg(sentPic(S[step.s]), 'mid');
+  stg.innerHTML = (step.listen ? playHTML() : '<div class="pr">' + bp + '<div class="bubble"><div class="md">' + prompt + '</div></div></div>') +
     '<div class="ans-line" id="aL">' + (before ? '<span class="fx">' + before.trim() + '</span>' : '') + '<span id="aS" style="display:contents"></span>' + (after ? '<span class="fx">' + after.trim() + '</span>' : '') + '</div>' +
     '<div class="bank" id="bK">' + tiles.map((t, i) => '<button type="button" class="tile" data-i="' + i + '">' + esc(t) + '</button>').join('') + '</div>';
   const aS = stg.querySelector('#aS'), bK = stg.querySelector('#bK'), aL = stg.querySelector('#aL');
@@ -2312,7 +2580,7 @@ function fill(step, stg) {
   const x = S[step.s], w = x.words[step.k];
   const want = w.x;
   const width = Math.max(3, want.length + 1);
-  stg.innerHTML = '<div class="pr"><div class="lg" id="fS">' + sentHTML(x, { blank: step.k, blankHTML: '<input class="blank" id="fI" size="' + width + '" style="width:' + (width + 1) + 'ch" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" lang="fr">', hide: step.w }) + ' <button class="spk sm" type="button" id="fP" aria-label="Listen">' + ico('snd') + '</button></div><div class="sm">' + esc(x.t) + '</div></div>';
+  stg.innerHTML = '<div class="pr">' + pimg(sentPic(x), 'mid') + '<div class="lg" id="fS">' + sentHTML(x, { blank: step.k, blankHTML: '<input class="blank" id="fI" size="' + width + '" style="width:' + (width + 1) + 'ch" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" lang="fr">', hide: step.w }) + ' <button class="spk sm" type="button" id="fP" aria-label="Listen">' + ico('snd') + '</button></div><div class="sm">' + esc(x.t) + '</div></div>';
   const inp = stg.querySelector('#fI');
   const ctrl0 = { ready: () => inp.value.trim().length > 0, focus: () => inp.focus({ preventScroll: true }) };
   const i0 = x.parts.findIndex(p => p.w === step.k);
@@ -2339,7 +2607,7 @@ function speak(step, stg) {
   if (!SRC || P.noSR || window.__dkSR === false) return speakSelf(step, stg);
   const x = step.s != null ? S[step.s] : null, e = step.w != null ? E[step.w] : null;
   const target = x ? x.s : e.forms[0], ansH = x ? sentHTML(x, { plain: true }) : esc(e.word);
-  stg.innerHTML = '<div class="speak"><div class="bubble" style="align-self:center"><div class="md">' + esc(x ? x.t : e.prompt) + '</div></div><button class="mic btnm idle" id="pM" type="button" aria-label="Speak">' + ico('mic') + '</button><div class="heard" id="hd"></div></div>';
+  stg.innerHTML = '<div class="speak">' + (x ? pimg(sentPic(x), 'mid') : picHTML(e, 'mid')) + '<div class="bubble" style="align-self:center"><div class="md">' + esc(x ? x.t : e.prompt) + '</div></div><button class="mic btnm idle" id="pM" type="button" aria-label="Speak">' + ico('mic') + '</button><div class="heard" id="hd"></div></div>';
   return listenFor(step, stg, target, ansH);
 }
 function listenFor(step, stg, target, ansH) {
@@ -2451,7 +2719,7 @@ function renderList() {
   if (!D.prep) dictSearch();
   const H = L.clientHeight; if (!H) return;
   const r = recs();
-  const rowHTML = i => { const e = E[i]; return '<button type="button" class="row" data-id="' + i + '"><span class="tx"><div class="w">' + esc(e.word) + (e.posLabel ? '<span class="p">' + esc(e.posLabel.split(',')[0]) + '</span>' : '') + '</div><div class="m">' + esc(e.senses.map(s => s.g).filter(Boolean).join('; ')) + '</div></span>' + (starOn(i) ? '<svg class="i f st"><use href="#i-star"/></svg>' : '') + '<span class="sg">' + barsHTML(r[i]) + '</span></button>'; };
+  const rowHTML = i => { const e = E[i]; return '<button type="button" class="row" data-id="' + i + '">' + (picOf(e) ? picHTML(e, 'li') : '<span class="pic li ph"></span>') + '<span class="tx"><div class="w">' + esc(e.word) + (e.posLabel ? '<span class="p">' + esc(e.posLabel.split(',')[0]) + '</span>' : '') + '</div><div class="m">' + esc(e.senses.map(s => s.g).filter(Boolean).join('; ')) + '</div></span>' + (starOn(i) ? '<svg class="i f st"><use href="#i-star"/></svg>' : '') + '<span class="sg">' + barsHTML(r[i]) + '</span></button>'; };
   if (!D.rowH) { L.innerHTML = rowHTML(D.ids[0] != null ? D.ids[0] : 0); const rr = L.firstChild.getBoundingClientRect(); D.rowH = rr.height || 58; }
   const gap = 6.4;
   D.per = Math.max(2, Math.floor((H + gap) / (D.rowH + gap)));
@@ -2720,9 +2988,10 @@ function afterSync() {
 function openPlace() {
   if ($('place') || !FB.user) return;
   const el = document.createElement('div'); el.id = 'place'; el.className = 'ov gate';
-  el.innerHTML = '<div class="gc"><svg class="fl"><use href="#i-fleur"/></svg><h2>Placement test</h2><p>A few questions to find where you start.</p><button class="btn pri" type="button" id="plGo">Start</button></div>';
+  el.innerHTML = '<div class="gc"><svg class="king k-wave"><use href="#i-king"/></svg><h2>Placement test</h2><p>A few questions to find where you start.</p><button class="btn pri" type="button" id="plGo">Start</button><button class="btn ghost" type="button" id="plNo">I\'m new, start from the beginning</button></div>';
   document.body.appendChild(el);
   el.querySelector('#plGo').onclick = () => { el.remove(); startPlacement(); };
+  el.querySelector('#plNo').onclick = () => { el.remove(); st.placed = now(); save(); push(); SFX.tap(); renderAll(); };
 }
 function startPlacement() { startSession('place', K.unitTest(0, { seed: rnd(900) + 1 }), { pl: { pass: -1, fail: null, u: 0, rounds: 0, res: [] } }); }
 /* adaptive: climb units 1, 3, 7, 15... until a miss, then narrow down between the last pass and the miss */
@@ -2747,6 +3016,7 @@ async function loadX() {
     const seen = new Map(), by = new Map();
     V.forEach((e, i) => { e.id = i; const n = (seen.get(e.key) || 0) + 1; seen.set(e.key, n); e.xk = n > 1 ? e.key + '#' + n : e.key; const k = DK.fold(e.short); if (!by.has(k)) by.set(k, []); by.get(k).push(e); });
     V.forEach(e => { const g = by.get(DK.fold(e.short)); if (g.length > 1) e.accept = DK.uniq(g.flatMap(x => x.forms)); });
+    await loadP();
     XREADY = V.length >= 5;
   } catch (e) { XREADY = false; }
   $('tX').hidden = !XREADY;
@@ -2757,14 +3027,17 @@ const xNext = (n = 5) => { const o = []; for (const e of V) { if (!xrec(e)) o.pu
 const xDue = () => { const t = endOfToday(); return V.filter(e => { const r = xrec(e); return r && r[1] * 6e4 <= t; }).map(e => e.id); };
 function renderX() {
   const v = $('v101'); if (!XREADY) { v.innerHTML = ''; return; }
-  const nx = xNext(), due = xDue(), n = V.filter(xrec).length, fr = n / V.length;
+  const nx = xNext(), due = xDue().concat(pDue()), n = V.filter(xrec).length, fr = n / V.length, np = PV.find(p => !prec(p));
   v.innerHTML = '<div class="xw"><div class="xhero"><span class="x101 big">101</span><div><h2>Vocab 101</h2><p>Everyday words, five at a time.</p></div></div>' +
     '<div class="xbar" title=""><i style="width:' + Math.max(fr ? 2 : 0, Math.round(fr * 100)) + '%"></i></div>' +
     (nx.length ? '<div class="xnext"><div class="ws">' + nx.map(i => '<span>' + picHTML(V[i], 'xs') + esc(tw(V[i])) + '</span>').join('') + '</div><button class="btn pri" id="xGo" type="button">' + ico('spark') + 'Learn these words</button></div>'
       : '<div class="xnext"><div class="xall">' + ico('check') + 'Every word learned</div></div>') +
-    '<div class="acts"><button class="btn' + (due.length ? ' acc' : '') + '" id="xRev" type="button"' + (n ? '' : ' disabled') + '>' + ico('rev') + 'Review' + (due.length ? '<i class="dot"></i>' : '') + '</button><button class="btn" id="xList" type="button">' + ico('book') + 'Word list</button></div>' +
+    (PV.length ? '<div class="pvc">' + pimg(np ? np.pic : 'trophy', 'pvi') + '<div class="pvt"><b>Proverbs</b><small>' + (np ? esc(np.t) : 'Every proverb learned') + '</small></div>' + (np ? '<button class="btn" id="pGo" type="button">Learn</button>' : '') + '<button class="rb" id="pAll" type="button" aria-label="All proverbs">' + ico('book') + '</button></div>' : '') +
+    '<div class="acts"><button class="btn' + (due.length ? ' acc' : '') + '" id="xRev" type="button"' + (n || PV.some(prec) ? '' : ' disabled') + '>' + ico('rev') + 'Review' + (due.length ? '<i class="dot"></i>' : '') + '</button><button class="btn" id="xList" type="button">' + ico('book') + 'Word list</button></div>' +
     '<small class="cred">Word list from <i>Ti Liv Kréyòl</i> · CC BY-NC-SA 4.0</small></div>';
   if ($('xGo')) $('xGo').onclick = () => xLearn(nx);
+  if ($('pGo')) $('pGo').onclick = () => pLearn();
+  if ($('pAll')) $('pAll').onclick = openPList;
   $('xRev').onclick = xReview;
   $('xList').onclick = openXList;
   fit(v.querySelector('.xw'), 0.6);
@@ -2788,11 +3061,14 @@ function xReview() {
   let ids = xDue();
   if (!ids.length) ids = V.filter(xrec).map(e => e.id).sort((p, q) => DK.recall(xrec(V[p]), t) - DK.recall(xrec(V[q]), t)).slice(0, 8);
   ids = ids.sort((p, q) => DK.recall(xrec(V[p]), t) - DK.recall(xrec(V[q]), t)).slice(0, 12);
-  if (!ids.length) return;
+  const pv = pDue().slice(0, 4);
+  if (!ids.length && !pv.length) return;
   const s = [];
   if (ids.length >= 4) s.push({ type: 'match', x: 1, ids: DK.shuffle(ids, Math.random).slice(0, 5), targets: [] });
+  pv.forEach(p => { const x = pvSent(p), k = pvBlanks(x, 1)[0]; if (k != null) s.push(pvFill(p, k, x)); });
   DK.shuffle(ids, Math.random).forEach((i, k) => { const r = xrec(V[i]); s.push({ type: 'type', x: 1, w: i, dir: DK.strength(r, t) <= 2 && k % 2 ? 'kl2en' : 'en2kl', targets: [i] }); });
-  startSession('xreview', s, {});
+  const first = s[0] && s[0].type === 'match' ? [s.shift()] : [];
+  startSession('xreview', first.concat(DK.shuffle(s, Math.random)), {});
 }
 function openXList() {
   SFX.tap();
@@ -2833,12 +3109,14 @@ function gBlock(b) {
   if (b.h) return '<div class="g' + b.h + '">' + b.x + '</div>';
   if (b.p) return '<p class="gp">' + b.p + '</p>';
   if (b.li) return '<p class="gp gli">' + b.li + '</p>';
+  if (b.kp) return '<div class="gex kp">' + b.kp.map(r => '<div class="r" data-say="' + esc(r[0]) + '">' + pimg(r[2], 'kpi') + '<div class="k">' + esc(r[0]) + '</div><div class="e">' + esc(r[1]) + '</div></div>').join('') + '</div>';
   if (b.ex) return '<div class="gex">' + b.ex.map(r => '<div class="r" data-say="' + esc(plain(r[0])) + '"><div class="k">' + r[0] + '</div><div class="e">' + r[1] + '</div></div>').join('') + '</div>';
   if (b.tbl) return '<table class="gtb">' + b.tbl.map((r, i) => '<tr>' + r.map(c => { const tg = i === 0 ? 'th' : 'td'; return '<' + tg + (c.cs ? ' colspan="' + c.cs + '"' : '') + (c.rs ? ' rowspan="' + c.rs + '"' : '') + '>' + c.x + '</' + tg + '>'; }).join('') + '</tr>').join('') + '</table>';
   if (b.cred) return '<p class="gcred">From <i>Ti Liv Kréyòl</i> (2nd edition, 2020) by Adrien Guillory-Chatman, Oliver Mayeux, Nathan Wendte and Herbert Wiltz, TSÒHK. <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener">CC BY-NC-SA 4.0</a>. Tables reformatted.</p>';
   return '';
 }
 function gSplit(b) {
+  if (b.kp && b.kp.length > 1) return { n: b.kp.length, head: n => ({ kp: b.kp.slice(0, n) }), tail: n => ({ kp: b.kp.slice(n) }) };
   if (b.ex && b.ex.length > 1) return { n: b.ex.length, head: n => ({ ex: b.ex.slice(0, n) }), tail: n => ({ ex: b.ex.slice(n) }) };
   if (b.tbl && b.tbl.length > 2) return { n: b.tbl.length, min: 2, head: n => ({ tbl: b.tbl.slice(0, n) }), tail: n => ({ tbl: [b.tbl[0]].concat(b.tbl.slice(n)) }) };
   const t = b.p || b.li;
@@ -2850,9 +3128,15 @@ function gPaginate() {
   const ch = G.data.chapters[G.ch], key = G.ch + ':' + box.clientWidth + 'x' + box.clientHeight;
   if (G.key === key && G.pages) return;
   G.key = key;
+  const pages = paginate(box, ch.blocks.concat([{ cred: 1 }]));
+  let sec = '';
+  G.pages = pages.map(p => { const h = p.find(b => b.h === 2); if (h) sec = plain(h.x); return { blocks: p, sec }; });
+  G.page = Math.max(0, Math.min(G.pages.length - 1, G.page));
+}
+function paginate(box, blocks) {
   box.style.setProperty('--k', '1');
   const fits = arr => { box.innerHTML = arr.map(gBlock).join(''); return box.scrollHeight <= box.clientHeight + 1; };
-  const q = ch.blocks.concat([{ cred: 1 }]), pages = [];
+  const q = blocks.slice(), pages = [];
   let cur = [];
   while (q.length) {
     const b = q.shift();
@@ -2866,9 +3150,7 @@ function gPaginate() {
     pages.push(cur); cur = carry; q.unshift(b);
   }
   if (cur.length) pages.push(cur);
-  let sec = '';
-  G.pages = pages.map(p => { const h = p.find(b => b.h === 2); if (h) sec = plain(h.x); else if (p[0] && p[0].h === 3) {} return { blocks: p, sec }; });
-  G.page = Math.max(0, Math.min(G.pages.length - 1, G.page));
+  return pages;
 }
 function renderGram() {
   const v = $('vGram'); if (!G.data) { v.innerHTML = ''; return; }
@@ -2921,7 +3203,7 @@ function gToc() {
    Corrections live in st.ed, apply to his account only, and export as a file to be built into the app for everyone. */
 const ADMIN_HASH = '4cb8b22a15b084a55472d88d1f154663b7d744fc1543c500a77695a86c529fba';
 let ADMIN = false;
-const RAW = { d: new Map(), x: new Map() };
+const RAW = { d: new Map(), x: new Map(), p: new Map() };
 const adminOn = () => ADMIN && !!st.set.admin;
 async function checkAdmin(u) {
   let ok = false;
@@ -2972,7 +3254,7 @@ function openEditor(o) {
   const x = o.x, sed = x ? (Object.values(st.ed || {}).find(r => r.f === 's' && r.s === x.s) || edOf('s', x.s) || {}) : null;
   const fld = (id, lab, val, big) => '<label class="ef"><span>' + lab + '</span>' + (big ? '<textarea id="' + id + '" rows="2">' : '<input id="' + id + '" value="') + esc(val || '') + (big ? '</textarea>' : '" autocomplete="off" autocapitalize="off" spellcheck="false">') + '</label>';
   const el = overlay('edit', '<div class="card" style="height:100%"><div class="ch"><span class="adm">Admin</span><h2>Correct</h2><button class="rb" type="button" data-x>' + ico('x') + '</button></div><div class="cb ed">' +
-    (e ? '<div class="eg"><small>' + (f === 'x' ? 'Vocab 101 word' : 'Dictionary word') + '</small>' + fld('eA', 'Word (part of speech)', cur(0)) + fld('eB', 'Meaning', cur(1), 1) + fld('eC', 'Example', cur(2), 1) + fld('eD', 'Translation', cur(3), 1) + fld('eK', 'Also accept (one per line)', (ed.acc || []).join('\n'), 1) + '</div>' : '') +
+    (e && f === 'p' ? '<div class="eg"><small>Proverb</small>' + fld('eA', 'Kréyòl', cur(0), 1) + fld('eB', 'English', cur(1), 1) + fld('eC', 'Meaning', cur(2), 1) + '</div>' : e ? '<div class="eg"><small>' + (f === 'x' ? 'Vocab 101 word' : 'Dictionary word') + '</small>' + fld('eA', 'Word (part of speech)', cur(0)) + fld('eB', 'Meaning', cur(1), 1) + fld('eC', 'Example', cur(2), 1) + fld('eD', 'Translation', cur(3), 1) + fld('eK', 'Also accept (one per line)', (ed.acc || []).join('\n'), 1) + '</div>' : '') +
     (x ? '<div class="eg"><small>Sentence on screen</small>' + fld('sS', 'Kréyòl', sed.s || x.s, 1) + fld('sT', 'English', sed.tr != null ? sed.tr : x.t, 1) + '</div>' : '') +
     fld('eN', 'Note', ed.note || (sed && sed.note) || '', 1) + '</div><div class="ef2"><button class="btn" type="button" id="eU">' + ico('rev') + 'Undo</button><button class="btn pri" type="button" id="eV">Save</button></div></div>');
   el.querySelector('[data-x]').onclick = () => closeOv('edit');
@@ -2982,8 +3264,8 @@ function openEditor(o) {
     const note = v('eN').trim();
     if (e) {
       const rec = { f, k: e.key, note };
-      [['a', 'eA', 0], ['b', 'eB', 1], ['c', 'eC', 2], ['d', 'eD', 3]].forEach(([k, id, i]) => { const nv = v(id); if (nv != null && nv.trim() !== (raw[i] || '').trim()) rec[k] = nv.trim(); else rec[k] = null; });
-      rec.acc = v('eK').split('\n').map(s => s.trim()).filter(Boolean);
+      [['a', 'eA', 0], ['b', 'eB', 1], ['c', 'eC', 2], ['d', 'eD', 3]].forEach(([k, id, i]) => { if (!el.querySelector('#' + id)) { rec[k] = null; return; } const nv = v(id); if (nv != null && nv.trim() !== (raw[i] || '').trim()) rec[k] = nv.trim(); else rec[k] = null; });
+      rec.acc = el.querySelector('#eK') ? v('eK').split('\n').map(s => s.trim()).filter(Boolean) : [];
       if (rec.acc.length) rec.en = rec.en != null ? rec.en : !!ed.en;
       saveEd(f + '|' + e.key, rec);
     }
@@ -2995,6 +3277,7 @@ function openEditor(o) {
 }
 function editStep() {
   const s = P.steps[P.i]; if (!s) return;
+  if (s.pv != null) { openEditor({ f: 'p', e: { key: PV[s.pv].key }, x: null }); return; }
   const f = s.x ? 'x' : 'd';
   const id = s.w != null ? s.w : s.phrase != null ? s.phrase : (s.targets || [])[0];
   openEditor({ f, e: id != null ? ent(s, id) : null, x: s.s != null ? S[s.s] : null });
@@ -3004,7 +3287,7 @@ function exportEd() {
   const L = [['file', 'original', 'field', 'was', 'now', 'note'].join('\t')];
   const cl = s => String(s == null ? '' : s).replace(/[\t\n]+/g, ' ');
   Object.values(st.ed || {}).filter(r => !r.off).sort((a, b) => a.t - b.t).forEach(r => {
-    const file = r.f === 'd' ? 'diksyonaer.tsv' : r.f === 'x' ? 'vocab101.tsv' : r.f === 's' ? 'sentence' : r.f === 'w' ? 'sentence word' : '';
+    const file = r.f === 'd' ? 'diksyonaer.tsv' : r.f === 'x' ? 'vocab101.tsv' : r.f === 'p' ? 'proverbs.tsv' : r.f === 's' ? 'sentence' : r.f === 'w' ? 'sentence word' : '';
     if (!file) return;
     const raw = (RAW[r.f] && RAW[r.f].get(r.k)) || [];
     let any = false;
@@ -3018,6 +3301,126 @@ function exportEd() {
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
 
+/* ================================================================ notes */
+/* each unit gets the grammar it starts to use (from the Grammar tab) plus key phrases from its own lessons */
+const NT = {
+  'Introduction': { nouns: ['*0'], verbs: ['fé', 'di', 'alé', 'manjé'] }, 'A note on variation': ['*2'], 'Word order': ['*1'],
+  'Singular': ['in', 'la', '-la'], 'Plural': ['-yé'], 'Plain noun': ['-yé'], 'Noun + -yé': ['-yé'], 'Lê + Noun': ['lê', 'le'], 'Dê + Noun': ['dê'], 'Counting': ['dé', 'twa', 'kat', 'senk'],
+  'Pronouns': ['mo', 'to'], "Subject: Mo... 'I...'": ['mo', 'to', 'li'], 'Object: ...mò/...mwa ‘...me’': ['mwa', 'twa', 'mò'], 'Possessive: mô ‘my’': ['mô', 'tô', 'sô'],
+  'Reflexive: mo-minm ‘myself’': ['minm', 'mo-minm'], 'Emphatic possessive: mô-chin/-kin/-chènn/-kènn ‘my own’, ‘mine’': ['-chin', 'chin'],
+  'Adjective position': ['bon', 'bèl', 'gran', 'piti', 'jenn'], 'Comparatives': ['pli', 'plis', 'mwin', 'myè', 'osi'],
+  'One-stem verbs': ['fé', 'di', 'konné', 'koné'], 'Two-stem verbs': ['manjé', 'parlé', 'olé', 'lenmé'], 'Pre-Verbal Markers': ['té', 'va'], 'Future': ['va', 'a', 'sa'], 'Conditional': ['sré', 'ré'],
+  'Past Anterior': [], 'Simple Past': ['té'], 'Auxiliary Verbs': ['pe', 'olé', 'konné', 'koné'], '‘To be’': ['yé', 'çé'], 'Imperatives': ['annou', 'ané'], 'Negation': ['pa'], 'Adverbs': ['byin', 'vit', 'toujou', 'jamé'],
+  'Yes-no questions': ['èské', 'eské'], 'Wh-questions': ['ki', 'kwa'], 'Who': ['ki'], 'What': ['kwa'], 'When': ['kan'], 'Where': ['éyou', 'oyou', 'kotè', 'koté'], 'Why': ['kòfær'], 'How': ['komen'], 'Relative clauses': []
+};
+const NT_SKIP = new Set(['Present Progressive', 'Past Progressive']); // his dialect has no ap/apé
+let NOTES = null;
+function buildNotes() {
+  if (NOTES || !G.data || !C) return NOTES;
+  const secs = [];
+  G.data.chapters.forEach(ch => {
+    let h2 = '', cur = null;
+    ch.blocks.forEach(b => {
+      if (b.h) {
+        const t = plain(b.x);
+        if (b.h === 2) h2 = t;
+        if (NT_SKIP.has(b.h === 2 ? t : h2)) { cur = null; return; }
+        cur = { ch: ch.id, t, h2: b.h === 3 ? h2 : '', blocks: [] }; secs.push(cur); return;
+      }
+      if (cur) cur.blocks.push(b);
+    });
+  });
+  const unitForms = C.units.map(U => { const f = new Set(); U.ls.forEach(L => C.lessons[L].ids.forEach(i => { const e = E[i]; e.forms.concat(e.teach ? [e.teach] : []).forEach(x => f.add(DK.fold(x))); if (e.word && e.word.startsWith('-')) f.add(DK.fold(e.word)); })); return f; });
+  const per = C.units.map(() => []), loose = [], placed = [];
+  secs.filter(x => x.blocks.length).forEach((x, bi) => {
+    let tr = NT[x.t]; if (tr && !Array.isArray(tr)) tr = tr[x.ch] || [];
+    let u = -1;
+    if (tr) for (const t of tr) { if (t[0] === '*') { u = +t.slice(1); break; } const k = unitForms.findIndex(f => f.has(DK.fold(t))); if (k >= 0 && (u < 0 || k < u)) u = k; }
+    if (u < 0) loose.push(x); else placed.push({ x, u, bi });
+  });
+  // earliest first, book order on ties; one grammar note per unit so it arrives a little at a time
+  placed.sort((a, b) => a.u - b.u || a.bi - b.bi).forEach(({ x, u }) => { while (u < per.length - 1 && per[u].length >= 1) u++; per[u].push(x); });
+  let u = 6; loose.forEach(x => { while (u < per.length - 1 && per[u].length) u++; per[u].push(x); u += 3; });
+  NOTES = per;
+  return NOTES;
+}
+const notesFor = u => (buildNotes() || [])[u] || [];
+function keyPhrases(u) {
+  const ls = C.units[u].ls, a = ls[0], b = ls[ls.length - 1];
+  const xs = S.filter(x => x.ready >= a && x.ready <= b && !x.oov && !x.bad && x.n <= 7 && !x.pv).sort((p, q) => (p.n - q.n) || (p.id - q.id));
+  const out = [], seen = new Set();
+  for (const x of xs) { const k = DK.fold(x.s); if (seen.has(k)) continue; seen.add(k); out.push(x); if (out.length >= 4) break; }
+  return out;
+}
+function openNotes(u) {
+  SFX.tap();
+  const D = distOf(u), kp = keyPhrases(u), ns = notesFor(u);
+  const blocks = [];
+  if (kp.length) blocks.push({ h: 2, x: 'Key phrases' }, { kp: kp.map(x => [x.s, x.t, sentPic(x)]) });
+  ns.forEach(x => { blocks.push({ h: 2, x: esc(x.h2 ? x.h2 + ': ' + x.t : x.t) }); blocks.push(...x.blocks); });
+  if (ns.length) blocks.push({ cred: 1 });
+  const el = overlay('notes', '<div class="card notec d-' + D.id + '"><div class="ch"><span style="width:40px"></span><div class="ut"><small>' + esc(D.kr) + ' · Unit ' + (u % SEC + 1) + '</small><b>Notes</b></div><button class="rb" type="button" data-x>' + ico('x') + '</button></div><div class="gpage np" id="nP"></div><div class="gnav"><button class="rb" type="button" id="nPv" aria-label="Previous page">' + ico('back') + '</button><span class="pgb"><i id="nPb"></i></span><button class="rb" type="button" id="nNx" aria-label="Next page">' + ico('fwd') + '</button></div></div>');
+  el.querySelector('[data-x]').onclick = () => closeOv('notes');
+  const box = el.querySelector('#nP');
+  let pages = [], pg = 0;
+  const draw = d => { box.style.setProperty('--k', '1'); box.innerHTML = (pages[pg] || []).map(gBlock).join(''); fit(box, 0.62); el.querySelector('#nPb').style.width = ((pg + 1) / Math.max(1, pages.length) * 100).toFixed(1) + '%'; el.querySelector('#nPv').disabled = !pg; el.querySelector('#nNx').disabled = pg >= pages.length - 1; el.querySelector('.gnav').style.visibility = pages.length > 1 ? '' : 'hidden'; if (d) box.animate([{ transform: 'translateX(' + (d * 22) + 'px)', opacity: 0.3 }, { transform: 'none', opacity: 1 }], { duration: 220 }); };
+  const turn = d => { const n = Math.max(0, Math.min(pages.length - 1, pg + d)); if (n !== pg) { pg = n; SFX.tap(); draw(d); } };
+  el.querySelector('#nPv').onclick = () => turn(-1); el.querySelector('#nNx').onclick = () => turn(1);
+  box.addEventListener('click', ev => { const r = ev.target.closest('.r[data-say]'); if (r) { TTS.say(r.dataset.say, { tap: true }); r.classList.remove('on'); void r.offsetWidth; r.classList.add('on'); } });
+  let sx = 0; box.addEventListener('pointerdown', ev => { sx = ev.clientX; }); box.addEventListener('pointerup', ev => { const dx = ev.clientX - sx; if (Math.abs(dx) > 55) turn(dx < 0 ? 1 : -1); });
+  el.draw = () => { pages = paginate(box, blocks.length ? blocks : [{ p: 'Notes for this unit are on their way.' }]); pg = Math.min(pg, pages.length - 1); draw(); };
+  requestAnimationFrame(el.draw);
+}
+
+/* ============================================================= proverbs */
+/* old Louisiana proverbs (Hearn, 1885, public domain) in modern spelling; they live in the Vocab 101 deck */
+let PV = [];
+async function loadP() {
+  try {
+    const t = patchTSV(await getText('proverbs.tsv'), 'p');
+    PV = rows(t).map(l => l.split('\t')).filter(c => c[0] && c[1]).map((c, i) => ({ i, key: (RAW.p.get(c[0].trim().normalize('NFC')) ? c[0] : c[0]).trim(), s: c[0].trim(), t: c[1].trim(), m: (c[2] || '').trim(), pic: (c[3] || '').trim() }));
+    const raw = [...RAW.p.keys()]; PV.forEach((p, i) => { p.key = raw[i] || p.s; });
+  } catch (e) { PV = []; }
+}
+function pvSent(p) {
+  if (p.x) return p.x;
+  const x = DK.makeSentence(lex, p.s, p.t, -1, true);
+  x.id = S.length; x.pv = 1; x.note = p.m; x.pic = p.pic || ''; S.push(x); p.x = x;
+  return x;
+}
+const prec = p => st.x['p|' + p.key];
+const STOP = new Set(['pa', 'li', 'to', 'mo', 'ki', 'çé', 'la', 'sô', 'a', 'é', 'dan', 'pou', 'avek', 'çila', 'tou', 'ça', 'va', 'yé', 'fo', 'kan', 'gin', 'm\'a', 'twa', 'mò']);
+function pvBlanks(x, n) { const ks = x.words.map((w, k) => k).filter(k => x.words[k].x.length >= 3 && !STOP.has(DK.fold(x.words[k].x))); return DK.shuffle(ks, Math.random).slice(0, n); }
+const pvFill = (p, k, x) => ({ type: 'fill', s: x.id, k, w: (x.words[k].ids || [])[0] ?? null, targets: ['P' + p.i], pv: p.i });
+function pLearn(i) {
+  const p = PV[i != null ? i : PV.findIndex(q => !prec(q))]; if (!p) return;
+  const x = pvSent(p), s = [{ type: 'read', ss: [x.id], targets: [], pv: p.i }];
+  pvBlanks(x, 2).forEach(k => s.push(pvFill(p, k, x)));
+  s.push({ type: 'build', s: x.id, a: 0, b: x.n, w: null, tiles: x.words.map(w => w.x), extra: [], targets: ['P' + p.i], pv: p.i });
+  startSession('plearn', s, { pi: p.i });
+}
+const pDue = () => { const t = endOfToday(); return PV.filter(p => { const r = prec(p); return r && r[1] * 6e4 <= t; }); };
+function openPList() {
+  SFX.tap();
+  let pg = 0, per = 4;
+  const el = overlay('plist', '<div class="card" style="height:100%"><div class="ch"><span style="width:40px"></span><h2>Proverbs</h2><button class="rb" type="button" data-x>' + ico('x') + '</button></div><div class="list" id="pL"></div><div class="pager" id="pP"></div><p class="cred" style="padding:0 1rem calc(.6rem + var(--sb))">From Lafcadio Hearn’s <i>Gombo Zhèbes</i> (1885), public domain, in modern spelling.</p></div>');
+  el.querySelector('[data-x]').onclick = () => closeOv('plist');
+  const list = el.querySelector('#pL');
+  const row = p => '<div class="row pvrow"' + (prec(p) ? '' : ' data-new="1"') + '>' + pimg(p.pic, 'xs') + '<span class="tx"><div class="w">' + esc(p.s) + '</div><div class="m">' + esc(p.t) + '</div>' + (p.m ? '<div class="m2">' + esc(p.m) + '</div>' : '') + '</span>' + spk(p.s, 'sm') + (adminOn() ? '<button class="rb admb" type="button" data-e="' + p.i + '">' + ico('pen') + '</button>' : '') + '</div>';
+  const draw = () => {
+    if (!list.clientHeight) return;
+    per = 6; const pages = () => Math.max(1, Math.ceil(PV.length / per));
+    const put = () => { list.innerHTML = PV.slice(pg * per, pg * per + per).map(row).join(''); };
+    pg = Math.min(pg, pages() - 1); put();
+    while (list.scrollHeight > list.clientHeight + 1 && per > 1) { per--; pg = Math.min(pg, pages() - 1); put(); }
+    const n = pages();
+    el.querySelector('#pP').innerHTML = n > 1 ? '<button class="rb" type="button" data-d="-1"' + (pg ? '' : ' disabled style="opacity:.3"') + '>' + ico('back') + '</button><span class="pgb"><i style="width:' + ((pg + 1) / n * 100).toFixed(1) + '%"></i></span><button class="rb" type="button" data-d="1"' + (pg < n - 1 ? '' : ' disabled style="opacity:.3"') + '>' + ico('fwd') + '</button>' : '';
+    el.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { pg += +b.dataset.d; SFX.tap(); draw(); });
+    el.querySelectorAll('[data-e]').forEach(b => b.onclick = () => openEditor({ f: 'p', e: { key: PV[+b.dataset.e].key }, x: null }));
+  };
+  el.draw = draw;
+  requestAnimationFrame(draw);
+}
 /* ============================================================= wiring */
 let TAB = 'learn';
 const VIEWS = { learn: ['vLearn', 'tLearn'], x: ['v101', 'tX'], gram: ['vGram', 'tG'], dict: ['vDict', 'tDict'] };
@@ -3029,7 +3432,7 @@ function setTab(t) {
   renderTab();
 }
 function renderTab() { if (!READY) return; if (TAB === 'dict') renderDict(); else if (TAB === 'x') renderX(); else if (TAB === 'gram') renderGram(); else renderLearn(); }
-function renderAll() { if (!READY) return; renderTab(); renderHeader(); if ($('sheet')) drawSheet(); }
+function renderAll() { if (!READY) return; renderTab(); renderHeader(); if ($('sheet')) drawSheet(); if ($('unit')) drawUnit(); }
 for (const k in VIEWS) $(VIEWS[k][1]).onclick = () => { if (TAB === k && k === 'gram' && G.ch >= 0) { G.ch = -1; } SFX.tap(); setTab(k); };
 $('av').onclick = openSheet;
 $('logo').onclick = () => { if (!READY) return; const pool = E.filter(e => e.ex.length); const e = pool[rnd(pool.length)]; openEntry(e.id, [e.id]); };
@@ -3063,7 +3466,7 @@ async function boot() {
   $('boot').classList.add('out'); setTimeout(() => $('boot').remove(), 400);
   const w = new URLSearchParams(location.search).get('w');
   if (w) { const f = DK.fold(w); const e = E.find(x => DK.fold(x.word) === f) || E.find(x => x.forms.some(y => DK.fold(y) === f)); if (e) openEntry(e.id, [e.id]); }
-  window.__dk = { E, S, C, K, st: () => st, P, D, recs, FB, push, loadFb, reset: resetAll, mergeRemote, startLesson, startReview, startJump, startPlacement, startUnitReview, startBlitz, setTab, firstOpen, TTS, rerender: nextStep, V: () => V, G, xLearn, xReview, celebrate, retry, finish, settle, outScreen };
+  window.__dk = { E, S, C, K, st: () => st, P, D, recs, FB, push, loadFb, reset: resetAll, mergeRemote, startLesson, startReview, startJump, startPlacement, startUnitReview, startBlitz, setTab, firstOpen, TTS, rerender: nextStep, touch, renderAll, V: () => V, G, notesFor, xLearn, xReview, celebrate, retry, finish, settle, outScreen };
 }
 if (ROOT && 'serviceWorker' in navigator) { addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {})); const m = document.createElement('link'); m.rel = 'manifest'; m.href = 'manifest.webmanifest'; document.head.appendChild(m); }
 boot();
