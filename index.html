@@ -9,8 +9,8 @@
 <meta name="apple-mobile-web-app-title" content="Diksyonær">
 <meta name="description" content="Diksyonær: Kréyòl Lalwizyan dictionary and course">
 <title>Diksyonær</title>
-<link rel="icon" href="/icon.png">
-<link rel="apple-touch-icon" href="/icon.png">
+<link rel="icon" type="image/png" href="dk-icon-48.png">
+<link rel="apple-touch-icon" href="dk-icon-180.png">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -32,6 +32,7 @@ button{cursor:pointer;background:none;border:0;touch-action:manipulation}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 svg.i{width:20px;height:20px;display:block;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
 svg.f{fill:currentColor;stroke:none}
+svg.fl,svg.i.fl{fill:url(#dkg);stroke:none}
 
 /* shell */
 #app{position:fixed;left:0;right:0;top:var(--vt,0px);height:var(--vh);display:flex;flex-direction:column;overflow:hidden;overflow:clip}
@@ -39,7 +40,7 @@ svg.f{fill:currentColor;stroke:none}
 #top .ttl{display:flex;align-items:center;gap:.55rem;margin-right:auto;min-width:0}
 #top h1{font-size:1.15rem;font-weight:400;white-space:nowrap;letter-spacing:.01em}
 #logo{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none}
-#logo img{width:40px;height:40px;object-fit:contain;display:block}
+#logo svg.fl{width:36px;height:36px;display:block;filter:drop-shadow(0 1px 3px rgba(243,201,105,.25))}
 .rb{position:relative;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;background:var(--panel);border:1px solid var(--line);border-radius:50%;transition:border-color .15s,background .15s,transform .1s;flex:none}
 .rb:active{transform:scale(.9)}
 @media(hover:hover){.rb:hover{border-color:var(--accent)}}
@@ -51,17 +52,43 @@ svg.f{fill:currentColor;stroke:none}
 #av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 #av .dot{position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;border-radius:50%;background:var(--ok);border:2px solid var(--bg)}
 
-#views{flex:1;min-height:0;display:grid;grid-template-columns:1fr;position:relative}
+#mid{flex:1;min-height:0;display:flex;flex-direction:column}
+#views{flex:1;min-height:0;min-width:0;display:grid;grid-template-columns:1fr;position:relative}
 .view{min-height:0;min-width:0;display:flex;flex-direction:column;overflow:hidden}
 #tabs{flex:none;display:flex;border-top:1px solid var(--line);padding:0 var(--sr) var(--sb) var(--sl)}
-#tabs button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.15rem;height:58px;color:var(--mid);font-size:.78rem;letter-spacing:.02em;position:relative}
+#tabs button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2rem;height:60px;color:var(--mid);font-size:.74rem;letter-spacing:.02em;position:relative;transition:color .15s}
+#tabs button span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 #tabs button[aria-selected=true]{color:var(--fg)}
-#tabs button[aria-selected=true]::before{content:'';position:absolute;top:-1px;left:30%;right:30%;height:2px;background:var(--accent);border-radius:2px}
+#tabs button[aria-selected=true]::before{content:'';position:absolute;top:-1px;left:28%;right:28%;height:2px;background:var(--accent);border-radius:2px}
 #tabs svg.i{width:22px;height:22px}
-body.wide #tabs{display:none}
+#tabs button:active svg.i,#tabs button:active .x101{transform:scale(.9)}
+.x101{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:7px;background:#ff86c0;color:#1b0711;font-family:'Arial Black','Helvetica Neue',Impact,'Segoe UI Black',sans-serif;font-weight:900;font-size:10px;letter-spacing:-.06em;line-height:1;box-shadow:0 2px 0 #b8507f;flex:none;transition:transform .1s}
+#tabs button:not([aria-selected=true]) .x101{opacity:.72}
+.x101.big{width:76px;height:76px;border-radius:20px;font-size:29px;letter-spacing:-.05em;box-shadow:0 6px 0 #b8507f,0 0 40px rgba(255,134,192,.25)}
+body.wide #mid{flex-direction:row}
+body.wide #tabs{order:-1;flex-direction:column;justify-content:flex-start;gap:.35rem;width:92px;border-top:0;border-right:1px solid var(--line);padding:.8rem .45rem calc(.8rem + var(--sb)) calc(.45rem + var(--sl))}
+body.wide #tabs button{flex:none;height:70px;border-radius:16px}
+body.wide #tabs button[aria-selected=true]{background:var(--panel)}
+body.wide #tabs button[aria-selected=true]::before{top:22%;bottom:22%;left:-.45rem;right:auto;width:3px;height:auto}
 
 /* learn */
-#vLearn{padding:.7rem calc(.9rem + var(--sr)) .7rem calc(.9rem + var(--sl));gap:.65rem}
+#vLearn{padding:.7rem calc(.9rem + var(--sr)) .7rem calc(.9rem + var(--sl));flex-direction:row;gap:1rem}
+.lmain{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;gap:.65rem}
+.lside{display:none}
+body.wide .lside{display:flex;flex-direction:column;gap:.75rem;width:min(360px,40%);flex:none;min-height:0}
+body.wide .lmain .acts{display:none}
+.lside .next{display:flex;flex-direction:column;gap:.55rem;padding:1rem;background:var(--panel);border:1px solid var(--line);border-radius:var(--r2)}
+.lside .next small{color:var(--mid);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase}
+.lside .next .ws{display:flex;flex-wrap:wrap;gap:.35rem}
+.lside .next .ws span,.xnext .ws span{display:inline-flex;align-items:center;gap:.3rem;padding:.25rem .65rem;border-radius:999px;background:var(--raised);border:1px solid var(--line);font-size:.95rem}
+.lside .next .btn{margin-top:.25rem;height:54px}
+.lside .week{display:flex;justify-content:space-between;gap:.3rem;padding:.8rem .9rem;background:var(--panel);border:1px solid var(--line);border-radius:var(--r2)}
+.lside .acts{grid-template-columns:1fr auto}
+.ldots{display:flex;gap:.35rem}
+.ldots i{flex:1;height:6px;border-radius:6px;background:var(--raised2)}
+.ldots i.on{background:var(--accent)}
+.ldots i.cur{background:var(--fg);animation:glow 1.6s ease-in-out infinite}
+@keyframes glow{50%{opacity:.55}}
 .stats{flex:none;display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem}
 .stat{display:flex;align-items:center;gap:.55rem;padding:.5rem .6rem;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);min-width:0}
 .stat b{display:block;font-size:1.1rem;font-weight:400;font-variant-numeric:tabular-nums;line-height:1.1}
@@ -70,7 +97,7 @@ body.wide #tabs{display:none}
 .stat.fire .ic{color:var(--gold);background:var(--gold-a)}
 .stat.goal .ic{background:none}
 .stat.words .ic{color:var(--accent);background:var(--accent-a)}
-.ring{width:34px;height:34px;transform:rotate(-90deg)}
+.ring{width:30px;height:30px;transform:rotate(-90deg);flex:none}
 .ring circle{fill:none;stroke-width:4}
 .ring .bgc{stroke:var(--raised2)}
 .ring .fgc{stroke:var(--ok);stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.2,.8,.2,1)}
@@ -78,15 +105,17 @@ body.wide #tabs{display:none}
 .unit{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:var(--r2);overflow:hidden;position:relative}
 .uh{flex:none;display:flex;align-items:center;gap:.4rem;padding:.6rem .6rem .5rem}
 .uh .nm{flex:1;min-width:0;text-align:center;background:none;border:0;padding:.15rem .3rem;border-radius:10px}
-.uh .nm b{display:block;font-weight:400;font-size:1.08rem;letter-spacing:.02em}
-.uh .nm small{display:block;color:var(--mid);font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.uh .nm .core{display:inline-block;margin-left:.4rem;font-size:.66rem;letter-spacing:.08em;color:var(--accent);border:1px solid var(--accent-b);border-radius:999px;padding:0 .4rem;vertical-align:2px}
-.ubar{flex:none;height:4px;margin:0 1rem;background:var(--raised2);border-radius:4px;overflow:hidden}
-.ubar i{display:block;height:100%;width:0;background:var(--accent);border-radius:4px;transition:width .6s}
+.uh .nm small{display:block;color:var(--accent);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase}
+.uh .nm b{display:flex;align-items:center;justify-content:center;gap:.35rem;font-weight:400;font-size:1.15rem;letter-spacing:.02em}
+.uh .nm b svg.ck{width:17px;height:17px;color:var(--gold);stroke-width:2.6}
+.uh .nm .uw{display:block;color:var(--mid);font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.uh .rb[disabled]{opacity:.25;pointer-events:none}
+.unit.gold{border-color:rgba(243,201,105,.45);box-shadow:inset 0 0 60px rgba(243,201,105,.05)}
 .path{flex:1;min-height:0;position:relative}
 .node{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:.25rem;background:none;border:0}
 .node .c{width:var(--ns,64px);height:var(--ns,64px);border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--raised);border:2px solid var(--line2);color:var(--dim);transition:transform .15s;position:relative}
 .node .c svg.i{width:calc(var(--ns,64px)*.38);height:calc(var(--ns,64px)*.38)}
+.node .c svg.fl{width:calc(var(--ns,64px)*.58);height:calc(var(--ns,64px)*.58)}
 .node .c::after{content:'';position:absolute;inset:-2px;border-radius:50%;box-shadow:0 5px 0 rgba(0,0,0,.55);z-index:-1}
 .node .lb{font-size:.74rem;color:var(--mid);max-width:9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .node.done .c{background:var(--accent);border-color:var(--accent);color:#141118}
@@ -102,7 +131,8 @@ body.wide #tabs{display:none}
 .path svg.trail path{fill:none;stroke:var(--line2);stroke-width:3;stroke-dasharray:2 9;stroke-linecap:round}
 .ulock{position:absolute;left:0;right:0;top:4.6rem;bottom:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(13,13,13,0),rgba(13,13,13,.72) 30%,rgba(13,13,13,.72) 70%,rgba(13,13,13,0));z-index:2}
 .ulock .btn{height:54px;padding:0 1.5rem;font-size:1.05rem}
-.acts{flex:none;display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.acts{flex:none;display:grid;grid-template-columns:1fr auto;gap:.5rem}
+.btn .dot{width:9px;height:9px;border-radius:50%;background:currentColor;animation:glow 1.4s ease-in-out infinite}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;height:50px;padding:0 1.1rem;border-radius:var(--r);border:1px solid var(--line);background:var(--panel);font-size:1rem;letter-spacing:.01em;transition:transform .1s,background .15s,border-color .15s,opacity .15s;white-space:nowrap}
 .btn:active{transform:scale(.97)}
 .btn small{font-variant-numeric:tabular-nums;color:var(--mid);font-size:.85rem}
@@ -124,10 +154,10 @@ body.wide #tabs{display:none}
 #vDict{padding:.7rem calc(.9rem + var(--sr)) .55rem calc(.9rem + var(--sl));gap:.5rem}
 .sw{position:relative;flex:none}
 .sw svg.mag{position:absolute;left:.95rem;top:50%;transform:translateY(-50%);color:var(--mid);width:18px;height:18px}
-#q{width:100%;height:46px;padding:0 2.8rem;background:var(--panel);border:1px solid var(--line);border-radius:999px;font-size:max(16px,1rem);outline:0;-webkit-appearance:none;appearance:none}
-#q:focus{border-color:var(--accent)}
-#q::placeholder{color:var(--dim)}
-#q::-webkit-search-cancel-button{display:none}
+#q,#xq{width:100%;height:46px;padding:0 2.8rem;background:var(--panel);border:1px solid var(--line);border-radius:999px;font-size:max(16px,1rem);outline:0;-webkit-appearance:none;appearance:none}
+#q:focus,#xq:focus{border-color:var(--accent)}
+#q::placeholder,#xq::placeholder{color:var(--dim)}
+#q::-webkit-search-cancel-button,#xq::-webkit-search-cancel-button{display:none}
 #qc{position:absolute;right:5px;top:5px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;color:var(--mid)}
 .chips{flex:none;display:flex;gap:.35rem;flex-wrap:nowrap;overflow:hidden}
 .chip{flex:none;height:32px;padding:0 .75rem;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--mid);font-size:.84rem;white-space:nowrap;display:inline-flex;align-items:center;gap:.3rem}
@@ -251,7 +281,6 @@ body.wide #tabs{display:none}
 .fb .hd .ic{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none}
 .fb.ok .hd .ic{background:var(--ok);color:#06170e;animation:pop .3s cubic-bezier(.2,.9,.3,1.4)}
 .fb.bad .hd .ic{background:var(--bad);color:#200805}
-.fb .hd .xp{margin-left:auto;color:var(--gold);font-size:.95rem;font-variant-numeric:tabular-nums;animation:rise .7s ease-out}
 @keyframes rise{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
 .fb .ans{font-size:1.08rem;color:var(--fg)}
 .fb .ans .df{background:rgba(255,143,134,.28);border-radius:3px}
@@ -327,52 +356,35 @@ textarea.field{height:calc(6rem*var(--k))}
 /* results */
 .res{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(1rem*var(--k));text-align:center}
 .res .medal{width:calc(7rem*var(--k));height:calc(7rem*var(--k));border-radius:50%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,var(--accent-b),transparent 70%);animation:pop .5s cubic-bezier(.2,.9,.3,1.4)}
-.res .medal img{width:72%;height:72%;object-fit:contain}
+.res .medal svg.fl{width:70%;height:70%}
+.res .medal.gold{background:radial-gradient(circle,rgba(243,201,105,.45),transparent 70%)}
 .res h2{font-weight:400;font-size:calc(1.8rem*var(--k))}
-.res .tiles3{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;width:100%;max-width:460px}
-.res .tiles3 div{border:2px solid var(--line2);border-radius:16px;padding:calc(.55rem*var(--k)) .4rem;overflow:hidden}
-.res .tiles3 small{display:block;font-size:calc(.72rem*var(--k));letter-spacing:.08em;text-transform:uppercase;padding-bottom:.25rem}
-.res .tiles3 b{display:block;font-weight:400;font-size:calc(1.45rem*var(--k));font-variant-numeric:tabular-nums}
-.res .tiles3 .x{border-color:var(--gold)}.res .tiles3 .x small{color:var(--gold)}
-.res .tiles3 .a{border-color:var(--ok)}.res .tiles3 .a small{color:var(--ok)}
-.res .tiles3 .s{border-color:var(--accent)}.res .tiles3 .s small{color:var(--accent)}
-.res .wl{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;max-width:520px}
-.res .wl span{padding:.25rem .65rem;border-radius:999px;background:var(--raised);border:1px solid var(--line);font-size:calc(.92rem*var(--k))}
-.res .gm{display:flex;align-items:center;gap:.5rem;color:var(--ok);font-size:calc(1rem*var(--k))}
+.res .tiles2{display:grid;grid-template-columns:repeat(2,1fr);gap:.6rem;width:100%;max-width:320px}
+.res .tiles2 div{border:2px solid var(--line2);border-radius:16px;padding:calc(.55rem*var(--k)) .4rem;overflow:hidden}
+.res .tiles2 small{display:block;font-size:calc(.72rem*var(--k));letter-spacing:.08em;text-transform:uppercase;padding-bottom:.25rem}
+.res .tiles2 b{display:block;font-weight:400;font-size:calc(1.45rem*var(--k));font-variant-numeric:tabular-nums}
+.res .tiles2 .a{border-color:var(--ok)}.res .tiles2 .a small{color:var(--ok)}
+.res .tiles2 .s{border-color:var(--gold)}.res .tiles2 .s small{color:var(--gold)}
+.res .wl{display:flex;flex-wrap:wrap;gap:.45rem;justify-content:center;max-width:540px}
+.res .wl .wc{display:inline-flex;align-items:center;gap:.35rem;padding:calc(.3rem*var(--k)) .75rem;border-radius:999px;background:var(--raised);border:1px solid var(--line2);font-size:calc(1rem*var(--k));color:var(--fg)}
+.res .wl .wc:active{border-color:var(--accent)}
+.res .gm{display:flex;align-items:center;gap:.45rem;color:var(--gold);font-size:calc(1.05rem*var(--k));animation:rise .6s .4s ease-out both}
+.res .gm svg.i{width:20px;height:20px}
 #fx{position:fixed;inset:0;pointer-events:none;z-index:95}
 #toast{position:fixed;left:50%;bottom:calc(84px + var(--sb));transform:translateX(-50%) translateY(20px);background:var(--raised2);border:1px solid var(--line2);border-radius:999px;padding:.55rem 1rem;font-size:.92rem;opacity:0;transition:opacity .2s,transform .2s;z-index:99;pointer-events:none;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
 #toast.show{opacity:1;transform:translateX(-50%)}
 #boot{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:200;background:var(--bg);transition:opacity .35s}
-#boot img{width:84px;height:84px;object-fit:contain;animation:breathe 1.6s ease-in-out infinite}
+#boot svg.fl{width:96px;height:96px;animation:breathe 1.6s ease-in-out infinite;filter:drop-shadow(0 0 22px rgba(243,201,105,.3))}
 #boot.out{opacity:0;pointer-events:none}
 @keyframes breathe{0%,100%{transform:scale(.92);opacity:.6}50%{transform:scale(1);opacity:1}}
 
 /* wide layouts */
-body.wide #views{grid-template-columns:minmax(300px,1fr) minmax(330px,420px)}
-body.wide #vLearn{border-right:1px solid var(--line)}
-body.wide #vLearn,body.wide #vDict{display:flex!important}
-body.xwide #views{grid-template-columns:300px minmax(380px,1fr) minmax(340px,420px)}
-body.xwide #vSide{display:flex!important}
-#vSide{display:none;padding:.9rem 1rem;gap:.7rem;border-right:1px solid var(--line)}
-body.xwide #vLearn .stats,body.xwide #vLearn .acts{display:none}
-#vSide .stats{grid-template-columns:1fr;gap:.55rem}
-#vSide .stat{padding:.75rem .8rem}
-#vSide .stat b{font-size:1.35rem}
-#vSide .stat small{font-size:.8rem}
-#vSide .acts{grid-template-columns:1fr;gap:.55rem}
-#vSide .week{display:flex;justify-content:space-between;gap:.3rem;padding:.75rem .8rem;background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
 .week div{display:flex;flex-direction:column;align-items:center;gap:.3rem;font-size:.72rem;color:var(--mid)}
 .week i{width:26px;height:26px;border-radius:50%;border:2px solid var(--line2);display:flex;align-items:center;justify-content:center}
 .week i.on{background:var(--gold);border-color:var(--gold);color:#251a00}
 .week i.td{border-color:var(--accent)}
 .week i svg.i{width:14px;height:14px;stroke-width:2.6}
 body.wide .ov.dim .card{width:min(600px,100%)}
-#vSide .next{display:flex;flex-direction:column;gap:.45rem;padding:.85rem .9rem;background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
-#vSide .next small{color:var(--mid);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase}
-#vSide .next b{font-weight:400;font-size:1.1rem}
-#vSide .next .ws{display:flex;flex-wrap:wrap;gap:.35rem}
-#vSide .next .ws span{padding:.2rem .6rem;border-radius:999px;background:var(--raised);border:1px solid var(--line);font-size:.92rem}
-#vSide .next .btn{margin-top:.2rem}
 .spk{display:inline-flex;align-items:center;justify-content:center;width:calc(2.7rem*var(--k));height:calc(2.7rem*var(--k));min-width:34px;min-height:34px;border-radius:50%;background:var(--accent-a);color:var(--accent);flex:none;vertical-align:middle;transition:transform .1s,background .15s;border:0;padding:0}
 .spk:active{transform:scale(.88);background:var(--accent-b)}
 .spk svg.i{width:52%;height:52%}
@@ -380,7 +392,6 @@ body.wide .ov.dim .card{width:min(600px,100%)}
 .spk.fbs{margin-left:.4rem;width:38px;height:38px}
 body:not(.tts) .spk{display:none}
 .hwrow{display:flex;align-items:center;gap:.7rem;justify-content:center;max-width:100%}
-.fb .hd .xp{margin-left:auto}
 #kbx{flex:none;width:100%}
 .kb{max-width:760px;margin:0 auto;padding:.35rem calc(.3rem + var(--sr)) .15rem calc(.3rem + var(--sl));display:flex;flex-direction:column;gap:clamp(4px,.8vh,7px)}
 .kb .r{display:flex;gap:clamp(3px,1vw,6px);justify-content:center}
@@ -399,7 +410,7 @@ body:not(.tts) .spk{display:none}
 .heard.bad{color:var(--bad)}
 .gate{z-index:80;align-items:center;justify-content:center;padding:1.5rem}
 .gc{display:flex;flex-direction:column;align-items:center;gap:1rem;text-align:center;width:min(360px,100%)}
-.gc img{width:96px;height:96px;object-fit:contain;animation:pop .5s cubic-bezier(.2,.9,.3,1.3)}
+.gc svg.fl{width:104px;height:104px;animation:pop .5s cubic-bezier(.2,.9,.3,1.3);filter:drop-shadow(0 0 24px rgba(243,201,105,.3))}
 .gc h2{font-weight:400;font-size:1.7rem}
 .gc p{color:var(--mid);font-size:1rem}
 .gc small{color:var(--bad);min-height:1.2em}
@@ -408,7 +419,6 @@ body:not(.tts) .spk{display:none}
 .ov#quit{z-index:95}
 .dkb{flex:0 0 auto!important;padding:0 1rem;color:var(--mid);font-size:.95rem!important}
 .btn.sq{width:50px;padding:0;color:var(--gold)}
-.acts{grid-template-columns:1fr 1fr auto}
 .combo.low{color:var(--bad);animation:bump .5s infinite}
 .node.trophy .c{border-radius:30%}
 .node.trophy.open .c{background:var(--gold);border-color:var(--gold);color:#2a1f00}
@@ -433,14 +443,194 @@ body:not(.tts) .play{display:none}
 .story .kl{font-size:calc(1.3rem*var(--k))}
 .story .tr{font-size:calc(.95rem*var(--k));color:var(--mid);margin-top:.2rem}
 @media (min-height:700px) and (min-width:860px){.stage{justify-content:center}.akeys{margin-top:.2rem}.bank{margin-top:1.6rem}.mgrid{margin:0}}
-@media (max-height:600px){#vLearn .stats{display:none}#vLearn{gap:.5rem;padding-top:.5rem;padding-bottom:.5rem}.uh{padding:.35rem .5rem .3rem}}
-@media (max-width:400px){.acts .btn{padding:0 .55rem;gap:.35rem;font-size:.95rem}.acts .btn svg.i{display:none}.stat{padding:.45rem .45rem;gap:.4rem}.stat .ic,.stat .ring{width:28px;height:28px}}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* strikes */
+.strikes{display:flex;gap:.3rem}
+.strikes i{width:26px;height:26px;border-radius:8px;border:2px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--line2);transition:background .2s,border-color .2s,color .2s}
+.strikes i svg.i{width:15px;height:15px;stroke-width:3}
+.strikes i.on{background:var(--bad);border-color:var(--bad);color:#2a0905}
+.strikes i.hit{animation:strk .5s cubic-bezier(.2,.9,.3,1.4)}
+@keyframes strk{0%{transform:scale(.4) rotate(-20deg)}60%{transform:scale(1.35) rotate(8deg)}100%{transform:none}}
+.smk{display:flex;gap:.4rem;justify-content:center}
+.smk i{width:30px;height:30px;border-radius:9px;border:2px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--line2)}
+.smk i svg.i{width:16px;height:16px;stroke-width:3}
+.smk i.on{border-color:var(--bad);color:var(--bad);background:var(--bad-a)}
+.res.out .xxx{display:flex;gap:.7rem;justify-content:center}
+.res.out .xxx i{width:calc(4.2rem*var(--k));height:calc(4.2rem*var(--k));border-radius:18px;background:var(--bad);color:#2a0905;display:flex;align-items:center;justify-content:center;animation:xin .45s cubic-bezier(.2,.9,.3,1.4) both;box-shadow:0 5px 0 #a4554f}
+.res.out .xxx i svg.i{width:55%;height:55%;stroke-width:3.2}
+@keyframes xin{from{transform:scale(0) rotate(-30deg);opacity:0}to{transform:none;opacity:1}}
+.res.out p{color:var(--mid);font-size:calc(1.05rem*var(--k))}
+.combo:empty{display:none}
+
+/* gold: a unit is complete */
+.ov.gold{z-index:120;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 38%,#3b2a07 0%,#140e03 45%,#000 80%);animation:gfade .35s ease-out}
+.ov.gold.bye{animation:gout .26s ease-in forwards}
+@keyframes gfade{from{opacity:0}}
+@keyframes gout{to{opacity:0;transform:scale(1.04)}}
+.gold .rays{position:absolute;left:50%;top:38%;width:170vmax;height:170vmax;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 0deg,rgba(243,201,105,.16) 0deg 9deg,transparent 9deg 22.5deg);-webkit-mask:radial-gradient(circle,#000 0,rgba(0,0,0,.6) 18%,transparent 52%);mask:radial-gradient(circle,#000 0,rgba(0,0,0,.6) 18%,transparent 52%);animation:spin 26s linear infinite,raysin 1s ease-out both}
+@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+@keyframes raysin{from{opacity:0}}
+.gold #gfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
+.gw{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;gap:1rem;text-align:center;padding:1.5rem;margin-top:-6vh}
+.gmed{position:relative;width:min(46vw,210px);height:min(46vw,210px);border-radius:50%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 35% 30%,#fff6d2,#f3c969 38%,#b47c1f 72%,#7a5210);box-shadow:0 0 0 6px rgba(243,201,105,.25),0 0 80px rgba(243,201,105,.55),inset 0 -10px 24px rgba(90,55,5,.55),inset 0 8px 18px rgba(255,255,255,.45);animation:medal 1.1s cubic-bezier(.2,.9,.25,1.25) both;overflow:hidden}
+.gmed::before{content:'';position:absolute;inset:11%;border-radius:50%;background:radial-gradient(circle at 50% 40%,#2a1d06,#120c02);box-shadow:inset 0 3px 10px rgba(0,0,0,.7),0 0 0 3px rgba(255,236,170,.55)}
+.gmed svg.fl{position:relative;width:62%;height:62%;filter:drop-shadow(0 2px 6px rgba(0,0,0,.6));animation:fleurin 1.2s .35s cubic-bezier(.2,.9,.3,1.35) both}
+.gmed .shine{position:absolute;inset:0;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.75) 48%,transparent 60%);transform:translateX(-120%);animation:shine 1.4s 1.1s ease-in-out both}
+.gring{position:absolute;inset:-14px;border-radius:50%;border:3px solid rgba(243,201,105,.6);animation:ring 1.6s .5s ease-out infinite}
+@keyframes medal{0%{transform:scale(0) rotate(-120deg);opacity:0}60%{transform:scale(1.12) rotate(8deg);opacity:1}100%{transform:none}}
+@keyframes fleurin{0%{transform:scale(.2);opacity:0}100%{transform:none;opacity:1}}
+@keyframes shine{to{transform:translateX(120%)}}
+@keyframes ring{0%{transform:scale(.9);opacity:.9}100%{transform:scale(1.45);opacity:0}}
+.gt1{font-size:clamp(2rem,9vw,3.2rem);line-height:1.05;letter-spacing:.01em;background:linear-gradient(180deg,#fff6d2,#f3c969 55%,#c38a2a);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 0 rgba(0,0,0,.6));animation:rise .6s .55s ease-out both}
+.gt2{color:#e9d9b0;font-size:1.05rem;opacity:.85;animation:rise .6s .75s ease-out both;max-width:22rem}
+.gnext{display:inline-flex;align-items:center;gap:.55rem;padding:.55rem 1.1rem .55rem .6rem;border-radius:999px;border:1px solid rgba(243,201,105,.35);background:rgba(20,14,3,.7);color:#e9d9b0;font-size:1rem;animation:rise .6s 1s ease-out both;transition:border-color .3s,background .3s}
+.gnext .lk{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#3a2c0c;color:#f3c969}
+.gnext .lk svg.i{width:17px;height:17px}
+.gnext.open{border-color:#f3c969;background:rgba(243,201,105,.14);color:#fff3c4}
+.gnext.open .lk{background:#f3c969;color:#2a1d06;animation:pop .45s cubic-bezier(.2,.9,.3,1.6)}
+.gf{position:absolute;left:0;right:0;bottom:0;z-index:4;display:flex;justify-content:center;padding:1rem calc(1.2rem + var(--sr)) calc(1.2rem + var(--sb)) calc(1.2rem + var(--sl))}
+.gbtn2{width:min(420px,100%);height:56px;font-size:1.1rem;background:linear-gradient(180deg,#ffe9a6,#f3c969 50%,#d9a441);color:#2a1d06;border:0;box-shadow:0 5px 0 #8a6214;animation:rise .5s 1.3s ease-out both}
+.gbtn2:active{transform:translateY(3px);box-shadow:0 2px 0 #8a6214}
+
+/* pictures */
+img.pic{display:block;object-fit:contain;pointer-events:none;user-select:none;-webkit-user-select:none}
+img.pic.big{width:calc(6.6rem*var(--k));height:calc(6.6rem*var(--k));animation:pop .45s cubic-bezier(.2,.9,.3,1.4);filter:drop-shadow(0 6px 14px rgba(0,0,0,.5))}
+img.pic.mid{width:calc(4.4rem*var(--k));height:calc(4.4rem*var(--k));align-self:flex-start;margin-top:calc(.3rem*var(--k))}
+img.pic.xs{display:inline-block;width:1.35em;height:1.35em;vertical-align:-.3em}
+img.pic.ent{width:calc(3.2rem*var(--k));height:calc(3.2rem*var(--k));flex:none}
+.pq{font-size:.62em;color:var(--mid);font-style:italic;white-space:nowrap}
+
+/* course sections */
+.secs{display:flex;flex-direction:column;gap:calc(.45rem*var(--k))}
+.sec{border:1px solid var(--line);border-radius:16px;background:var(--raised);overflow:hidden}
+.sec .sh{display:flex;align-items:center;gap:.7rem;width:100%;padding:calc(.5rem*var(--k)) .75rem;text-align:left}
+.sec .sh b{flex:1;font-weight:400;font-size:calc(1.02rem*var(--k))}
+.sec .sh svg.ck{color:var(--gold);width:18px;height:18px;stroke-width:2.6}
+.sec .sh svg.lk{color:var(--dim);width:17px;height:17px}
+.sec.lock .sh{color:var(--mid)}
+.sec.cur{border-color:var(--accent-b)}
+.sec.done .ring .fgc{stroke:var(--gold)}
+.sec .ring .fgc{stroke:var(--accent)}
+.sec .sg{display:grid;grid-template-columns:repeat(5,1fr);gap:calc(.45rem*var(--k));padding:0 .75rem calc(.75rem*var(--k))}
+.sec .sg button{aspect-ratio:1;border-radius:50%;border:2px solid var(--line2);background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:calc(1rem*var(--k));color:var(--soft);font-variant-numeric:tabular-nums;max-height:56px;justify-self:center;width:100%;max-width:56px}
+.sec .sg button svg.i{width:42%;height:42%}
+.sec .sg button svg.fl{width:62%;height:62%}
+.sec .sg button.done{border-color:var(--gold);background:var(--gold-a)}
+.sec .sg button.cur{background:var(--fg);color:#000;border-color:var(--fg)}
+.sec .sg button.part{border-color:var(--accent)}
+.sec .sg button.lock{color:var(--dim)}
+.sec .sg button.sel{outline:2px solid var(--accent);outline-offset:2px}
+
+/* vocab 101 */
+#v101{padding:.9rem calc(1rem + var(--sr)) .8rem calc(1rem + var(--sl));align-items:center}
+.xw{flex:1;min-height:0;width:100%;max-width:560px;display:flex;flex-direction:column;gap:calc(1rem*var(--k));justify-content:center}
+.xhero{display:flex;align-items:center;gap:1.1rem}
+.xhero h2{font-weight:400;font-size:calc(1.7rem*var(--k))}
+.xhero p{color:var(--mid);font-size:calc(1rem*var(--k))}
+.xbar{height:8px;border-radius:8px;background:var(--raised2);overflow:hidden}
+.xbar i{display:block;height:100%;background:linear-gradient(90deg,#ff86c0,#ffb3d9);border-radius:8px;transition:width .6s}
+.xnext{display:flex;flex-direction:column;gap:calc(.8rem*var(--k));padding:calc(1.1rem*var(--k)) 1rem;background:var(--panel);border:1px solid var(--line);border-radius:var(--r2)}
+.xnext .ws{display:flex;flex-wrap:wrap;gap:.45rem;justify-content:center}
+.xnext .ws span{font-size:calc(1.05rem*var(--k));padding:calc(.35rem*var(--k)) .8rem}
+.xnext .btn{height:56px;font-size:1.08rem}
+.xall{display:flex;align-items:center;justify-content:center;gap:.5rem;color:var(--ok);font-size:1.1rem;padding:.6rem}
+.xall svg.i{width:22px;height:22px;stroke-width:2.6}
+.xw .acts{grid-template-columns:1fr 1fr}
+.cred{color:var(--dim);font-size:.74rem;text-align:center}
+.ch .x101{margin-left:.5rem}
+.sw.xs{margin:0 1rem .5rem}
+#xlist .list{padding:0 1rem}
+#xlist .pager{padding-bottom:calc(.4rem + var(--sb))}
+.row.xr{cursor:default}
+.row.xr img.pic.xs{width:2rem;height:2rem}
+.pgb{width:min(220px,40vw);height:5px;border-radius:5px;background:var(--raised2);overflow:hidden}
+.pgb i{display:block;height:100%;background:var(--accent);border-radius:5px;transition:width .3s}
+
+/* grammar */
+#vGram{padding:.7rem calc(.9rem + var(--sr)) .55rem calc(.9rem + var(--sl));align-items:center}
+.glist{flex:1;min-height:0;width:100%;max-width:640px;display:flex;flex-direction:column;gap:calc(.6rem*var(--k));justify-content:center}
+.ghd{display:flex;align-items:center;gap:.6rem;padding:0 .2rem}
+.ghd svg.i{width:26px;height:26px;color:var(--accent)}
+.ghd h2{font-weight:400;font-size:calc(1.6rem*var(--k))}
+.gch{display:flex;align-items:center;gap:.85rem;width:100%;text-align:left;padding:calc(.8rem*var(--k)) .9rem;background:var(--panel);border:1px solid var(--line);border-radius:var(--r2);transition:border-color .15s,transform .1s}
+.gch:active{transform:scale(.99);border-color:var(--accent)}
+@media(hover:hover){.gch:hover{border-color:var(--accent)}}
+.gch .gi{width:calc(2.9rem*var(--k));height:calc(2.9rem*var(--k));border-radius:14px;background:var(--accent-a);color:var(--accent);display:flex;align-items:center;justify-content:center;flex:none}
+.gch .gi svg.i{width:52%;height:52%}
+.gch .gtx{flex:1;min-width:0}
+.gch b{display:block;font-weight:400;font-size:calc(1.18rem*var(--k))}
+.gch small{display:block;color:var(--soft);font-size:calc(.88rem*var(--k))}
+.gch .gtoc{display:block;color:var(--dim);font-size:calc(.78rem*var(--k));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:.15rem}
+.gch>svg.i{color:var(--dim)}
+.gcred{color:var(--dim);font-size:calc(.74rem*var(--k));text-align:center;line-height:1.4}
+.gcred a,.cred a{color:var(--mid)}
+.gread{flex:1;min-height:0;width:100%;max-width:760px;display:flex;flex-direction:column;gap:.5rem}
+.gbar{flex:none;display:flex;align-items:center;gap:.6rem}
+.gbar .gt{flex:1;min-width:0;text-align:center}
+.gbar .gt b{display:block;font-weight:400;font-size:1.08rem}
+.gbar .gt small{display:block;color:var(--accent);font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:1em}
+.gpage{flex:1;min-height:0;overflow:hidden;padding:.2rem .15rem;display:flex;flex-direction:column;gap:calc(.7rem*var(--k));touch-action:pan-y}
+.gnav{flex:none;display:flex;align-items:center;justify-content:center;gap:1rem;height:46px}
+.gnav .rb[disabled]{opacity:.25;pointer-events:none}
+.g2{font-size:calc(1.42rem*var(--k));color:var(--fg);margin-top:calc(.25rem*var(--k));line-height:1.2}
+.g3{font-size:calc(1.12rem*var(--k));color:var(--accent);line-height:1.25}
+.g2 i,.g3 i{color:var(--gold);font-style:normal}
+.gp{font-size:calc(1.02rem*var(--k));color:var(--soft);line-height:1.5}
+.gp i,.gex .k i,.gex .k b{color:var(--gold);font-style:normal}
+.gp b{color:var(--fg);font-weight:600}
+.gli{padding-left:1rem;position:relative}
+.gli::before{content:'';position:absolute;left:.25rem;top:.62em;width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.gex{border:1px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden}
+.gex .r{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:.2rem 1rem;padding:calc(.55rem*var(--k)) .85rem;cursor:pointer;position:relative;transition:background .15s}
+.gex .r+.r{border-top:1px solid var(--line)}
+.gex .r.on{animation:rowon .9s ease-out}
+@keyframes rowon{0%{background:var(--accent-b)}100%{background:transparent}}
+.gex .k{font-size:calc(1.05rem*var(--k));color:var(--gold);line-height:1.35}
+.gex .k b{font-weight:700;color:#ffe08f;text-decoration:underline;text-decoration-color:rgba(243,201,105,.4);text-underline-offset:3px}
+.gex .e{font-size:calc(.95rem*var(--k));color:var(--soft);line-height:1.35}
+.gex .e b{color:var(--fg);font-weight:600}
+body.tts .gex .r .k::after{content:'';display:inline-block;width:.85em;height:.85em;margin-left:.4em;vertical-align:-.08em;opacity:.45;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='4 9.5 8 9.5 13 5 13 19 8 14.5 4 14.5'/%3E%3Cpath d='M16.3 8.7a4.6 4.6 0 0 1 0 6.6'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='4 9.5 8 9.5 13 5 13 19 8 14.5 4 14.5'/%3E%3Cpath d='M16.3 8.7a4.6 4.6 0 0 1 0 6.6'/%3E%3C/svg%3E") center/contain no-repeat}
+@media (max-width:560px){.gex .r{grid-template-columns:1fr}.gex .e{color:var(--mid)}}
+.gtb{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--line2);border-radius:16px;overflow:hidden;font-size:calc(.98rem*var(--k));background:var(--panel)}
+.gtb th{background:var(--accent-a);color:var(--accent);font-weight:400;font-size:calc(.78rem*var(--k));letter-spacing:.1em;text-transform:uppercase;padding:calc(.45rem*var(--k)) .6rem;text-align:left}
+.gtb th+th{border-left:1px solid var(--line2)}
+.gtb td{padding:calc(.45rem*var(--k)) .6rem;vertical-align:top;border-top:1px solid var(--line);line-height:1.3}
+.gtb td:nth-child(odd){color:var(--gold)}
+.gtb td:nth-child(even){color:var(--soft)}
+.gtb td:nth-child(3){border-left:1px solid var(--line2)}
+.gtb tr:nth-child(odd) td{background:rgba(255,255,255,.015)}
+.toc{display:flex;flex-direction:column;gap:calc(.2rem*var(--k))}
+.toc button{text-align:left;padding:calc(.45rem*var(--k)) .7rem;border-radius:10px;font-size:calc(1rem*var(--k));color:var(--soft)}
+.toc button.t3{padding-left:1.6rem;font-size:calc(.9rem*var(--k));color:var(--mid)}
+.toc button.on{background:var(--accent-a);color:var(--fg)}
+
+/* profile, voices, credits */
+.srow.pick{width:100%;text-align:left;border-radius:12px;padding:0 .2rem;color:var(--fg)}
+.srow.pick .lb{color:var(--fg)}
+.srow.pick small{color:var(--mid);margin-left:.35rem}
+.srow.pick svg.i{color:var(--mid);width:18px;height:18px}
+.links{display:flex;gap:.4rem 1rem;justify-content:center;flex-wrap:wrap}
+.vgrid{display:flex;flex-direction:column;gap:calc(.35rem*var(--k))}
+.vrow{display:flex;align-items:center;gap:.6rem;width:100%;text-align:left;padding:calc(.6rem*var(--k)) .8rem;border-radius:14px;border:1px solid var(--line);background:var(--raised)}
+.vrow .vn{flex:1;min-width:0;display:flex;align-items:center;gap:.45rem;font-size:calc(1.02rem*var(--k))}
+.vrow small{color:var(--mid);font-size:calc(.8rem*var(--k));white-space:nowrap}
+.vrow svg.i{color:var(--accent);width:18px;height:18px;stroke-width:2.6}
+.vrow.on{border-color:var(--accent);background:var(--accent-a)}
+.tagb{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:#1d1500;background:var(--gold);border-radius:999px;padding:.05rem .45rem}
+.vtip{color:var(--mid);font-size:calc(.84rem*var(--k));margin-top:calc(.8rem*var(--k));line-height:1.45}
+.cred p{color:var(--soft);font-size:calc(.95rem*var(--k));line-height:1.5;margin-bottom:.8rem}
+.cred a{color:var(--accent)}
+.cred b{font-weight:600;color:var(--fg)}
+.gpage>*,.glist>*,.xw>*,.secs>*,.vgrid>*{flex:none}
 
 </style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs><linearGradient id="dkg" gradientUnits="userSpaceOnUse" x1="0" y1="2" x2="0" y2="88"><stop offset="0" stop-color="#fff3c4"/><stop offset=".45" stop-color="#f3c969"/><stop offset="1" stop-color="#c38a2a"/></linearGradient></defs>
+  <symbol id="i-fleur" viewBox="0 0 100 100"><path d="M50 3.5 C57.5 13,63 24,63 35.5 C63 45.5,58 52.5,55.5 60 L44.5 60 C42 52.5,37 45.5,37 35.5 C37 24,42.5 13,50 3.5 Z"/><path d="M55.5 60 C56 45,63 30,76.5 25.5 C87 22,96.5 28,96.5 37.5 C96.5 45,91 50,84 49.5 C88.5 46.5,90.5 41.5,88 38 C85 34,78.5 34,74 38 C69 43,67 51,67 60 Z"/><path d="M54 67 C55.5 76,62.5 82.5,72 82 C80 81.5,84 75,81.5 69.5 C80.5 74,76.5 76.5,72.5 75.5 C66.5 74.5,63.5 71,63.5 67 Z"/><path transform="matrix(-1 0 0 1 100 0)" d="M55.5 60 C56 45,63 30,76.5 25.5 C87 22,96.5 28,96.5 37.5 C96.5 45,91 50,84 49.5 C88.5 46.5,90.5 41.5,88 38 C85 34,78.5 34,74 38 C69 43,67 51,67 60 Z"/><path transform="matrix(-1 0 0 1 100 0)" d="M54 67 C55.5 76,62.5 82.5,72 82 C80 81.5,84 75,81.5 69.5 C80.5 74,76.5 76.5,72.5 75.5 C66.5 74.5,63.5 71,63.5 67 Z"/><rect x="31" y="57.5" width="38" height="10" rx="3.5"/><path d="M45.5 67 C45.5 74,47.5 80,50 86 C52.5 80,54.5 74,54.5 67 Z"/><g fill="none" stroke="#9a6a1c" stroke-width=".7" opacity=".5"><path d="M50 12 C50 30,50 45,50 57"/><line x1="31.5" y1="62.5" x2="68.5" y2="62.5"/></g></symbol>
+  <symbol id="i-gram" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="16" rx="2.5"/><line x1="3.5" y1="9" x2="20.5" y2="9"/><line x1="10" y1="9" x2="10" y2="20"/><line x1="10" y1="14.5" x2="20.5" y2="14.5"/></symbol>
   <symbol id="i-back" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></symbol>
   <symbol id="i-fwd" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
@@ -477,16 +667,17 @@ body:not(.tts) .play{display:none}
 <div id="app">
   <header id="top">
     <div class="ttl">
-      <a class="rb" id="bk" href="https://7stages.net/" aria-label="7 Stages" title="7 Stages"><svg class="i"><use href="#i-back"/></svg></a>
-      <button id="logo" type="button" aria-label="Random word"><img src="/icon.png" alt="" width="40" height="40"></button>
+      <button id="logo" type="button" aria-label="Random word"><svg class="fl"><use href="#i-fleur"/></svg></button>
       <h1>Diksyonær</h1>
     </div>
     <span class="pill fire off" id="hStreak" title="Streak" hidden><svg class="i f"><use href="#i-flame"/></svg><span>0</span></span>
     <button class="rb" id="av" type="button" aria-label="Account"><svg class="i"><use href="#i-user"/></svg></button>
   </header>
+  <div id="mid">
   <main id="views">
-    <section class="view" id="vSide" aria-label="Progress"></section>
     <section class="view" id="vLearn" aria-label="Course"></section>
+    <section class="view" id="v101" aria-label="Vocab 101" hidden></section>
+    <section class="view" id="vGram" aria-label="Grammar" hidden></section>
     <section class="view" id="vDict" aria-label="Dictionary" hidden>
       <div class="sw"><svg class="i mag"><use href="#i-mag"/></svg><input id="q" type="search" placeholder="Search Kréyòl Lalwizyan or English" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"><button id="qc" type="button" aria-label="Clear" hidden><svg class="i"><use href="#i-x"/></svg></button></div>
       <div class="chips" id="chips"></div>
@@ -495,13 +686,16 @@ body:not(.tts) .play{display:none}
     </section>
   </main>
   <nav id="tabs" role="tablist">
-    <button type="button" role="tab" id="tLearn" aria-selected="true"><svg class="i"><use href="#i-path"/></svg>Course</button>
-    <button type="button" role="tab" id="tDict" aria-selected="false"><svg class="i"><use href="#i-book"/></svg>Dictionary</button>
+    <button type="button" role="tab" id="tLearn" aria-selected="true"><svg class="i"><use href="#i-path"/></svg><span>Course</span></button>
+    <button type="button" role="tab" id="tX" aria-selected="false" hidden><span class="x101">101</span><span>Vocab 101</span></button>
+    <button type="button" role="tab" id="tG" aria-selected="false" hidden><svg class="i"><use href="#i-gram"/></svg><span>Grammar</span></button>
+    <button type="button" role="tab" id="tDict" aria-selected="false"><svg class="i"><use href="#i-book"/></svg><span>Dictionary</span></button>
   </nav>
+  </div>
 </div>
 <canvas id="fx"></canvas>
 <div id="toast" role="status" aria-live="polite"></div>
-<div id="boot"><img src="/icon.png" alt=""></div>
+<div id="boot"><svg class="fl"><use href="#i-fleur"/></svg></div>
 <script>
 /* Diksyonær core: lexicon, lemmatizer, course, exercises, grading, scheduling. No DOM. */
 (function (G) {
@@ -1313,8 +1507,9 @@ const ROOT = /\/(index\.html)?$/.test(location.pathname);
 
 /* ================================================================ state */
 const LS = 'dk2-state';
-const fresh = () => ({ v: 1, rst: 0, w: {}, days: {}, set: { goal: 50, snd: 1, voice: 1, t: 0 }, stars: {}, mig: 0, uid: '', placed: 0, cp: {}, best: {}, t: 0 });
-let st = (() => { try { const v = JSON.parse(localStorage.getItem(LS)); if (v && v.v === 1) { const f = fresh(); return Object.assign(f, v, { set: Object.assign(f.set, v.set || {}) }); } } catch (e) {} return fresh(); })();
+/* w: course words, x: Vocab 101 words (kept apart so the two decks never mix), days: sessions finished per day (streak) */
+const fresh = () => ({ v: 1, rst: 0, w: {}, x: {}, days: {}, set: { snd: 1, voice: 1, rate: 1, t: 0 }, stars: {}, mig: 0, uid: '', placed: 0, cp: {}, best: {}, t: 0 });
+let st = (() => { try { const v = JSON.parse(localStorage.getItem(LS)); if (v && v.v === 1) { const f = fresh(); return Object.assign(f, v, { set: Object.assign(f.set, v.set || {}), x: v.x || {} }); } } catch (e) {} return fresh(); })();
 function save(push = true) { st.t = now(); try { localStorage.setItem(LS, JSON.stringify(st)); } catch (e) {} if (push) pushLater(); }
 if (!st.mig) { try { (JSON.parse(localStorage.getItem('dk-stars') || '[]') || []).forEach(k => { const a = String(k).split('|')[0]; if (a && !(a in st.stars)) st.stars[a] = 1; }); } catch (e) {} st.mig = 1; save(false); }
 
@@ -1325,8 +1520,7 @@ let _recs = null;
 const recs = () => { if (_recs) return _recs; _recs = {}; for (const k in st.w) { const id = keyId.get(k); if (id != null) _recs[id] = st.w[k]; } return _recs; };
 const touch = () => { _recs = null; _fo = null; };
 const recOf = id => st.w[E[id].key];
-const xpToday = () => st.days[dayKey()] || 0;
-const xpTotal = () => Object.values(st.days).reduce((a, b) => a + (+b || 0), 0);
+const did = (t = now()) => { st.days[dayKey(t)] = (st.days[dayKey(t)] || 0) + 1; };
 function streak() { let n = 0; const d = new Date(); if (!(st.days[dayKey(d.getTime())] > 0)) d.setDate(d.getDate() - 1); while (st.days[dayKey(d.getTime())] > 0) { n++; d.setDate(d.getDate() - 1); } return n; }
 function bestStreak() { const ks = Object.keys(st.days).filter(k => st.days[k] > 0).sort(); let best = 0, run = 0, prev = null; ks.forEach(k => { const t = new Date(k + 'T12:00:00').getTime(); run = prev && Math.round((t - prev) / 864e5) === 1 ? run + 1 : 1; best = Math.max(best, run); prev = t; }); return best; }
 const learnedN = () => Object.keys(recs()).length;
@@ -1351,7 +1545,33 @@ const SFX = (() => {
     match: () => tone(988, 0, 0.12, 'sine', 0.05),
     flip: () => tone(523, 0, 0.18, 'sine', 0.045, 784),
     done: () => [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, i * 0.09, 0.32, 'triangle', 0.05)),
-    goal: () => [784, 988, 1175, 1568].forEach((f, i) => tone(f, i * 0.12, 0.4, 'sine', 0.05))
+    /* the gap in a cloze sentence: a soft two-note blip */
+    blank: () => { tone(660, 0, 0.11, 'sine', 0.07); tone(660, 0.16, 0.11, 'sine', 0.07); },
+    strike: () => { tone(196, 0, 0.16, 'square', 0.03, 140); tone(98, 0.02, 0.2, 'sine', 0.08, 70); },
+    out: () => [392, 349, 311, 262].forEach((f, i) => tone(f, i * 0.2, i === 3 ? 0.7 : 0.24, 'triangle', 0.06, i === 3 ? 196 : 0)),
+    /* unit complete: an original brass fanfare with timpani and a bell shimmer */
+    fanfare: () => {
+      const c = ac(); if (!c) return;
+      const t0 = c.currentTime + 0.06, out = c.createDynamicsCompressor(); out.connect(c.destination);
+      const bus = c.createGain(); bus.gain.value = 0.85; bus.connect(out);
+      const brass = (f, at, d, g = 0.11) => {
+        const t = t0 + at, v = c.createGain(), lp = c.createBiquadFilter();
+        lp.type = 'lowpass'; lp.Q.value = 2; lp.frequency.setValueAtTime(f * 1.5, t); lp.frequency.exponentialRampToValueAtTime(f * 6, t + 0.08); lp.frequency.exponentialRampToValueAtTime(f * 2.5, t + d);
+        v.gain.setValueAtTime(0.0001, t); v.gain.exponentialRampToValueAtTime(g, t + 0.035); v.gain.setValueAtTime(g * 0.8, t + d * 0.7); v.gain.exponentialRampToValueAtTime(0.0001, t + d);
+        [-6, 0, 7].forEach(dt => { const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.detune.value = dt; o.connect(lp); o.start(t); o.stop(t + d + 0.05); });
+        lp.connect(v).connect(bus);
+      };
+      const timp = (at, f = 98) => { const t = t0 + at, o = c.createOscillator(), v = c.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(f * 1.6, t); o.frequency.exponentialRampToValueAtTime(f, t + 0.12); v.gain.setValueAtTime(0.0001, t); v.gain.exponentialRampToValueAtTime(0.32, t + 0.01); v.gain.exponentialRampToValueAtTime(0.0001, t + 0.9); o.connect(v).connect(bus); o.start(t); o.stop(t + 1); };
+      const bell = (f, at) => { const t = t0 + at; [1, 2.01, 3.02].forEach((m, k) => { const o = c.createOscillator(), v = c.createGain(); o.type = 'sine'; o.frequency.value = f * m; v.gain.setValueAtTime(0.0001, t); v.gain.exponentialRampToValueAtTime(0.05 / (k + 1), t + 0.01); v.gain.exponentialRampToValueAtTime(0.0001, t + 1.2); o.connect(v).connect(bus); o.start(t); o.stop(t + 1.3); }); };
+      const N = { G4: 392, A4: 440, B4: 494, C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880, C6: 1046.5 };
+      // pickup, a rising call, a held answer and the big chord
+      [['G4', 0, 0.13], ['G4', 0.14, 0.13], ['C5', 0.28, 0.2], ['E5', 0.5, 0.2], ['D5', 0.72, 0.13], ['E5', 0.86, 0.13], ['G5', 1.0, 0.52]].forEach(([n, a, d]) => brass(N[n], a, d));
+      [['C5', 1.56], ['E5', 1.56], ['G5', 1.56], ['C6', 1.56]].forEach(([n, a]) => brass(N[n], a, 1.5, 0.075));
+      brass(130.81, 1.56, 1.5, 0.09);
+      timp(0.28); timp(1.0, 110); timp(1.56, 82); timp(1.7, 82);
+      [N.C6 * 2, N.G5 * 2, N.E5 * 2, N.C6 * 2].forEach((f, i) => bell(f, 1.62 + i * 0.09));
+    },
+    unlock: () => { [1319, 1568, 2093, 2637].forEach((f, i) => tone(f, i * 0.06, 0.5, 'sine', 0.04)); tone(220, 0, 0.08, 'square', 0.03, 330); }
   };
 })();
 const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
@@ -1360,33 +1580,69 @@ const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (
 /* There is no Kréyòl voice in browsers, so a French voice reads a French spelling of the Kréyòl (DK.toFr). */
 const TTS = (() => {
   const ok = () => 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
-  let voice = null, last = '', lastT = 0;
+  const VK = 'dk-voice';
+  let voice = null, last = '', lastT = 0, gen = 0;
+  /* novelty and Eloquence voices (Eddy, Flo, Grandma…) sound robotic: never pick them on our own */
+  const BAD = /eloquence|\b(eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley|albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|fred|junior|kathy|ralph)\b|novelty/i;
+  const score = v => { const n = v.name + ' ' + (v.voiceURI || ''); return (BAD.test(n) ? -40 : 0) + (/premium/i.test(n) ? 12 : /enhanced|améliorée/i.test(n) ? 10 : 0) + (/natural|neural|online/i.test(n) ? 11 : 0) + (/siri/i.test(n) ? 8 : 0) + (/google/i.test(n) ? 6 : 0) + (/\b(thomas|amélie|amelie|audrey|aurélie|aurelie|marie|daniel|virginie|denise|henri|eloise|vivienne|rémy|remy|juliette|jules|chantal|nicolas)\b/i.test(n) ? 4 : 0) + (/fr[-_]FR/i.test(v.lang) ? 2 : /fr[-_]CA/i.test(v.lang) ? 1 : 0) + (v.localService === false ? 1 : 0); };
+  const list = () => { if (!ok()) return []; return speechSynthesis.getVoices().filter(v => /^fr([-_]|$)/i.test(v.lang)).sort((a, b) => score(b) - score(a)); };
   const pick = () => {
-    if (!ok()) return;
-    const vs = speechSynthesis.getVoices().filter(v => /^fr([-_]|$)/i.test(v.lang));
-    const sc = v => (/natural|neural|premium|enhanced|google|siri/i.test(v.name) ? 6 : 0) + (/fr[-_]FR/i.test(v.lang) ? 2 : /fr[-_]CA/i.test(v.lang) ? 1 : 0) + (v.localService ? 0 : 1);
-    voice = vs.sort((a, b) => sc(b) - sc(a))[0] || null;
+    const vs = list(); let want = ''; try { want = localStorage.getItem(VK) || ''; } catch (e) {}
+    voice = (want && vs.find(v => v.voiceURI === want || v.name === want)) || vs[0] || null;
     document.body.classList.toggle('tts', !!voice);
   };
   if (ok()) { pick(); try { speechSynthesis.addEventListener('voiceschanged', pick); } catch (e) { speechSynthesis.onvoiceschanged = pick; } }
+  const rate = slow => (slow ? 0.62 : 0.9) * (st.set.rate === 0 ? 0.8 : 1);
+  function utter(text, slow, end) {
+    const u = new SpeechSynthesisUtterance(DK.toFr(text));
+    u.voice = voice; u.lang = voice.lang; u.rate = rate(slow);
+    if (end) { let done = false; const fin = () => { if (!done) { done = true; clearTimeout(tm); end(); } }; u.onend = fin; u.onerror = fin; const tm = setTimeout(fin, 1600 + text.length * 120 / u.rate); }
+    return u;
+  }
   function say(text, o = {}) {
+    gen++;
     if (!ok() || st.set.voice === 0 || !text) { if (o.end) o.end(); return; }
     if (!voice) pick();
     if (!voice) { if (o.end) o.end(); return; }
     const t = now(), slow = o.slow || (o.tap && text === last && t - lastT < 2500 && !o.fast);
     last = text; lastT = slow ? 0 : t;
-    try {
-      speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(DK.toFr(text));
-      u.voice = voice; u.lang = voice.lang; u.rate = slow ? 0.6 : 0.9;
-      if (o.end) { let done = false; const fin = () => { if (!done) { done = true; o.end(); } }; u.onend = fin; u.onerror = fin; }
-      speechSynthesis.speak(u);
-    } catch (e) {}
+    try { speechSynthesis.cancel(); speechSynthesis.speak(utter(text, slow, o.end)); } catch (e) { if (o.end) o.end(); }
   }
-  return { say, stop() { try { if (ok()) speechSynthesis.cancel(); } catch (e) {} }, has: () => !!voice };
+  /* a sentence read in pieces, with a sound where the blank is */
+  function seq(items, o = {}) {
+    gen++;
+    if (!ok() || st.set.voice === 0 || !voice) { if (o.end) o.end(); return; }
+    const g = gen;
+    try { speechSynthesis.cancel(); } catch (e) {}
+    let k = 0;
+    const next = () => {
+      if (g !== gen) return;
+      if (k >= items.length) { if (o.end) o.end(); return; }
+      const it = items[k++];
+      if (it && it.fx) { SFX[it.fx](); setTimeout(next, 420); return; }
+      const s = String(it || '').trim();
+      if (!/[\p{L}\p{N}]/u.test(s)) { next(); return; }
+      try { speechSynthesis.speak(utter(s, o.slow, () => setTimeout(next, 90))); } catch (e) { next(); }
+    };
+    next();
+  }
+  function set(uri) { try { localStorage.setItem(VK, uri); } catch (e) {} pick(); }
+  return { say, seq, set, list, cur: () => voice, stop() { gen++; try { if (ok()) speechSynthesis.cancel(); } catch (e) {} }, has: () => !!voice, ok, score };
 })();
 const spk = (text, extra = '') => '<button class="spk ' + extra + '" type="button" data-say="' + esc(text) + '" aria-label="Listen">' + ico('snd') + '</button>';
-document.addEventListener('click', ev => { const b = ev.target.closest && ev.target.closest('.spk'); if (b) { ev.stopPropagation(); TTS.say(b.dataset.say, { tap: true }); } }, true);
+document.addEventListener('click', ev => { const b = ev.target.closest && ev.target.closest('.spk'); if (b && b.dataset.say != null) { ev.stopPropagation(); TTS.say(b.dataset.say, { tap: true }); } }, true);
+
+/* ============================================================= pictures */
+/* Microsoft Fluent Emoji (MIT licence), matched only for concrete nouns by their first English meaning */
+const PIC = {"dog":"dog","cat":"cat","cow":"cow","horse":"horse","pig":"pig","hog":"pig","chicken":"chicken","hen":"chicken","rooster":"rooster","duck":"duck","bird":"bird","fish":"fish","catfish":"fish","crab":"crab","shrimp":"shrimp","crawfish":"lobster","lobster":"lobster","alligator":"crocodile","mosquito":"mosquito","mouse":"mouse","rat":"rat","sheep":"ewe","owl":"owl","raccoon":"raccoon","squirrel":"chipmunk","deer":"deer","wolf":"wolf","monkey":"monkey","spider":"spider","ant":"ant","fly":"fly","worm":"worm","oyster":"oyster","egg":"egg","eggs":"egg","buzzard":"bird","vulture":"bird","pelican":"bird","goose":"goose","house":"house","home":"house","church":"church","school":"school","hospital":"hospital","store":"convenience-store","bank":"bank","city":"cityscape","door":"door","window":"window","bed":"bed","chair":"chair","key":"key","box":"package","bottle":"bottle-with-popping-cork","cup":"teacup-without-handle","bowl":"bowl-with-spoon","spoon":"spoon","knife":"kitchen-knife","fork":"fork-and-knife","plate":"fork-and-knife-with-plate","pot":"pot-of-food","broom":"broom","bucket":"bucket","candle":"candle","lamp":"light-bulb","light":"light-bulb","clock":"mantelpiece-clock","watch":"watch","phone":"mobile-phone","book":"closed-book","pencil":"pencil","paper":"page-facing-up","money":"money-bag","gift":"wrapped-gift","present":"wrapped-gift","hammer":"hammer","axe":"axe","car":"automobile","truck":"pickup-truck","boat":"canoe","pirogue":"canoe","ship":"ship","airplane":"airplane","bicycle":"bicycle","bike":"bicycle","road":"motorway","sun":"sun","moon":"crescent-moon","star":"star","cloud":"cloud","rain":"cloud-with-rain","snow":"snowflake","wind":"wind-face","storm":"cloud-with-lightning-and-rain","hurricane":"cyclone","lightning":"high-voltage","thunder":"cloud-with-lightning","fire":"fire","water":"droplet","sea":"water-wave","ocean":"water-wave","river":"water-wave","tree":"deciduous-tree","oak":"deciduous-tree","flower":"hibiscus","leaf":"leaf-fluttering-in-wind","grass":"herb","mountain":"mountain","world":"globe-showing-americas","apple":"red-apple","orange":"tangerine","lemon":"lemon","banana":"banana","peach":"peach","pear":"pear","strawberry":"strawberry","fig":"red-apple","peanut":"peanuts","tomato":"tomato","potato":"potato","sweet potato":"roasted-sweet-potato","onion":"onion","garlic":"garlic","pepper":"hot-pepper","carrot":"carrot","corn":"ear-of-corn","bean":"beans","beans":"beans","cabbage":"leafy-green","eggplant":"eggplant","cucumber":"cucumber","mushroom":"mushroom","rice":"cooked-rice","bread":"bread","cornbread":"bread","cake":"shortcake","pie":"pie","butter":"butter","cheese":"cheese-wedge","milk":"glass-of-milk","coffee":"hot-beverage","tea":"teacup-without-handle","beer":"beer-mug","wine":"wine-glass","whiskey":"tumbler-glass","meat":"cut-of-meat","sausage":"hot-dog","soup":"pot-of-food","gumbo":"pot-of-food","honey":"honey-pot","ice":"ice","child":"child","boy":"boy","girl":"girl","man":"man","woman":"woman","old man":"old-man","teacher":"teacher","farmer":"farmer","police":"police-officer","student":"student","hand":"raised-hand","foot":"foot","leg":"leg","arm":"flexed-biceps","eye":"eye","ear":"ear","mouth":"mouth","lip":"mouth","tooth":"tooth","teeth":"tooth","tongue":"tongue","heart":"red-heart","brain":"brain","bone":"bone","finger":"backhand-index-pointing-up","thumb":"thumbs-up","shirt":"t-shirt","dress":"dress","hat":"billed-cap","shoe":"mans-shoe","shoes":"mans-shoe","boots":"womans-boot","boot":"womans-boot","coat":"coat","pants":"jeans","sock":"socks","socks":"socks","glasses":"glasses","glove":"gloves","gloves":"gloves","umbrella":"umbrella","music":"musical-notes","song":"musical-note","guitar":"guitar","drum":"drum","banjo":"banjo","dance":"woman-dancing","ball":"soccer-ball","game":"game-die","card":"joker","cards":"joker","birthday":"birthday-cake","christmas":"christmas-tree","bible":"closed-book","cross":"latin-cross","angel":"baby-angel","picture":"framed-picture","calendar":"calendar","medicine":"pill","pill":"pill","soap":"soap","needle":"sewing-needle","garden":"seedling","seed":"seedling","wood":"wood","beach":"beach-with-umbrella","night":"night-with-stars","morning":"sunrise","evening":"sunset","summer":"sun","winter":"snowflake","spring":"cherry-blossom","fall":"fallen-leaf","autumn":"fallen-leaf","year":"calendar","week":"spiral-calendar","day":"sun"};
+const picHead = g => String(g || '').replace(/<br\s*\/?>/gi, ';').replace(/^\s*\d+\.\s*/, '').split(/[;,\/]|\s\d+\./)[0].replace(/\([^)]*\)/g, '').trim().toLowerCase().replace(/^(a|an|the|to) /, '');
+function picOf(e) {
+  if (!e) return '';
+  if (e.pic !== undefined) return e.pic;
+  const noun = /^(noun|n\b)/i.test(e.posLabel || '') || (e.cats && e.cats.has('noun') && !e.cats.has('verb'));
+  return (e.pic = noun ? (PIC[picHead(e.senses && e.senses[0] && e.senses[0].g)] || '') : '');
+}
+const picHTML = (e, cls = '') => { const p = picOf(e); return p ? '<img class="pic ' + cls + '" src="dk-img/' + p + '.webp" alt="" draggable="false" onerror="this.remove()">' : ''; };
 
 /* ============================================================== viewport */
 const root = document.documentElement;
@@ -1399,7 +1655,7 @@ function vv() {
   document.body.classList.toggle('xwide', w >= 1180);
 }
 let rzT = 0;
-const onRz = () => { vv(); clearTimeout(rzT); rzT = setTimeout(() => { if (!READY) return; layoutPath(); if (P.on) fit($('stg'), 0.5); if (!$('vDict').hidden || document.body.classList.contains('wide')) renderList(); fitOverlays(); }, 90); };
+const onRz = () => { vv(); clearTimeout(rzT); rzT = setTimeout(() => { if (!READY) return; if (TAB === 'learn') layoutPath(); if (P.on) fit($('stg'), 0.5); if (TAB === 'dict') renderList(); if (TAB === 'x') renderX(); if (TAB === 'gram') { if (G.ch >= 0) { gPaginate(); gDraw(); } else renderGram(); } const xl = $('xlist'); if (xl && xl.draw) xl.draw(); fitOverlays(); }, 90); };
 addEventListener('resize', onRz);
 if (window.visualViewport) { visualViewport.addEventListener('resize', onRz); visualViewport.addEventListener('scroll', vv); }
 addEventListener('scroll', () => { if (scrollY) scrollTo(0, 0); });
@@ -1476,22 +1732,19 @@ function overlay(id, html, cls = 'dim') {
 function closeOv(id, silent) { const el = $(id); if (!el) return; el.remove(); const i = stack.lastIndexOf(id); if (i >= 0) stack.splice(i, 1); if (!silent && id === 'pl') P.on = false; }
 function closeTop() { const id = stack[stack.length - 1]; if (!id) return false; if (id === 'pl') { quitAsk(); return true; } closeOv(id); return true; }
 addEventListener('popstate', () => { if (stack.length) { const id = stack[stack.length - 1]; if (id === 'pl') { if (P.on && P.answered && !P.fin) { try { history.pushState({ ov: 'pl' }, ''); } catch (e) {} quitAsk(); } else endPlayer(); } else closeOv(id); } });
-function fitOverlays() { ['ent', 'units', 'sheet', 'kind'].forEach(id => { const el = $(id); if (el) { const b = el.querySelector('.cb'); if (b && id !== 'ent') fit(b, 0.55); if (id === 'ent') layoutEntry(); } }); }
+function fitOverlays() { ['ent', 'units', 'sheet', 'kind', 'voices', 'credits', 'gtoc'].forEach(id => { const el = $(id); if (el) { const b = el.querySelector('.cb'); if (b && id !== 'ent') fit(b, 0.55); if (id === 'ent') layoutEntry(); } }); }
 
 /* =============================================================== learn */
-let viewU = null;
-function statsHTML() {
-  const g = st.set.goal, x = xpToday(), fr = Math.min(1, x / g), C2 = 2 * Math.PI * 14;
-  const sk = streak();
-  return '<div class="stats">' +
-    '<div class="stat fire"><span class="ic">' + ico('flame', 'f') + '</span><span><b>' + sk + '</b><small>day streak</small></span></div>' +
-    '<div class="stat goal"><svg class="ring" viewBox="0 0 34 34"><circle class="bgc" cx="17" cy="17" r="14"/><circle class="fgc" cx="17" cy="17" r="14" stroke-dasharray="' + C2.toFixed(1) + '" stroke-dashoffset="' + (C2 * (1 - fr)).toFixed(1) + '"/></svg><span><b>' + x + '<span style="color:var(--mid)">/' + g + '</span></b><small>XP today</small></span></div>' +
-    '<div class="stat words"><span class="ic">' + ico('book') + '</span><span><b>' + learnedN() + '</b><small>words</small></span></div></div>';
-}
+/* the course is long, so it is shown a section (10 units) at a time, with no totals */
+const SEC = 10;
+const secOf = u => Math.floor(u / SEC);
+let viewU = null, viewPinned = false;
+const tw = e => (e.teach || e.single[0] || e.forms[0]).replace(/^-+/, '');
+function unitTitle(u) { const ids = C.lessons[C.units[u].ls[0]].ids.slice(0, 4); return ids.map(i => tw(E[i])).join(' · '); }
+const unitAll = u => C.units[u].ls.every(lessonDone);
 function actsHTML() {
-  const d = dueN(), w = weakN(), any = learnedN() > 0;
-  return '<div class="acts"><button class="btn' + (d ? ' acc' : '') + '" id="bRev" type="button"' + (any ? '' : ' disabled') + '>' + ico('rev') + 'Review<span class="cnt' + (d ? '' : ' z') + '">' + d + '</span></button>' +
-    '<button class="btn" id="bWeak" type="button"' + (any ? '' : ' disabled') + '>' + ico('target') + 'Weak words<span class="cnt z">' + w + '</span></button>' +
+  const any = learnedN() > 0, due = any && dueN() > 0;
+  return '<div class="acts"><button class="btn' + (due ? ' acc' : '') + '" id="bRev" type="button"' + (any ? '' : ' disabled') + '>' + ico('rev') + 'Review' + (due ? '<i class="dot"></i>' : '') + '</button>' +
     '<button class="btn sq" id="bBlz" type="button" aria-label="Speed round" title="Speed round"' + (learnedN() >= 5 ? '' : ' disabled') + '>' + ico('bolt', 'f') + '</button></div>';
 }
 function weekHTML() {
@@ -1499,33 +1752,29 @@ function weekHTML() {
   for (let i = 0; i < 7; i++) { const k = dayKey(d.getTime()), on = st.days[k] > 0, td = i === 6; h += '<div><i class="' + (on ? 'on' : '') + (td ? ' td' : '') + '">' + (on ? ico('check') : '') + '</i>' + 'SMTWTFS'[d.getDay()] + '</div>'; d.setDate(d.getDate() + 1); }
   return h + '</div>';
 }
-const tw = e => (e.teach || e.single[0] || e.forms[0]).replace(/^-+/, '');
 function nextHTML(fo) {
   if (fo >= C.lessons.length) return '';
-  const ids = C.lessons[fo].ids;
-  return '<div class="next"><small>Up next</small><b>Unit ' + (C.lessons[fo].u + 1) + ' · Lesson ' + (fo - C.units[C.lessons[fo].u].ls[0] + 1) + '</b><div class="ws">' + ids.map(i => '<span>' + esc(tw(E[i])) + '</span>').join('') + '</div><button class="btn pri" id="bNext" type="button">Start</button></div>';
+  const L = C.lessons[fo], u = L.u, ids = L.ids, k = fo - C.units[u].ls[0];
+  return '<div class="next"><small>Section ' + (secOf(u) + 1) + ' · Unit ' + (u % SEC + 1) + '</small><div class="ldots">' + C.units[u].ls.map((_, j) => '<i class="' + (j < k ? 'on' : j === k ? 'cur' : '') + '"></i>').join('') + '</div><div class="ws">' + ids.map(i => '<span>' + picHTML(E[i], 'xs') + esc(tw(E[i])) + '</span>').join('') + '</div><button class="btn pri" id="bNext" type="button">Start</button></div>';
 }
-function unitTitle(u) { const ids = C.lessons[C.units[u].ls[0]].ids.slice(0, 4); return ids.map(i => tw(E[i])).join(' · '); }
 function renderLearn() {
   if (!READY) return;
   const fo = firstOpen(), cu = fo < C.lessons.length ? C.lessons[fo].u : C.units.length - 1;
-  if (viewU == null) viewU = cu;
+  if (viewU == null || !viewPinned) viewU = cu;
   viewU = Math.max(0, Math.min(C.units.length - 1, viewU));
-  const u = C.units[viewU], dn = unitDone(viewU), locked = u.ls[0] > fo;
-  $('vLearn').innerHTML = statsHTML() +
-    '<div class="unit" id="unit"><div class="uh"><button class="rb" id="uPrev" type="button" aria-label="Previous unit"' + (viewU ? '' : ' disabled style="opacity:.3"') + '>' + ico('back') + '</button>' +
-    '<button class="nm" id="uName" type="button"><b>Unit ' + (viewU + 1) + (u.core ? '<span class="core">CORE</span>' : '') + '</b><small>' + esc(unitTitle(viewU)) + '</small></button>' +
-    '<button class="rb" id="uNext" type="button" aria-label="Next unit"' + (viewU < C.units.length - 1 ? '' : ' disabled style="opacity:.3"') + '>' + ico('fwd') + '</button></div>' +
-    '<div class="ubar"><i style="width:' + Math.round(dn / u.ls.length * 100) + '%"></i></div><div class="path" id="path"></div>' +
-    (locked ? '<div class="ulock"><button class="btn acc" id="bJump" type="button">' + ico('jump') + 'Jump here</button></div>' : '') + '</div>' + actsHTML();
-  $('vSide').innerHTML = statsHTML() + weekHTML() + nextHTML(fo) + actsHTML();
+  const u = C.units[viewU], locked = u.ls[0] > fo, all = unitAll(viewU);
+  $('vLearn').innerHTML = '<div class="lmain"><div class="unit' + (all ? ' gold' : '') + '" id="unit"><div class="uh"><button class="rb" id="uPrev" type="button" aria-label="Previous unit"' + (viewU ? '' : ' disabled') + '>' + ico('back') + '</button>' +
+    '<button class="nm" id="uName" type="button"><small>Section ' + (secOf(viewU) + 1) + '</small><b>Unit ' + (viewU % SEC + 1) + (all ? ' ' + ico('check', 'ck') : '') + '</b><span class="uw">' + esc(unitTitle(viewU)) + '</span></button>' +
+    '<button class="rb" id="uNext" type="button" aria-label="Next unit"' + (viewU < C.units.length - 1 ? '' : ' disabled') + '>' + ico('fwd') + '</button></div>' +
+    '<div class="path" id="path"></div>' +
+    (locked ? '<div class="ulock"><button class="btn acc" id="bJump" type="button">' + ico('jump') + 'Jump here</button></div>' : '') + '</div>' + actsHTML() + '</div>' +
+    '<div class="lside">' + nextHTML(fo) + weekHTML() + actsHTML() + '</div>';
   const nb = $('bNext'); if (nb) nb.onclick = () => startLesson(fo);
-  $('uPrev').onclick = () => { if (viewU > 0) { viewU--; SFX.tap(); renderLearn(); } };
-  $('uNext').onclick = () => { if (viewU < C.units.length - 1) { viewU++; SFX.tap(); renderLearn(); } };
-  $('uName').onclick = openUnits;
+  $('uPrev').onclick = () => { if (viewU > 0) { viewU--; viewPinned = viewU !== cu; SFX.tap(); renderLearn(); } };
+  $('uNext').onclick = () => { if (viewU < C.units.length - 1) { viewU++; viewPinned = viewU !== cu; SFX.tap(); renderLearn(); } };
+  $('uName').onclick = openSections;
   if ($('bJump')) $('bJump').onclick = () => startJump(viewU);
   document.querySelectorAll('#bRev').forEach(b => b.onclick = () => startReview('review'));
-  document.querySelectorAll('#bWeak').forEach(b => b.onclick = () => startReview('weak'));
   document.querySelectorAll('#bBlz').forEach(b => b.onclick = startBlitz);
   layoutPath();
   renderHeader();
@@ -1539,54 +1788,71 @@ function layoutPath() {
   box.style.setProperty('--ns', ns + 'px');
   const amp = Math.min(W * 0.26, 120), offs = [0, 0.7, 0.15, -0.7, -0.35, 0.3];
   const pts = u.ls.concat(['T']).map((L, k) => ({ L, x: W / 2 + offs[k % 6] * amp, y: top + slot * (k + 0.5) - 8 }));
-  let svg = '<svg class="trail" viewBox="0 0 ' + W + ' ' + H + '"><path d="' + pts.map((p, k) => (k ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1)).join(' ') + '"/></svg>';
-  let h = svg;
+  let h = '<svg class="trail" viewBox="0 0 ' + W + ' ' + H + '"><path d="' + pts.map((p, k) => (k ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1)).join(' ') + '"/></svg>';
   const allDone = u.ls.every(lessonDone), cpDone = !!(st.cp && st.cp[viewU]);
-  pts.forEach((p, k) => {
+  pts.forEach(p => {
     if (p.L === 'T') {
-      h += '<button class="node trophy ' + (cpDone ? 'done' : allDone ? 'open' : 'lock') + '" type="button" data-t="1" style="left:' + p.x.toFixed(1) + 'px;top:' + p.y.toFixed(1) + 'px">' + (allDone && !cpDone ? '<span class="go">Review</span>' : '') + '<span class="c">' + ico(allDone ? 'trophy' : 'lock') + '</span><span class="lb">Unit review</span></button>';
+      h += '<button class="node trophy ' + (cpDone ? 'done' : allDone ? 'open' : 'lock') + '" type="button" data-t="1" style="left:' + p.x.toFixed(1) + 'px;top:' + p.y.toFixed(1) + 'px">' + (allDone && !cpDone ? '<span class="go">Challenge</span>' : '') + '<span class="c">' + (allDone ? '<svg class="i fl"><use href="#i-fleur"/></svg>' : ico('lock')) + '</span><span class="lb">Unit challenge</span></button>';
       return;
     }
     const L = p.L, done = lessonDone(L), open = L === fo, lock = !done && !open;
-    const cls = 'node ' + (done ? 'done' : open ? 'open' : 'lock');
     const lbl = C.lessons[L].ids.slice(0, 2).map(i => tw(E[i])).join(' · ');
-    h += '<button class="' + cls + '" type="button" data-l="' + L + '" style="left:' + p.x.toFixed(1) + 'px;top:' + p.y.toFixed(1) + 'px">' + (open ? '<span class="go">Start</span>' : '') + '<span class="c">' + ico(done ? 'check' : lock ? 'lock' : 'spark') + '</span><span class="lb">' + esc(lbl) + '</span></button>';
+    h += '<button class="node ' + (done ? 'done' : open ? 'open' : 'lock') + '" type="button" data-l="' + L + '" style="left:' + p.x.toFixed(1) + 'px;top:' + p.y.toFixed(1) + 'px">' + (open ? '<span class="go">Start</span>' : '') + '<span class="c">' + ico(done ? 'check' : lock ? 'lock' : 'spark') + '</span><span class="lb">' + esc(lbl) + '</span></button>';
   });
   box.innerHTML = h;
+  const wob = b => b.animate([{ transform: 'translate(-50%,-50%) rotate(0)' }, { transform: 'translate(-50%,-50%) rotate(-8deg)' }, { transform: 'translate(-50%,-50%) rotate(8deg)' }, { transform: 'translate(-50%,-50%) rotate(0)' }], { duration: 300 });
   box.querySelectorAll('.node').forEach(b => b.onclick = () => {
-    if (b.dataset.t) { if (b.classList.contains('lock')) { b.animate([{ transform: 'translate(-50%,-50%) rotate(0)' }, { transform: 'translate(-50%,-50%) rotate(-8deg)' }, { transform: 'translate(-50%,-50%) rotate(8deg)' }, { transform: 'translate(-50%,-50%) rotate(0)' }], { duration: 300 }); return; } startUnitReview(viewU); return; }
-    const L = +b.dataset.l;
-    if (b.classList.contains('lock')) { b.animate([{ transform: 'translate(-50%,-50%) rotate(0)' }, { transform: 'translate(-50%,-50%) rotate(-8deg)' }, { transform: 'translate(-50%,-50%) rotate(8deg)' }, { transform: 'translate(-50%,-50%) rotate(0)' }], { duration: 300 }); buzz(30); return; }
-    startLesson(L);
+    if (b.classList.contains('lock')) { wob(b); buzz(30); return; }
+    if (b.dataset.t) { startUnitReview(viewU); return; }
+    startLesson(+b.dataset.l);
   });
 }
 function renderHeader() {
   const sk = streak(), el = $('hStreak');
   el.querySelector('span').textContent = sk;
+  el.hidden = !sk;
   el.classList.toggle('off', !(st.days[dayKey()] > 0));
   const av = $('av');
   if (FB.user && FB.user.photoURL) av.innerHTML = '<img src="' + esc(FB.user.photoURL) + '" alt="" referrerpolicy="no-referrer">' + (FB.status === 'ok' ? '<span class="dot"></span>' : '');
   else av.innerHTML = ico('user') + (FB.user && FB.status === 'ok' ? '<span class="dot"></span>' : '');
 }
-function openUnits() {
+/* sections: the current one open, the rest folded; no unit totals anywhere */
+let openSec = null;
+function openSections() {
   SFX.tap();
-  const fo = firstOpen(), cu = fo < C.lessons.length ? C.lessons[fo].u : -1;
-  const cols = innerWidth < 420 ? 8 : 10;
-  let g = '<div class="ugrid" style="--uc:' + cols + '">';
-  C.units.forEach((u, i) => { const d = unitDone(i), all = d === u.ls.length; g += '<button type="button" data-u="' + i + '" class="' + (all ? 'done' : '') + (i === cu ? ' cur' : '') + (u.core ? ' core' : '') + (i === viewU ? ' sel' : '') + '">' + (i + 1) + (d && !all ? '<i style="width:' + (d / u.ls.length * 100) + '%"></i>' : '') + '</button>'; });
-  g += '</div>';
-  const el = overlay('units', '<div class="card"><div class="ch"><span style="width:40px"></span><h2>Units</h2><button class="rb" type="button" data-x>' + ico('x') + '</button></div><div class="cb">' + g + '</div></div>');
-  el.querySelector('[data-x]').onclick = () => closeOv('units');
-  el.querySelectorAll('[data-u]').forEach(b => b.onclick = () => { viewU = +b.dataset.u; closeOv('units'); renderLearn(); });
-  fit(el.querySelector('.cb'), 0.5);
+  const fo = firstOpen(), cu = fo < C.lessons.length ? C.lessons[fo].u : C.units.length - 1;
+  const ns = Math.ceil(C.units.length / SEC);
+  if (openSec == null) openSec = secOf(viewU);
+  const draw = el => {
+    let h = '';
+    for (let s = 0; s < ns; s++) {
+      const us = C.units.slice(s * SEC, s * SEC + SEC).map((_, k) => s * SEC + k);
+      const dn = us.filter(unitAll).length, state = dn === us.length ? 'done' : s === secOf(cu) ? 'cur' : s > secOf(cu) ? 'lock' : 'part';
+      const fr = dn / us.length, R = 13, CC = 2 * Math.PI * R;
+      h += '<div class="sec ' + state + (s === openSec ? ' open' : '') + '"><button type="button" class="sh" data-s="' + s + '"><svg class="ring" viewBox="0 0 34 34"><circle class="bgc" cx="17" cy="17" r="' + R + '"/><circle class="fgc" cx="17" cy="17" r="' + R + '" stroke-dasharray="' + CC.toFixed(1) + '" stroke-dashoffset="' + (CC * (1 - fr)).toFixed(1) + '"/></svg>' +
+        '<b>Section ' + (s + 1) + '</b>' + (state === 'done' ? ico('check', 'ck') : state === 'lock' ? ico('lock', 'lk') : '') + '</button>';
+      if (s === openSec) h += '<div class="sg">' + us.map(u => { const a = unitAll(u), part = C.units[u].ls.some(lessonDone); return '<button type="button" data-u="' + u + '" class="' + (a ? 'done' : u === cu ? 'cur' : part ? 'part' : u > cu ? 'lock' : '') + (u === viewU ? ' sel' : '') + '">' + (a ? '<svg class="i fl"><use href="#i-fleur"/></svg>' : u > cu ? ico('lock') : (u % SEC + 1)) + '</button>'; }).join('') + '</div>';
+      h += '</div>';
+    }
+    el.querySelector('.cb').innerHTML = '<div class="secs">' + h + '</div>';
+    el.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { const s = +b.dataset.s; openSec = openSec === s ? -1 : s; SFX.tap(); draw(el); });
+    el.querySelectorAll('[data-u]').forEach(b => b.onclick = () => { viewU = +b.dataset.u; viewPinned = viewU !== cu; openSec = null; closeOv('units'); renderLearn(); });
+    fit(el.querySelector('.cb'), 0.5);
+  };
+  const el = overlay('units', '<div class="card"><div class="ch"><span style="width:40px"></span><h2>Course</h2><button class="rb" type="button" data-x>' + ico('x') + '</button></div><div class="cb"></div></div>');
+  el.querySelector('[data-x]').onclick = () => { openSec = null; closeOv('units'); };
+  draw(el);
 }
 
 /* ============================================================== player */
 const P = { on: false };
 const canMic = () => !!SRC && !P.noSR && window.__dkSR !== false;
+/* three strikes and the session is over: lessons, unit challenges, jumps and new 101 words */
+const STRIKES = { lesson: 1, unit: 1, jump: 1, xlearn: 1 };
 function warmIds(L) { const r = recs(), t = now(), mine = new Set(C.lessons[L].ids); return Object.keys(r).map(Number).filter(i => !mine.has(i) && r[i][1] * 6e4 <= t && !E[i].multi).sort((a, b) => DK.recall(r[a], t) - DK.recall(r[b], t)).slice(0, 2); }
-function startLesson(L) { const steps = K.lesson(L, { seed: (now() / 1000 | 0) % 997 + 1, audio: TTS.has(), mic: canMic(), warm: warmIds(L) }); startSession('lesson', steps, { L }); }
-function startUnitReview(U) { startSession('unit', K.unitReview(U, { seed: (now() / 1000 | 0) % 997 + 1, audio: TTS.has() }), { U }); }
+const seed = () => (now() / 1000 | 0) % 997 + 1;
+function startLesson(L) { const steps = K.lesson(L, { seed: seed(), audio: TTS.has(), mic: canMic(), warm: warmIds(L) }); startSession('lesson', steps, { L }); }
+function startUnitReview(U) { startSession('unit', K.unitReview(U, { seed: seed(), audio: TTS.has() }), { U }); }
 function startBlitz() { const ids = Object.keys(recs()).map(Number).filter(i => !E[i].multi); if (ids.length < 5) return; const b = K.blitzBoard(ids, Math.random); if (!b) return; startSession('blitz', [b], {}); }
 function startReview(mode) {
   let steps = K.review(recs(), now(), mode, { until: endOfToday(), audio: TTS.has() });
@@ -1596,20 +1862,31 @@ function startReview(mode) {
   if (!steps.length) return;
   startSession(m, steps, {});
 }
-function startJump(U) { startSession('jump', K.jump(U, { seed: (now() / 1000 | 0) % 997 + 1 }), { U }); }
+function startJump(U) { startSession('jump', K.jump(U, { seed: seed() }), { U }); }
+function retry() {
+  const m = P.mode, M = P.meta || {};
+  P.on = false; TTS.stop(); closeOv('pl', true);
+  if (m === 'lesson') startLesson(M.L); else if (m === 'unit') startUnitReview(M.U); else if (m === 'jump') startJump(M.U);
+  else if (m === 'blitz') startBlitz(); else if (m === 'xlearn') xLearn(M.ids); else if (m === 'xreview') xReview(); else if (m === 'place') startPlacement();
+  else startReview(m === 'weak' || m === 'practice' ? m : 'review');
+  if (!P.on) renderAll();
+}
 function startSession(mode, steps, meta) {
   if (!steps || !steps.length) return;
   SFX.tap();
-  Object.assign(P, { on: true, fin: false, mode, meta, steps: steps.map(s => Object.assign({}, s)), i: 0, ok: 0, tried: 0, mistakes: 0, combo: 0, best: 0, xp: 0, grades: new Map(), t0: now(), lives: mode === 'jump' ? 3 : null, answered: false, cur: null });
-  const el = overlay('pl', '<div class="ph"><button class="rb" id="pX" type="button" aria-label="Close">' + ico('x') + '</button><div class="pbar"><i id="pB"></i></div><div class="combo" id="pC"></div><div class="hearts" id="pH"></div></div><div class="stage" id="stg"></div><div id="kbx"></div><div class="pf" id="pf"></div><div class="fb" id="fb"><div class="in"></div></div>', '');
+  Object.assign(P, { on: true, fin: false, out: false, mode, meta, steps: steps.map(s => Object.assign({}, s)), i: 0, ok: 0, tried: 0, mistakes: 0, strikes: 0, grades: new Map(), t0: now(), answered: false, cur: null });
+  const el = overlay('pl', '<div class="ph"><button class="rb" id="pX" type="button" aria-label="Close">' + ico('x') + '</button><div class="pbar"><i id="pB"></i></div><div class="combo" id="pC"></div><div class="strikes" id="pH"></div></div><div class="stage" id="stg"></div><div id="kbx"></div><div class="pf" id="pf"></div><div class="fb" id="fb"><div class="in"></div></div>', '');
   el.querySelector('#pX').onclick = quitAsk;
-  hearts();
+  strikesUI();
   if (mode === 'blitz') { P.left = 60; P.pairs = 0; clearInterval(P.clock); const tick = () => { const c = $('pC'); if (!P.on || P.fin) { clearInterval(P.clock); return; } if (c) { c.innerHTML = ico('bolt', 'f') + P.left + 's'; c.classList.toggle('low', P.left <= 10); } if (P.left <= 0) { clearInterval(P.clock); finish(); return; } P.left--; }; tick(); P.clock = setInterval(tick, 1000); }
   nextStep();
 }
-function hearts() { const h = $('pH'); if (!h) return; if (P.lives == null) { h.innerHTML = ''; return; } h.innerHTML = [0, 1, 2].map(i => ico('heart', i < P.lives ? 'f' : 'lost')).join(''); }
+function strikesUI(hit) {
+  const h = $('pH'); if (!h) return;
+  if (!STRIKES[P.mode]) { h.innerHTML = ''; return; }
+  h.innerHTML = [0, 1, 2].map(i => '<i class="' + (i < P.strikes ? 'on' : '') + (hit && i === P.strikes - 1 ? ' hit' : '') + '">' + ico('x') + '</i>').join('');
+}
 function progress() { const b = $('pB'); if (b) b.style.width = (P.i / P.steps.length * 100).toFixed(1) + '%'; }
-function combo() { const c = $('pC'); if (!c || P.mode === 'blitz') return; if (P.combo >= 3) { c.innerHTML = ico('bolt', 'f') + P.combo; c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump'); } else c.innerHTML = ''; }
 function quitAsk() {
   if (!P.on) return;
   if (!P.answered || P.fin) { endPlayer(); return; }
@@ -1620,10 +1897,10 @@ function quitAsk() {
 }
 function endPlayer() { const wasPlace = P.mode === 'place' && !P.fin; P.on = false; clearInterval(P.clock); TTS.stop(); closeOv('pl', true); closeOv('quit', true); renderAll(); if (wasPlace) openPlace(); }
 function setFoot(html) { const f = $('pf'); f.innerHTML = html; return f; }
+const ent = (step, i) => (step && step.x ? V : E)[i];
 function nextStep() {
   if (!P.on) return;
   progress();
-  if (P.mode === 'jump' && P.lives <= 0) return finish();
   if (P.mode === 'place' && P.i >= P.steps.length && !placeRound()) return finish();
   if (P.mode === 'blitz' && P.i >= P.steps.length) { if (P.left <= 0) return finish(); const b = K.blitzBoard(Object.keys(recs()).map(Number), Math.random); if (b) P.steps.push(b); }
   if (P.i >= P.steps.length) return finish();
@@ -1653,30 +1930,36 @@ function checkBtn(ctrl) {
 function settle(res) {
   const step = P.steps[P.i], first = !step.req;
   P.answered = true; P.tried++;
-  let xp = 0;
-  if (res.ok) { P.ok++; P.combo++; P.best = Math.max(P.best, P.combo); xp = first ? 2 : 1; P.xp += xp; SFX.ok(); }
-  else { P.mistakes++; P.combo = 0; if (P.lives != null) { P.lives--; hearts(); } if (first && step.type !== 'match' && !step.repeat && P.mode !== 'jump' && P.mode !== 'place' && P.mode !== 'blitz') P.steps.push(Object.assign({}, step, { req: 1 })); SFX.bad(); buzz(60); }
+  if (res.ok) { P.ok++; SFX.ok(); }
+  else {
+    P.mistakes++;
+    if (first && step.type !== 'match' && !step.repeat && P.mode !== 'jump' && P.mode !== 'place' && P.mode !== 'blitz') P.steps.push(Object.assign({}, step, { req: 1 }));
+    /* a strike for a wrong or skipped answer; speaking and self-marked cards never cost one */
+    if (STRIKES[P.mode] && !res.silent && step.type !== 'speak' && !step.repeat) { P.strikes = Math.min(3, P.strikes + 1); strikesUI(true); if (P.strikes >= 3) P.out = true; SFX.strike(); }
+    else SFX.bad();
+    buzz(60);
+  }
   if (P.mode === 'place') P.meta.pl.res.push(!!res.ok);
   const g = res.ok ? ((res.near || !first) ? 1 : 2) : 0;
   (res.grades || (step.targets || []).map(id => [id, g])).forEach(([id, gg]) => { const c = P.grades.get(id); P.grades.set(id, c == null ? gg : Math.min(c, gg)); });
-  combo();
   if (res.silent) { P.i++; return setTimeout(nextStep, 420); }
-  feedback(res, xp);
+  feedback(res);
 }
-function feedback(res, xp) {
+function feedback(res) {
   const fb = $('fb'), inn = fb.querySelector('.in');
-  const head = res.ok ? (res.near ? 'Almost' : ['Correct', 'Nice', 'Great', 'Yes'][P.ok % 4]) : 'Not quite';
-  inn.innerHTML = '<div class="hd"><span class="ic">' + ico(res.ok ? 'check' : 'x') + '</span>' + head + (xp ? '<span class="xp">+' + xp + ' XP</span>' : '') + (res.say ? spk(res.say, 'fbs') : '') + '</div>' +
+  const head = res.ok ? (res.near ? 'Almost' : ['Correct', 'Nice', 'Great', 'Yes'][P.ok % 4]) : P.out ? 'Strike three' : 'Not quite';
+  inn.innerHTML = '<div class="hd"><span class="ic">' + ico(res.ok ? 'check' : 'x') + '</span>' + head + (res.say ? spk(res.say, 'fbs') : '') + '</div>' +
     (res.ans && (!res.ok || res.near || res.show) ? '<div class="ans">' + res.ans + '</div>' : '') + (res.sub ? '<div class="sub">' + res.sub + '</div>' : '') +
     (res.accept ? '<button class="lnk" type="button" id="pAcc">My answer was right</button>' : '') +
     '<div class="row2"><button class="btn ' + (res.ok ? 'okb' : 'badb') + '" id="pN" type="button">Continue</button></div>';
   fb.className = 'fb show ' + (res.ok ? 'ok' : 'bad');
   setFoot('');
-  const go = () => { P.i++; nextStep(); };
+  const go = () => { if (P.out) { outScreen(); return; } P.i++; nextStep(); };
   inn.querySelector('#pN').onclick = go;
   const a = inn.querySelector('#pAcc');
-  if (a) a.onclick = () => { // the learner overrides a strict English check
-    const step = P.steps[P.i]; P.mistakes--; P.ok++; P.xp += 2; P.combo++;
+  if (a) a.onclick = () => { // the learner overrides a strict English check: the strike comes back too
+    const step = P.steps[P.i]; P.mistakes--; P.ok++;
+    if (STRIKES[P.mode] && P.strikes > 0) { P.strikes--; P.out = false; strikesUI(); }
     if (step.req == null && P.steps.length && P.steps[P.steps.length - 1].req && P.steps[P.steps.length - 1].w === step.w && P.steps[P.steps.length - 1].type === step.type) P.steps.pop();
     (step.targets || []).forEach(id => P.grades.set(id, 1));
     SFX.ok(); go();
@@ -1684,55 +1967,115 @@ function feedback(res, xp) {
   setTimeout(() => { const b = inn.querySelector('#pN'); if (b) b.focus({ preventScroll: true }); }, 30);
   if (res.say) setTimeout(() => TTS.say(res.say), 250);
 }
+function outScreen() {
+  P.fin = true; clearInterval(P.clock); TTS.stop();
+  $('kbx').innerHTML = ''; $('fb').className = 'fb';
+  const stg = $('stg'); stg.className = 'stage mid';
+  stg.innerHTML = '<div class="res out"><div class="xxx">' + [0, 1, 2].map(i => '<i style="animation-delay:' + (i * 0.14) + 's">' + ico('x') + '</i>').join('') + '</div><h2>Three strikes</h2><p>' + (P.mode === 'lesson' ? 'Run it back and it will stick.' : 'Shake it off and go again.') + '</p></div>';
+  const f = setFoot('<button class="btn" id="pN" type="button">Close</button><button class="btn pri" id="pR" type="button">' + ico('rev') + 'Retry</button>');
+  f.querySelector('#pN').onclick = endPlayer;
+  f.querySelector('#pR').onclick = retry;
+  fit(stg, 0.5);
+  SFX.out(); buzz([40, 60, 40]);
+  setTimeout(() => { const b = $('pR'); if (b) b.focus({ preventScroll: true }); }, 30);
+}
 function finish() {
-  if (P.fin) return; P.fin = true;
+  if (P.fin) return; P.fin = true; viewPinned = false;
   const t = now(), mode = P.mode;
-  let pass = true;
-  const before = xpToday();
+  let pass = true, unitDoneNow = null;
+  $('kbx').innerHTML = '';
   if (mode === 'lesson') {
+    const u = C.lessons[P.meta.L].u, before = unitAll(u);
     C.lessons[P.meta.L].ids.forEach(id => { const g = P.grades.has(id) ? P.grades.get(id) : 2, k = E[id].key, r = st.w[k]; st.w[k] = r ? DK.schedule(r, g, t) : DK.recNew(t, g === 2 ? 1 : g === 1 ? 0.7 : 0.5); });
-    P.xp += 5 + (P.mistakes ? 0 : 5);
+    touch();
+    if (!before && unitAll(u)) { unitDoneNow = u; viewU = Math.min(C.units.length - 1, u + 1); }
   } else if (mode === 'blitz') {
-    P.xp = P.pairs; st.best = st.best || {}; P.newBest = P.pairs > (st.best.blitz || 0); if (P.newBest) st.best.blitz = P.pairs;
+    st.best = st.best || {}; P.newBest = P.pairs > (st.best.blitz || 0); if (P.newBest) st.best.blitz = P.pairs;
   } else if (mode === 'unit') {
     P.grades.forEach((g, id) => { const k = E[id].key; if (st.w[k]) st.w[k] = DK.schedule(st.w[k], g, t); });
-    st.cp = st.cp || {}; st.cp[P.meta.U] = t; P.xp += 15;
+    st.cp = st.cp || {}; st.cp[P.meta.U] = t;
   } else if (mode === 'place') {
     const h = P.meta.pl.pass; let k = 0;
     if (h >= 0) { const lastL = C.units[h].ls[C.units[h].ls.length - 1]; for (let L = 0; L <= lastL; L++) C.lessons[L].ids.forEach(id => { const key = E[id].key; if (st.w[key]) return; const g = P.grades.get(id); st.w[key] = DK.recNew(t, g === 2 ? 7 + (k % 10) : 3 + (k % 12)); k++; }); }
-    viewU = Math.min(C.units.length - 1, h + 1); st.placed = t; P.xp += 10;
+    viewU = Math.min(C.units.length - 1, h + 1); st.placed = t;
   } else if (mode === 'jump') {
-    pass = P.lives > 0;
-    if (pass) {
-      const first = C.units[P.meta.U].ls[0]; let k = 0;
-      for (let L = 0; L < first; L++) C.lessons[L].ids.forEach(id => { const key = E[id].key; if (st.w[key]) return; const g = P.grades.get(id); const s = g === 2 ? 7 + (k % 10) : 3 + (k % 12); st.w[key] = DK.recNew(t, s); k++; });
-      P.xp += 10; viewU = P.meta.U;
-    }
+    const first = C.units[P.meta.U].ls[0]; let k = 0;
+    for (let L = 0; L < first; L++) C.lessons[L].ids.forEach(id => { const key = E[id].key; if (st.w[key]) return; const g = P.grades.get(id); const s = g === 2 ? 7 + (k % 10) : 3 + (k % 12); st.w[key] = DK.recNew(t, s); k++; });
+    viewU = P.meta.U;
+  } else if (mode === 'xlearn') {
+    P.meta.ids.forEach(i => { const g = P.grades.has(i) ? P.grades.get(i) : 2, k = V[i].xk, r = st.x[k]; st.x[k] = r ? DK.schedule(r, g, t) : DK.recNew(t, g === 2 ? 1 : g === 1 ? 0.7 : 0.5); });
+  } else if (mode === 'xreview') {
+    P.grades.forEach((g, i) => { const k = V[i].xk; if (st.x[k]) st.x[k] = DK.schedule(st.x[k], g, t); });
   } else {
     P.grades.forEach((g, id) => { const k = E[id].key; if (st.w[k]) st.w[k] = DK.schedule(st.w[k], g, t); });
-    P.xp += 5;
   }
-  if (P.xp > 0) st.days[dayKey(t)] = (st.days[dayKey(t)] || 0) + P.xp;
+  const firstToday = !(st.days[dayKey(t)] > 0);
+  did(t);
   touch(); save(); push();
-  const goalNow = before < st.set.goal && xpToday() >= st.set.goal;
+  const sk = streak();
   progress(); $('pB').style.width = '100%';
-  const secs = Math.round((t - P.t0) / 1000), acc = P.tried ? Math.round(P.ok / P.tried * 100) : 100;
-  const title = mode === 'blitz' ? (P.newBest ? 'New best' : 'Speed round') : mode === 'unit' ? 'Unit ' + (P.meta.U + 1) + ' reviewed' : mode === 'place' ? 'You start at Unit ' + (viewU + 1) : mode === 'lesson' ? 'Lesson complete' : mode === 'jump' ? (pass ? 'Unit ' + (P.meta.U + 1) + ' unlocked' : 'Not yet') : 'Review complete';
-  const ws = mode === 'lesson' ? C.lessons[P.meta.L].ids : mode === 'place' || mode === 'blitz' ? [] : [...P.grades.keys()].slice(0, 14);
+  const title = mode === 'blitz' ? (P.newBest ? 'New best' : 'Speed round') : mode === 'unit' ? 'Challenge complete' : mode === 'place' ? 'You start at Section ' + (secOf(viewU) + 1) + ', Unit ' + (viewU % SEC + 1) : mode === 'lesson' ? (P.strikes ? 'Lesson complete' : 'Flawless') : mode === 'jump' ? 'Unit unlocked' : mode === 'xlearn' ? 'New words' : 'Review complete';
+  const isX = mode === 'xlearn' || mode === 'xreview';
+  const ws = mode === 'lesson' ? C.lessons[P.meta.L].ids : mode === 'xlearn' ? P.meta.ids : mode === 'place' || mode === 'blitz' ? [] : [...P.grades.keys()].slice(0, 14);
+  const W = i => isX ? V[i] : E[i];
   const stg = $('stg'); $('fb').className = 'fb'; stg.className = 'stage mid';
-  stg.innerHTML = '<div class="res"><div class="medal"><img src="/icon.png" alt=""></div><h2>' + esc(title) + '</h2>' +
-    (mode === 'blitz' ? '<div class="tiles3"><div class="x"><small>XP</small><b id="rX">+0</b></div><div class="a"><small>Pairs</small><b>' + P.pairs + '</b></div><div class="s"><small>Best</small><b>' + (st.best.blitz || 0) + '</b></div></div>'
-      : '<div class="tiles3"><div class="x"><small>XP</small><b id="rX">+0</b></div><div class="a"><small>Accuracy</small><b>' + acc + '%</b></div><div class="s"><small>Time</small><b>' + Math.floor(secs / 60) + ':' + pad(secs % 60) + '</b></div></div>') +
-    (ws.length ? '<div class="wl">' + ws.map(id => '<span>' + esc(tw(E[id])) + '</span>').join('') + '</div>' : '') +
-    '<div class="gm">' + ico('flame', 'f') + '<span>' + streak() + '</span>' + (goalNow ? '<span>·</span><span>Daily goal reached</span>' : '') + '</div></div>';
-  const due = dueN(), fo2 = firstOpen();
-  const nextBtn = mode === 'place' || mode === 'jump' ? '' : due >= 5 && mode === 'lesson' ? '<button class="btn" id="pR" type="button">' + ico('rev') + 'Review<span class="cnt">' + due + '</span></button>' : mode !== 'lesson' && fo2 < C.lessons.length ? '<button class="btn" id="pR" type="button">' + ico('spark') + 'Next lesson</button>' : '';
-  const ff = setFoot(nextBtn + '<button class="btn pri" id="pN" type="button">Continue</button>');
-  ff.querySelector('#pN').onclick = endPlayer;
-  const pr = ff.querySelector('#pR'); if (pr) pr.onclick = () => { const go = due >= 5 && mode === 'lesson' ? () => startReview('review') : () => startLesson(fo2); P.on = false; closeOv('pl', true); go(); };
+  const marks = STRIKES[mode] ? '<div class="smk">' + [0, 1, 2].map(i => '<i class="' + (i < P.strikes ? 'on' : '') + '">' + ico('x') + '</i>').join('') + '</div>' : '';
+  stg.innerHTML = '<div class="res"><div class="medal' + (unitDoneNow != null ? ' gold' : '') + '"><svg class="fl"><use href="#i-fleur"/></svg></div><h2>' + esc(title) + '</h2>' + marks +
+    (mode === 'blitz' ? '<div class="tiles2"><div class="a"><small>Pairs</small><b>' + P.pairs + '</b></div><div class="s"><small>Best</small><b>' + (st.best.blitz || 0) + '</b></div></div>' : '') +
+    (ws.length ? '<div class="wl">' + ws.map(id => '<button type="button" class="wc" data-say="' + esc(W(id).forms[0]) + '">' + picHTML(W(id), 'xs') + esc(tw(W(id))) + '</button>').join('') + '</div>' : '') +
+    (firstToday ? '<div class="gm">' + ico('flame', 'f') + '<span>' + (sk > 1 ? sk + '-day streak' : 'Streak started') + '</span></div>' : '') + '</div>';
+  stg.querySelectorAll('.wc').forEach(b => b.onclick = () => { TTS.say(b.dataset.say, { tap: true }); b.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 220 }); });
+  const again = mode !== 'place' && mode !== 'jump';
+  const ff = setFoot((again ? '<button class="btn" id="pR" type="button">' + ico('rev') + 'Retry</button>' : '') + '<button class="btn pri" id="pN" type="button">Continue</button>');
+  ff.querySelector('#pN').onclick = () => { const u = unitDoneNow != null ? unitDoneNow : mode === 'jump' ? P.meta.U : null; if (u != null) { P.on = false; TTS.stop(); closeOv('pl', true); renderAll(); celebrate(u, mode === 'jump'); } else endPlayer(); };
+  const pr = ff.querySelector('#pR'); if (pr) pr.onclick = retry;
   fit(stg, 0.5);
-  let n = 0; const tgt = P.xp, x = $('rX'); const tick = () => { n = Math.min(tgt, n + Math.max(1, Math.ceil(tgt / 25))); if (x) x.textContent = '+' + n; if (n < tgt) setTimeout(tick, 28); }; tick();
-  if (pass) { SFX.done(); confetti(); if (goalNow) setTimeout(() => { SFX.goal(); confetti(70); }, 900); } else SFX.bad();
+  if (pass) { SFX.done(); confetti(); } else SFX.bad();
+  setTimeout(() => { const b = $('pN'); if (b) b.focus({ preventScroll: true }); }, 30);
+}
+/* ============================================================ unit gold */
+function celebrate(u, jumped) {
+  if ($('gold')) return;
+  const nx = jumped ? u : u + 1, last = nx >= C.units.length;
+  const el = document.createElement('div'); el.id = 'gold'; el.className = 'ov gold';
+  el.innerHTML = '<div class="rays"></div><canvas id="gfx"></canvas><div class="gw">' +
+    '<div class="gmed"><div class="gring"></div><svg class="fl"><use href="#i-fleur"/></svg><i class="shine"></i></div>' +
+    '<div class="gt1">' + (jumped ? 'Unit unlocked' : 'Unit complete') + '</div>' +
+    '<div class="gt2">' + (jumped ? 'Section ' + (secOf(u) + 1) + ' · Unit ' + (u % SEC + 1) : esc(unitTitle(u))) + '</div>' +
+    (!jumped && !last ? '<div class="gnext"><span class="lk">' + ico('lock') + '</span><span>' + (secOf(nx) !== secOf(u) ? 'Section ' + (secOf(nx) + 1) + ' open' : 'Unit ' + (nx % SEC + 1) + ' open') + '</span></div>' : '') +
+    '</div><div class="gf"><button class="btn gbtn2" type="button" id="gC">Continue</button></div>';
+  document.body.appendChild(el);
+  stack.push('gold');
+  SFX.fanfare(); buzz([30, 50, 30, 50, 120]);
+  goldRain(el.querySelector('#gfx'));
+  setTimeout(() => { const lk = el.querySelector('.gnext'); if (lk) { lk.classList.add('open'); lk.querySelector('.lk').innerHTML = ico('check'); SFX.unlock(); } }, 1900);
+  const close = () => { el.classList.add('bye'); const i = stack.lastIndexOf('gold'); if (i >= 0) stack.splice(i, 1); setTimeout(() => { el.remove(); renderAll(); }, 260); };
+  el.querySelector('#gC').onclick = close;
+  setTimeout(() => { const b = $('gC'); if (b) b.focus({ preventScroll: true }); }, 50);
+}
+function goldRain(cv) {
+  const c = cv.getContext('2d'), dpr = Math.min(2, devicePixelRatio || 1), W = innerWidth, H = innerHeight;
+  cv.width = W * dpr; cv.height = H * dpr; c.scale(dpr, dpr);
+  const cols = ['#fff3c4', '#f3c969', '#e0ac43', '#c38a2a', '#ffffff'];
+  const ps = [];
+  const burst = (n, y) => { for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, v = 4 + Math.random() * 9; ps.push({ x: W / 2, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 4, r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4, w: 4 + Math.random() * 6, h: 6 + Math.random() * 9, c: cols[rnd(cols.length)], s: Math.random() < 0.25 }); } };
+  burst(120, H * 0.36);
+  setTimeout(() => burst(70, H * 0.36), 1560);
+  const t0 = performance.now();
+  (function f(t) {
+    if (!cv.isConnected) return;
+    const el = t - t0; c.clearRect(0, 0, W, H);
+    if (el < 4200 && Math.random() < 0.5) ps.push({ x: Math.random() * W, y: -10, vx: (Math.random() - 0.5) * 1.5, vy: 1 + Math.random() * 2, r: 0, vr: (Math.random() - 0.5) * 0.2, w: 3 + Math.random() * 4, h: 5 + Math.random() * 6, c: cols[rnd(cols.length)], s: Math.random() < 0.4 });
+    for (const p of ps) {
+      p.vy += 0.18; p.vx *= 0.985; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      c.save(); c.translate(p.x, p.y); c.rotate(p.r); c.fillStyle = p.c;
+      if (p.s) { c.globalAlpha = 0.6 + 0.4 * Math.sin(t / 90 + p.x); c.beginPath(); for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2; c.lineTo(Math.cos(a) * p.w, Math.sin(a) * p.w); c.lineTo(Math.cos(a + Math.PI / 4) * p.w * 0.3, Math.sin(a + Math.PI / 4) * p.w * 0.3); } c.fill(); }
+      else c.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * Math.abs(Math.cos(p.r * 2)) + 1);
+      c.restore();
+    }
+    for (let i = ps.length - 1; i >= 0; i--) if (ps[i].y > H + 30) ps.splice(i, 1);
+    if (el < 7000 || ps.length) requestAnimationFrame(f); else c.clearRect(0, 0, W, H);
+  })(t0);
 }
 
 /* --------------------------------------------------------- exercises */
@@ -1800,9 +2143,9 @@ function repeat(step, stg) {
 }
 const formsLine = e => e.forms.length > 1 ? e.forms.slice(0, 4).join(' · ') : '';
 function intro(step, stg) {
-  const e = E[step.w], x = step.s != null ? S[step.s] : null;
-  const senses = e.senses.filter(s => s.g).slice(0, 3);
-  stg.innerHTML = '<div class="intro"><span class="tag newt">' + ico('spark') + '</span><div class="hwrow"><div class="hw">' + esc(hw(e)) + '</div>' + spk(e.forms[0]) + '</div>' + (formsLine(e) ? '<div class="fm">' + esc(formsLine(e)) + '</div>' : '') +
+  const e = ent(step, step.w), x = step.s != null ? S[step.s] : null;
+  const senses = e.senses.filter(s => s.g).slice(0, 3), pic = picHTML(e, 'big');
+  stg.innerHTML = '<div class="intro">' + (pic || '<span class="tag newt">' + ico('spark') + '</span>') + '<div class="hwrow"><div class="hw">' + esc(hw(e)) + '</div>' + spk(e.forms[0]) + '</div>' + (formsLine(e) ? '<div class="fm">' + esc(formsLine(e)) + '</div>' : '') +
     (e.posLabel ? '<span class="ps">' + esc(e.posLabel) + '</span>' : '') +
     '<div class="gl">' + senses.map((s, i) => (senses.length > 1 ? '<span style="color:var(--dim)">' + (i + 1) + '. </span>' : '') + esc(s.g)).join('<br>') + '</div>' +
     (x ? '<div class="ex"><div class="kl">' + sentHTML(x, { hl: step.w }) + ' ' + spk(x.s, 'sm') + '</div><div class="tr">' + esc(x.t) + '</div></div>' : '') + '</div>';
@@ -1812,7 +2155,8 @@ function intro(step, stg) {
 }
 function match(step, stg) {
   const ids = DK.shuffle(step.ids, Math.random), R2 = DK.shuffle(step.ids, Math.random);
-  stg.innerHTML = '<div class="mgrid">' + ids.map((id, k) => '<button type="button" class="mt kl" data-s="k" data-id="' + id + '" style="grid-column:1;grid-row:' + (k + 1) + '">' + esc(tw(E[id])) + '</button>' + '<button type="button" class="mt" data-s="e" data-id="' + R2[k] + '" style="grid-column:2;grid-row:' + (k + 1) + '">' + esc(E[R2[k]].short) + '</button>').join('') + '</div>';
+  const W = i => ent(step, i);
+  stg.innerHTML = '<div class="mgrid">' + ids.map((id, k) => '<button type="button" class="mt kl" data-s="k" data-id="' + id + '" style="grid-column:1;grid-row:' + (k + 1) + '">' + esc(tw(W(id))) + '</button>' + '<button type="button" class="mt" data-s="e" data-id="' + R2[k] + '" style="grid-column:2;grid-row:' + (k + 1) + '">' + esc(W(R2[k]).short) + '</button>').join('') + '</div>';
   setFoot('');
   let sel = null, left = ids.length; const miss = new Set();
   stg.querySelectorAll('.mt').forEach(b => b.onclick = () => {
@@ -1907,11 +2251,12 @@ function build(step, stg) {
   return ctrl;
 }
 function typeEx(step, stg) {
-  const e = step.w != null ? E[step.w] : null;
+  const e = step.w != null ? ent(step, step.w) : null;
   let promptH, answers, ansH, sub = '', sentence = false, en = false;
   if (step.dir === 'en2kl' || step.dir === 'dict') {
-    promptH = step.dir === 'dict' ? playHTML() : '<div class="bubble"><div class="md">' + esc(e.prompt) + '</div></div>';
-    answers = e.forms.concat(e.forms.map(f => f.replace(/[.,;:!?]/g, '')));
+    promptH = step.dir === 'dict' ? playHTML() : '<div class="bubble"><div class="md">' + esc(e.prompt) + (step.x && e.posLabel ? ' <span class="pq">' + esc(e.posLabel.split(',')[0]) + '</span>' : '') + '</div></div>' + picHTML(e, 'mid');
+    const fs = e.accept || e.forms;
+    answers = fs.concat(fs.map(f => f.replace(/[.,;:!?]/g, '')));
     ansH = esc(hw(e)) + (e.forms.length > 1 ? ' <span style="color:var(--mid)">(' + esc(e.forms.join(', ')) + ')</span>' : '');
     if (step.dir === 'dict') sub = esc(e.prompt);
   } else {
@@ -1944,10 +2289,15 @@ function fill(step, stg) {
   const x = S[step.s], w = x.words[step.k];
   const want = w.x;
   const width = Math.max(3, want.length + 1);
-  stg.innerHTML = '<div class="pr"><div class="lg" id="fS">' + sentHTML(x, { blank: step.k, blankHTML: '<input class="blank" id="fI" size="' + width + '" style="width:' + (width + 1) + 'ch" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" lang="fr">', hide: step.w }) + '</div><div class="sm">' + esc(x.t) + '</div></div>';
+  stg.innerHTML = '<div class="pr"><div class="lg" id="fS">' + sentHTML(x, { blank: step.k, blankHTML: '<input class="blank" id="fI" size="' + width + '" style="width:' + (width + 1) + 'ch" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" lang="fr">', hide: step.w }) + ' <button class="spk sm" type="button" id="fP" aria-label="Listen">' + ico('snd') + '</button></div><div class="sm">' + esc(x.t) + '</div></div>';
   const inp = stg.querySelector('#fI');
+  const ctrl0 = { ready: () => inp.value.trim().length > 0, focus: () => inp.focus({ preventScroll: true }) };
+  const i0 = x.parts.findIndex(p => p.w === step.k);
+  const cloze = () => TTS.seq([x.parts.slice(0, i0).map(p => p.x).join(''), { fx: 'blank' }, x.parts.slice(i0 + 1).map(p => p.x).join('')]);
+  stg.querySelector('#fP').addEventListener('click', ev => { ev.stopPropagation(); cloze(); }, true);
+  setTimeout(() => { if (P.cur === ctrl0 && P.on) cloze(); }, 300);
   keyboard(inp, false);
-  const ctrl = { ready: () => inp.value.trim().length > 0, focus: () => inp.focus({ preventScroll: true }) };
+  const ctrl = ctrl0;
   const btn = checkBtn(ctrl);
   inp.addEventListener('input', () => { ctrl.update(); });
   inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); if (!btn.disabled) btn.click(); } });
@@ -2018,7 +2368,7 @@ function speakSelf(step, stg) {
 }
 addEventListener('keydown', ev => {
   if (ev.key === 'Escape') { if (stack.length) { ev.preventDefault(); closeTop(); } return; }
-  if (!P.on) { if (!stack.length && document.activeElement === document.body) { if (ev.key === 'ArrowRight' && D.ids.length) pageBy(1); if (ev.key === 'ArrowLeft' && D.ids.length) pageBy(-1); } return; }
+  if (!P.on) { if (!stack.length && document.activeElement === document.body) { const d = ev.key === 'ArrowRight' ? 1 : ev.key === 'ArrowLeft' ? -1 : 0; if (d && TAB === 'dict' && D.ids.length) pageBy(d); if (d && TAB === 'gram' && G.ch >= 0) gTurn(d); } return; }
   if (ev.key === 'Enter' && !(ev.target && /INPUT|TEXTAREA/.test(ev.target.tagName))) {
     const b = $('pN') || $('pK') || $('pG'); if (b && !b.disabled) { ev.preventDefault(); b.click(); }
   }
@@ -2062,7 +2412,8 @@ function chipsHTML() {
   const r = recs(), nL = Object.keys(r).length, nS = E.filter(e => (st.stars[e.key] || 0) > 0).length;
   const c = (k, t, n) => '<button type="button" class="chip" data-f="' + k + '" aria-pressed="' + (D.f === k) + '">' + t + (n != null ? '<small>' + n + '</small>' : '') + '</button>';
   const cat = D.cat ? (DK.CATS.find(x => x[0] === D.cat) || [, ''])[1] : 'Kind';
-  return c('all', 'All') + c('learned', 'Learned', nL) + c('starred', ico('star', 'f').replace('class="i f"', 'class="i f" style="width:13px;height:13px"'), nS) + '<button type="button" class="chip more" id="kindB" aria-pressed="' + (!!D.cat) + '">' + ico('filter').replace('class="i "', 'class="i" style="width:13px;height:13px"') + esc(cat) + '</button>';
+  void nL; void nS;
+  return c('all', 'All') + c('learned', 'Learned') + c('starred', ico('star', 'f').replace('class="i f"', 'class="i f" style="width:13px;height:13px"')) + '<button type="button" class="chip more" id="kindB" aria-pressed="' + (!!D.cat) + '">' + ico('filter').replace('class="i "', 'class="i" style="width:13px;height:13px"') + esc(cat) + '</button>';
 }
 function renderDict() {
   if (!READY) return;
@@ -2088,7 +2439,7 @@ function renderList() {
   let g = 0; while (D.ids.length && L.scrollHeight > L.clientHeight + 1 && D.per > 2 && g++ < 8) { const first = D.page * D.per; D.per--; D.page = Math.floor(first / D.per); draw(); }
   pages = Math.max(1, Math.ceil(D.ids.length / D.per));
   L.querySelectorAll('.row').forEach(b => b.onclick = () => openEntry(+b.dataset.id, D.ids));
-  $('pager').innerHTML = pages > 1 ? '<button class="rb" type="button" id="pgP"' + (D.page ? '' : ' disabled style="opacity:.3"') + '>' + ico('back') + '</button><span>' + (D.page + 1) + ' / ' + pages + '</span><button class="rb" type="button" id="pgN"' + (D.page < pages - 1 ? '' : ' disabled style="opacity:.3"') + '>' + ico('fwd') + '</button>' : '<span>' + D.ids.length + '</span>';
+  $('pager').innerHTML = pages > 1 ? '<button class="rb" type="button" id="pgP"' + (D.page ? '' : ' disabled style="opacity:.3"') + '>' + ico('back') + '</button><span class="pgb"><i style="width:' + ((D.page + 1) / pages * 100).toFixed(1) + '%"></i></span><button class="rb" type="button" id="pgN"' + (D.page < pages - 1 ? '' : ' disabled style="opacity:.3"') + '>' + ico('fwd') + '</button>' : '';
   if ($('pgP')) { $('pgP').onclick = () => pageBy(-1); $('pgN').onclick = () => pageBy(1); }
 }
 function pageBy(d) { const pages = Math.max(1, Math.ceil(D.ids.length / D.per)); const n = Math.max(0, Math.min(pages - 1, D.page + d)); if (n === D.page) return; D.page = n; SFX.tap(); renderList(); const L = $('list'); L.animate([{ transform: 'translateX(' + (d * 24) + 'px)', opacity: 0.4 }, { transform: 'none', opacity: 1 }], { duration: 200, easing: 'ease-out' }); }
@@ -2101,7 +2452,7 @@ function openKind() {
   SFX.tap();
   const cnt = {}; E.forEach(e => e.cats.forEach(c => cnt[c] = (cnt[c] || 0) + 1));
   const el = overlay('kind', '<div class="card" style="width:min(420px,100%)"><div class="ch"><span style="width:40px"></span><h2>Kind</h2><button class="rb" type="button" data-x>' + ico('x') + '</button></div><div class="cb"><div style="display:flex;flex-wrap:wrap;gap:.45rem;justify-content:center">' +
-    '<button type="button" class="chip" data-c="" aria-pressed="' + (!D.cat) + '">All</button>' + DK.CATS.filter(c => cnt[c[0]]).map(c => '<button type="button" class="chip" data-c="' + c[0] + '" aria-pressed="' + (D.cat === c[0]) + '">' + c[1] + '<small>' + cnt[c[0]] + '</small></button>').join('') + '</div></div></div>');
+    '<button type="button" class="chip" data-c="" aria-pressed="' + (!D.cat) + '">All</button>' + DK.CATS.filter(c => cnt[c[0]]).map(c => '<button type="button" class="chip" data-c="' + c[0] + '" aria-pressed="' + (D.cat === c[0]) + '">' + c[1] + '</button>').join('') + '</div></div></div>');
   el.querySelector('[data-x]').onclick = () => closeOv('kind');
   el.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { D.cat = b.dataset.c; closeOv('kind'); dictSearch(); renderDict(); });
 }
@@ -2128,7 +2479,7 @@ function stepEntry(d) { const L = ENT.list, i = L.indexOf(ENT.id); if (i < 0) re
 function copyText(t) { const ok = () => toast('Copied'); if (navigator.clipboard) navigator.clipboard.writeText(t).then(ok, () => {}); else { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); ok(); } catch (e) {} a.remove(); } }
 function entryBlocks(e) {
   const blocks = [];
-  blocks.push('<div class="hwrow" style="justify-content:flex-start"><div class="hw">' + esc(e.word) + '</div>' + spk(e.forms[0]) + '</div>' + (formsLine(e) ? '<div class="fm">' + esc(formsLine(e)) + '</div>' : '') + (e.note ? '<div class="fm">' + esc(e.note) + '</div>' : '') + (e.posLabel ? '<span class="ps">' + esc(e.posLabel) + '</span>' : ''));
+  blocks.push('<div class="hwrow" style="justify-content:flex-start">' + picHTML(e, 'ent') + '<div class="hw">' + esc(e.word) + '</div>' + spk(e.forms[0]) + '</div>' + (formsLine(e) ? '<div class="fm">' + esc(formsLine(e)) + '</div>' : '') + (e.note ? '<div class="fm">' + esc(e.note) + '</div>' : '') + (e.posLabel ? '<span class="ps">' + esc(e.posLabel) + '</span>' : ''));
   e.senses.forEach((s, i) => {
     let h = '<div class="s">' + (e.senses.length > 1 ? '<span class="n">' + (s.n || i + 1) + '</span>' : '') + '<div style="flex:1;min-width:0"><div class="g">' + esc(s.g) + (s.pos ? ' <span style="color:var(--mid);font-style:italic;font-size:.85em">' + esc(s.pos) + '</span>' : '') + '</div>';
     blocks.push(h + '</div></div>');
@@ -2176,27 +2527,56 @@ function openSheet() {
   drawSheet();
 }
 let resetArm = 0;
+const voiceName = v => v ? v.name.replace(/\s*\((?:French|français|Français)[^)]*\)\s*/i, '').replace(/^(Google|Microsoft)\s+/, '').trim() : '';
+const voiceWhere = v => /CA/i.test(v.lang) ? 'Canada' : /BE/i.test(v.lang) ? 'Belgium' : /CH/i.test(v.lang) ? 'Switzerland' : 'France';
 function drawSheet() {
   const b = $('shB'); if (!b) return;
   const u = FB.user;
   const acct = u ? '<div class="acct"><span class="ph">' + (u.photoURL ? '<img src="' + esc(u.photoURL) + '" alt="" referrerpolicy="no-referrer">' : esc((u.displayName || u.email || '?')[0])) + '</span><span class="nm"><b>' + esc(u.displayName || 'Signed in') + '</b><small>' + esc(u.email || '') + '</small><small style="color:' + (FB.status === 'err' ? 'var(--bad)' : 'var(--ok)') + '">' + (FB.status === 'err' ? 'Not saved yet' : FB.status === 'sync' ? 'Saving' : 'Progress saved to your account') + '</small></span><button class="rb" type="button" id="sOut" aria-label="Sign out">' + ico('out') + '</button></div>'
     : '<button class="gbtn" type="button" id="sIn"><span style="display:inline-flex;width:24px;height:24px;border-radius:50%;background:#000;color:#fff;align-items:center;justify-content:center;font-size:.85rem">G</span>Sign in with Google</button>';
-  const gs = [20, 50, 100, 150];
+  const v = TTS.cur();
   b.innerHTML = acct +
-    '<div class="kv"><div><b>' + xpTotal() + '</b><small>total XP</small></div><div><b>' + learnedN() + '</b><small>words</small></div><div><b>' + bestStreak() + '</b><small>best streak</small></div></div>' +
-    '<div class="srow"><span class="lb">Daily goal</span><span class="seg">' + gs.map(g => '<button type="button" data-g="' + g + '" aria-pressed="' + (st.set.goal === g) + '">' + g + '</button>').join('') + '</span></div>' +
+    '<div class="kv"><div><b>' + learnedN() + '</b><small>course words</small></div><div><b>' + Object.keys(st.x).length + '</b><small>101 words</small></div><div><b>' + bestStreak() + '</b><small>best streak</small></div></div>' +
     '<div class="srow"><span class="lb">Voice</span><button type="button" class="tg" id="sVoi" aria-pressed="' + (st.set.voice !== 0) + '" aria-label="Voice"></button></div>' +
+    (TTS.ok() && st.set.voice !== 0 ? '<button type="button" class="srow pick" id="sVp"><span class="lb">' + (v ? esc(voiceName(v)) + ' <small>' + voiceWhere(v) + '</small>' : 'No French voice on this device') + '</span>' + ico('fwd') + '</button>' +
+      '<div class="srow"><span class="lb">Speed</span><span class="seg"><button type="button" data-r="0" aria-pressed="' + (st.set.rate === 0) + '">Slower</button><button type="button" data-r="1" aria-pressed="' + (st.set.rate !== 0) + '">Normal</button></span></div>' : '') +
     '<div class="srow"><span class="lb">Sounds</span><button type="button" class="tg" id="sSnd" aria-pressed="' + (!!st.set.snd) + '" aria-label="Sounds"></button></div>' +
-    '<div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap"><button class="lnk" type="button" id="sPl">Placement test</button><button class="lnk" type="button" id="sExp">Export starred words</button><button class="lnk red" type="button" id="sRst">' + (resetArm ? 'Tap again to erase all progress' : 'Reset progress') + '</button></div>';
+    '<div class="links"><button class="lnk" type="button" id="sPl">Placement test</button><button class="lnk" type="button" id="sExp">Export starred words</button><button class="lnk" type="button" id="sCr">Credits</button><button class="lnk red" type="button" id="sRst">' + (resetArm ? 'Tap again to erase all progress' : 'Reset progress') + '</button></div>';
   if ($('sIn')) $('sIn').onclick = signIn;
   if ($('sOut')) $('sOut').onclick = () => { try { firebase.auth().signOut(); } catch (e) {} };
-  b.querySelectorAll('[data-g]').forEach(x => x.onclick = () => { st.set.goal = +x.dataset.g; st.set.t = now(); save(); SFX.tap(); drawSheet(); renderLearn(); });
   $('sSnd').onclick = () => { st.set.snd = st.set.snd ? 0 : 1; st.set.t = now(); save(); SFX.tap(); drawSheet(); };
   $('sExp').onclick = exportStars;
+  $('sCr').onclick = openCredits;
   $('sVoi').onclick = () => { st.set.voice = st.set.voice === 0 ? 1 : 0; st.set.t = now(); save(); drawSheet(); if (st.set.voice) TTS.say('Bonjou'); };
+  if ($('sVp')) $('sVp').onclick = openVoices;
+  b.querySelectorAll('[data-r]').forEach(x => x.onclick = () => { st.set.rate = +x.dataset.r; st.set.t = now(); save(); drawSheet(); TTS.say('Komen to yê?'); });
   $('sPl').onclick = () => { closeOv('sheet'); startPlacement(); };
   $('sRst').onclick = () => { if (!resetArm) { resetArm = 1; drawSheet(); setTimeout(() => { resetArm = 0; drawSheet(); }, 4000); return; } resetArm = 0; resetAll(); drawSheet(); };
   fit(b, 0.6);
+}
+/* every French voice on this device, best first; the choice stays on this device */
+function openVoices() {
+  SFX.tap();
+  const el = overlay('voices', '<div class="card"><div class="ch"><span style="width:40px"></span><h2>Voice</h2><button class="rb" type="button" data-x>' + ico('x') + '</button></div><div class="cb vl" id="vB"></div></div>');
+  el.querySelector('[data-x]').onclick = () => closeOv('voices');
+  const draw = () => {
+    const vs = TTS.list(), cur = TTS.cur(), best = vs[0];
+    const ios = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    el.querySelector('#vB').innerHTML = '<div class="vgrid">' + vs.slice(0, 12).map((v, i) => '<button type="button" class="vrow' + (cur === v ? ' on' : '') + '" data-i="' + i + '"><span class="vn">' + esc(voiceName(v)) + (v === best ? '<span class="tagb">Best</span>' : '') + '</span><small>' + voiceWhere(v) + (/premium|enhanced/i.test(v.name + v.voiceURI) ? ' · enhanced' : '') + '</small>' + (cur === v ? ico('check') : '') + '</button>').join('') + '</div>' +
+      '<p class="vtip">' + (ios ? 'For a fuller voice: Settings › Accessibility › Spoken Content › Voices › French, then download Audrey or Thomas (Enhanced or Premium).' : 'More voices come from your device’s language and speech settings.') + '</p>';
+    el.querySelectorAll('[data-i]').forEach(x => x.onclick = () => { const v = vs[+x.dataset.i]; TTS.set(v.voiceURI || v.name); draw(); drawSheet(); TTS.say('Bonjou! Komen to yê?'); });
+    fit(el.querySelector('.cb'), 0.6);
+  };
+  draw();
+}
+function openCredits() {
+  SFX.tap();
+  const el = overlay('credits', '<div class="card" style="width:min(520px,100%)"><div class="ch"><span style="width:40px"></span><h2>Credits</h2><button class="rb" type="button" data-x>' + ico('x') + '</button></div><div class="cb cred">' +
+    '<p><b>Grammar</b> and <b>Vocab 101</b> come from <i>Ti Liv Kréyòl</i> (2nd edition, 2020) by Adrien Guillory-Chatman, Oliver Mayeux, Nathan Wendte and Herbert Wiltz, TSÒHK, under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener">CC BY-NC-SA 4.0</a>. Adapted: tables reformatted, the language named Kréyòl, and the word list reordered for learning. These parts are shared under the same licence.</p>' +
+    '<p><b>Pictures</b>: Microsoft Fluent Emoji, <a href="https://github.com/microsoft/fluentui-emoji/blob/main/LICENSE" target="_blank" rel="noopener">MIT licence</a>.</p>' +
+    '<p><b>Voice</b>: your device’s French voice reading a French spelling of the Kréyòl.</p></div></div>');
+  el.querySelector('[data-x]').onclick = () => closeOv('credits');
+  fit(el.querySelector('.cb'), 0.6);
 }
 function exportStars() {
   const rows = E.filter(e => (st.stars[e.key] || 0) > 0).map(e => [e.key, ...[1, 2, 3]].map((v, i) => i === 0 ? v : '').join('\t'));
@@ -2240,7 +2620,7 @@ function signIn() {
   const go = async () => { const pr = new firebase.auth.GoogleAuthProvider(); try { await firebase.auth().signInWithPopup(pr); } catch (e) { if (e && /popup-closed|cancelled-popup/.test(e.code || '')) return; try { await firebase.auth().signInWithRedirect(pr); } catch (_) { toast('Sign-in did not go through'); } } };
   if (FB.ready) go(); else { const t = setInterval(() => { if (FB.ready) { clearInterval(t); go(); } }, 200); setTimeout(() => clearInterval(t), 12000); }
 }
-const wire = () => JSON.stringify({ v: 1, rst: st.rst || 0, w: st.w, days: st.days, set: st.set, stars: st.stars, placed: st.placed || 0, cp: st.cp || {}, best: st.best || {} });
+const wire = () => JSON.stringify({ v: 1, rst: st.rst || 0, w: st.w, x: st.x, days: st.days, set: st.set, stars: st.stars, placed: st.placed || 0, cp: st.cp || {}, best: st.best || {} });
 function mergeRemote(dk) {
   if (!dk) return false;
   let changed = false;
@@ -2249,13 +2629,14 @@ function mergeRemote(dk) {
   if (!r || r.v !== 1) return changed;
   if ((r.rst || 0) > (st.rst || 0)) {
     // progress was reset on another device: keep only what this device learned after that reset
-    const cut = r.rst / 6e4, rd = dayKey(r.rst), w = {}, days = {};
+    const cut = r.rst / 6e4, rd = dayKey(r.rst), w = {}, x = {}, days = {};
     for (const k in st.w) if (st.w[k][5] > cut) w[k] = st.w[k];
+    for (const k in st.x) if (st.x[k][5] > cut) x[k] = st.x[k];
     for (const d in st.days) if (d >= rd) days[d] = st.days[d];
-    st = Object.assign(fresh(), { rst: r.rst, mig: 1, migR: 1, stars: st.stars, set: st.set, w, days, uid: st.uid }); changed = true;
+    st = Object.assign(fresh(), { rst: r.rst, mig: 1, migR: 1, stars: st.stars, set: st.set, w, x, days, uid: st.uid }); changed = true;
   }
   else if ((r.rst || 0) < (st.rst || 0)) return true;
-  for (const k in (r.w || {})) { const a = st.w[k], b = r.w[k]; if (!Array.isArray(b)) continue; if (!a || b[5] > a[5] || (b[5] === a[5] && b[3] > a[3])) { st.w[k] = b; changed = true; } }
+  for (const D of ['w', 'x']) { st[D] = st[D] || {}; for (const k in (r[D] || {})) { const a = st[D][k], b = r[D][k]; if (!Array.isArray(b)) continue; if (!a || b[5] > a[5] || (b[5] === a[5] && b[3] > a[3])) { st[D][k] = b; changed = true; } } }
   for (const d in (r.days || {})) { const v = +r.days[d] || 0; if (v > (st.days[d] || 0)) { st.days[d] = v; changed = true; } }
   if (r.set && (r.set.t || 0) > (st.set.t || 0)) { st.set = Object.assign({}, st.set, r.set); changed = true; }
   for (const k in (r.stars || {})) { const a = +st.stars[k] || 0, b = +r.stars[k] || 0; if (Math.abs(b) > Math.abs(a)) { st.stars[k] = b; changed = true; } }
@@ -2296,7 +2677,7 @@ function showGate(msg) {
   let g = $('gate');
   if (!g) {
     g = document.createElement('div'); g.id = 'gate'; g.className = 'ov gate';
-    g.innerHTML = '<div class="gc"><img src="/icon.png" alt=""><h2>Diksyonær</h2><button class="gbtn" type="button" id="gIn"><span class="gg">G</span>Sign in with Google</button><small id="gMsg"></small></div>';
+    g.innerHTML = '<div class="gc"><svg class="fl"><use href="#i-fleur"/></svg><h2>Diksyonær</h2><button class="gbtn" type="button" id="gIn"><span class="gg">G</span>Sign in with Google</button><small id="gMsg"></small></div>';
     document.body.appendChild(g);
     g.querySelector('#gIn').onclick = () => { $('gMsg').textContent = ''; signIn(); };
   }
@@ -2311,7 +2692,7 @@ function afterSync() {
 function openPlace() {
   if ($('place') || !FB.user) return;
   const el = document.createElement('div'); el.id = 'place'; el.className = 'ov gate';
-  el.innerHTML = '<div class="gc"><img src="/icon.png" alt=""><h2>Placement test</h2><p>A few questions to find where you start.</p><button class="btn pri" type="button" id="plGo">Start</button></div>';
+  el.innerHTML = '<div class="gc"><svg class="fl"><use href="#i-fleur"/></svg><h2>Placement test</h2><p>A few questions to find where you start.</p><button class="btn pri" type="button" id="plGo">Start</button></div>';
   document.body.appendChild(el);
   el.querySelector('#plGo').onclick = () => { el.remove(); startPlacement(); };
 }
@@ -2329,16 +2710,197 @@ function placeRound() {
   return true;
 }
 
-/* ============================================================= wiring */
-function setTab(t) {
-  const d = t === 'dict';
-  $('vLearn').hidden = d; $('vDict').hidden = !d;
-  $('tLearn').setAttribute('aria-selected', String(!d)); $('tDict').setAttribute('aria-selected', String(d));
-  if (d) { renderDict(); } else renderLearn();
+/* ============================================================ vocab 101 */
+/* a separate deck (vocab101.tsv) with its own spaced repetition in st.x: it never touches the course */
+let V = [], XREADY = false;
+async function loadX() {
+  try {
+    V = DK.parseTSV(await getText('vocab101.tsv')).filter(e => !e.skip);
+    const seen = new Map(), by = new Map();
+    V.forEach((e, i) => { e.id = i; const n = (seen.get(e.key) || 0) + 1; seen.set(e.key, n); e.xk = n > 1 ? e.key + '#' + n : e.key; const k = DK.fold(e.short); if (!by.has(k)) by.set(k, []); by.get(k).push(e); });
+    V.forEach(e => { const g = by.get(DK.fold(e.short)); if (g.length > 1) e.accept = DK.uniq(g.flatMap(x => x.forms)); });
+    XREADY = V.length >= 5;
+  } catch (e) { XREADY = false; }
+  $('tX').hidden = !XREADY;
+  if (!XREADY && TAB === 'x') setTab('learn'); else if (TAB === 'x') renderX();
 }
-function renderAll() { if (!READY) return; renderLearn(); renderDict(); renderHeader(); if ($('sheet')) drawSheet(); }
-$('tLearn').onclick = () => { SFX.tap(); setTab('learn'); };
-$('tDict').onclick = () => { SFX.tap(); setTab('dict'); };
+const xrec = e => st.x[e.xk];
+const xNext = (n = 5) => { const o = []; for (const e of V) { if (!xrec(e)) o.push(e.id); if (o.length >= n) break; } return o; };
+const xDue = () => { const t = endOfToday(); return V.filter(e => { const r = xrec(e); return r && r[1] * 6e4 <= t; }).map(e => e.id); };
+function renderX() {
+  const v = $('v101'); if (!XREADY) { v.innerHTML = ''; return; }
+  const nx = xNext(), due = xDue(), n = V.filter(xrec).length, fr = n / V.length;
+  v.innerHTML = '<div class="xw"><div class="xhero"><span class="x101 big">101</span><div><h2>Vocab 101</h2><p>Everyday words, five at a time.</p></div></div>' +
+    '<div class="xbar" title=""><i style="width:' + Math.max(fr ? 2 : 0, Math.round(fr * 100)) + '%"></i></div>' +
+    (nx.length ? '<div class="xnext"><div class="ws">' + nx.map(i => '<span>' + picHTML(V[i], 'xs') + esc(tw(V[i])) + '</span>').join('') + '</div><button class="btn pri" id="xGo" type="button">' + ico('spark') + 'Learn these words</button></div>'
+      : '<div class="xnext"><div class="xall">' + ico('check') + 'Every word learned</div></div>') +
+    '<div class="acts"><button class="btn' + (due.length ? ' acc' : '') + '" id="xRev" type="button"' + (n ? '' : ' disabled') + '>' + ico('rev') + 'Review' + (due.length ? '<i class="dot"></i>' : '') + '</button><button class="btn" id="xList" type="button">' + ico('book') + 'Word list</button></div>' +
+    '<small class="cred">Word list from <i>Ti Liv Kréyòl</i> · CC BY-NC-SA 4.0</small></div>';
+  if ($('xGo')) $('xGo').onclick = () => xLearn(nx);
+  $('xRev').onclick = xReview;
+  $('xList').onclick = openXList;
+  fit(v.querySelector('.xw'), 0.6);
+}
+function xLearn(ids) {
+  ids = (ids || xNext()).filter(i => V[i]);
+  if (!ids.length) return;
+  const I = i => ({ type: 'intro', x: 1, w: i, targets: [i] }), T = (i, dir) => ({ type: 'type', x: 1, w: i, dir, targets: [i] }), M = g => ({ type: 'match', x: 1, ids: g, targets: g });
+  const sh = a => DK.shuffle(a, Math.random), [a, b, c, d, e] = ids, s = [];
+  s.push(I(a)); if (b != null) { s.push(I(b), M([a, b])); }
+  if (c != null) { s.push(I(c), T(a, 'kl2en')); }
+  if (d != null) { s.push(I(d), M([b, c, d])); }
+  if (e != null) { s.push(I(e)); }
+  sh(ids).forEach(i => s.push(T(i, 'en2kl')));
+  sh(ids).slice(0, Math.min(3, ids.length)).forEach(i => s.push(T(i, 'kl2en')));
+  if (ids.length >= 3) s.push(M(sh(ids)));
+  startSession('xlearn', s, { ids });
+}
+function xReview() {
+  const t = now();
+  let ids = xDue();
+  if (!ids.length) ids = V.filter(xrec).map(e => e.id).sort((p, q) => DK.recall(xrec(V[p]), t) - DK.recall(xrec(V[q]), t)).slice(0, 8);
+  ids = ids.sort((p, q) => DK.recall(xrec(V[p]), t) - DK.recall(xrec(V[q]), t)).slice(0, 12);
+  if (!ids.length) return;
+  const s = [];
+  if (ids.length >= 4) s.push({ type: 'match', x: 1, ids: DK.shuffle(ids, Math.random).slice(0, 5), targets: [] });
+  DK.shuffle(ids, Math.random).forEach((i, k) => { const r = xrec(V[i]); s.push({ type: 'type', x: 1, w: i, dir: DK.strength(r, t) <= 2 && k % 2 ? 'kl2en' : 'en2kl', targets: [i] }); });
+  startSession('xreview', s, {});
+}
+function openXList() {
+  SFX.tap();
+  const L = { q: '', page: 0, ids: V.map(e => e.id), per: 7 };
+  const el = overlay('xlist', '<div class="card" style="height:100%"><div class="ch"><span class="x101">101</span><h2>Word list</h2><button class="rb" type="button" data-x>' + ico('x') + '</button></div><div class="sw xs"><svg class="i mag"><use href="#i-mag"/></svg><input id="xq" type="search" placeholder="Search" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"></div><div class="list" id="xL"></div><div class="pager" id="xP"></div></div>');
+  el.querySelector('[data-x]').onclick = () => closeOv('xlist');
+  const list = el.querySelector('#xL');
+  const row = i => { const e = V[i], r = xrec(e); return '<div class="row xr">' + picHTML(e, 'xs') + '<span class="tx"><div class="w">' + esc(e.word) + (e.posLabel ? '<span class="p">' + esc(e.posLabel.split(',')[0]) + '</span>' : '') + '</div><div class="m">' + esc(e.senses.map(s => s.g).filter(Boolean).join('; ')) + '</div></span>' + spk(e.forms[0], 'sm') + '<span class="sg">' + barsHTML(r) + '</span></div>'; };
+  const draw = () => {
+    const H = list.clientHeight; if (!H) return;
+    if (!L.rowH) { list.innerHTML = row(L.ids[0] || 0); L.rowH = list.firstChild.getBoundingClientRect().height || 58; }
+    L.per = Math.max(2, Math.floor((H + 6.4) / (L.rowH + 6.4)));
+    const pages = Math.max(1, Math.ceil(L.ids.length / L.per)); L.page = Math.max(0, Math.min(pages - 1, L.page));
+    list.innerHTML = L.ids.length ? L.ids.slice(L.page * L.per, L.page * L.per + L.per).map(row).join('') : '<div class="empty">' + ico('mag') + '</div>';
+    let g = 0; while (L.ids.length && list.scrollHeight > list.clientHeight + 1 && L.per > 2 && g++ < 8) { L.per--; list.innerHTML = L.ids.slice(L.page * L.per, L.page * L.per + L.per).map(row).join(''); }
+    const pg = Math.max(1, Math.ceil(L.ids.length / L.per));
+    el.querySelector('#xP').innerHTML = pg > 1 ? '<button class="rb" type="button" data-d="-1"' + (L.page ? '' : ' disabled style="opacity:.3"') + '>' + ico('back') + '</button><span class="pgb"><i style="width:' + ((L.page + 1) / pg * 100).toFixed(1) + '%"></i></span><button class="rb" type="button" data-d="1"' + (L.page < pg - 1 ? '' : ' disabled style="opacity:.3"') + '>' + ico('fwd') + '</button>' : '';
+    el.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { L.page += +b.dataset.d; SFX.tap(); draw(); });
+  };
+  let qt = 0;
+  el.querySelector('#xq').addEventListener('input', ev => { clearTimeout(qt); qt = setTimeout(() => { const q = DK.fold(ev.target.value.trim()); L.ids = !q ? V.map(e => e.id) : V.filter(e => e.forms.some(f => DK.fold(f).includes(q)) || DK.fold(e.senses.map(s => s.g).join(' ')).includes(q)).map(e => e.id); L.page = 0; draw(); }, 90); });
+  let sx = 0; list.addEventListener('pointerdown', ev => { sx = ev.clientX; }); list.addEventListener('pointerup', ev => { const dx = ev.clientX - sx; if (Math.abs(dx) > 55) { L.page += dx < 0 ? 1 : -1; draw(); } });
+  el.draw = draw;
+  requestAnimationFrame(draw);
+}
+
+/* ============================================================== grammar */
+/* the Ti Liv Kréyòl grammar sketch, word for word, laid out as pages that never scroll */
+const G = { data: null, ch: -1, page: 0, pages: null, key: '' };
+async function loadG() {
+  try { G.data = JSON.parse(await getText('grammar.json')); if (!G.data.chapters || !G.data.chapters.length) G.data = null; } catch (e) { G.data = null; }
+  $('tG').hidden = !G.data;
+  if (!G.data && TAB === 'gram') setTab('learn'); else if (TAB === 'gram') renderGram();
+}
+const GI = { nouns: 'i-user', adjectives: 'i-spark', verbs: 'i-bolt', sentences: 'i-gram' };
+const plain = h => { const d = document.createElement('div'); d.innerHTML = h; return d.textContent.replace(/\s+/g, ' ').trim(); };
+function gBlock(b) {
+  if (b.h) return '<div class="g' + b.h + '">' + b.x + '</div>';
+  if (b.p) return '<p class="gp">' + b.p + '</p>';
+  if (b.li) return '<p class="gp gli">' + b.li + '</p>';
+  if (b.ex) return '<div class="gex">' + b.ex.map(r => '<div class="r" data-say="' + esc(plain(r[0])) + '"><div class="k">' + r[0] + '</div><div class="e">' + r[1] + '</div></div>').join('') + '</div>';
+  if (b.tbl) return '<table class="gtb">' + b.tbl.map((r, i) => '<tr>' + r.map(c => { const tg = i === 0 ? 'th' : 'td'; return '<' + tg + (c.cs ? ' colspan="' + c.cs + '"' : '') + (c.rs ? ' rowspan="' + c.rs + '"' : '') + '>' + c.x + '</' + tg + '>'; }).join('') + '</tr>').join('') + '</table>';
+  if (b.cred) return '<p class="gcred">From <i>Ti Liv Kréyòl</i> (2nd edition, 2020) by Adrien Guillory-Chatman, Oliver Mayeux, Nathan Wendte and Herbert Wiltz, TSÒHK. <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener">CC BY-NC-SA 4.0</a>. Tables reformatted.</p>';
+  return '';
+}
+function gSplit(b) {
+  if (b.ex && b.ex.length > 1) return { n: b.ex.length, head: n => ({ ex: b.ex.slice(0, n) }), tail: n => ({ ex: b.ex.slice(n) }) };
+  if (b.tbl && b.tbl.length > 2) return { n: b.tbl.length, min: 2, head: n => ({ tbl: b.tbl.slice(0, n) }), tail: n => ({ tbl: [b.tbl[0]].concat(b.tbl.slice(n)) }) };
+  const t = b.p || b.li;
+  if (t) { const ss = t.split(/(?<=[.!?:’”)])\s+(?=[A-Z‘“(<])/); if (ss.length > 1) return { n: ss.length, head: n => ({ p: ss.slice(0, n).join(' ') }), tail: n => ({ p: ss.slice(n).join(' ') }) }; }
+  return null;
+}
+function gPaginate() {
+  const box = $('gP'); if (!box) return;
+  const ch = G.data.chapters[G.ch], key = G.ch + ':' + box.clientWidth + 'x' + box.clientHeight;
+  if (G.key === key && G.pages) return;
+  G.key = key;
+  box.style.setProperty('--k', '1');
+  const fits = arr => { box.innerHTML = arr.map(gBlock).join(''); return box.scrollHeight <= box.clientHeight + 1; };
+  const q = ch.blocks.concat([{ cred: 1 }]), pages = [];
+  let cur = [];
+  while (q.length) {
+    const b = q.shift();
+    if (fits(cur.concat([b]))) { cur.push(b); continue; }
+    const sp = gSplit(b); let done = false;
+    if (sp) for (let n = sp.n - 1; n >= (sp.min || 1); n--) { const h = sp.head(n); if (fits(cur.concat([h]))) { cur.push(h); q.unshift(sp.tail(n)); done = true; break; } }
+    if (done) { pages.push(cur); cur = []; continue; }
+    if (!cur.length) { pages.push([b]); continue; }
+    const carry = [];
+    while (cur.length > 1 && cur[cur.length - 1].h) carry.unshift(cur.pop());
+    pages.push(cur); cur = carry; q.unshift(b);
+  }
+  if (cur.length) pages.push(cur);
+  let sec = '';
+  G.pages = pages.map(p => { const h = p.find(b => b.h === 2); if (h) sec = plain(h.x); else if (p[0] && p[0].h === 3) {} return { blocks: p, sec }; });
+  G.page = Math.max(0, Math.min(G.pages.length - 1, G.page));
+}
+function renderGram() {
+  const v = $('vGram'); if (!G.data) { v.innerHTML = ''; return; }
+  if (G.ch < 0) {
+    v.innerHTML = '<div class="glist"><div class="ghd"><svg class="i"><use href="#i-gram"/></svg><h2>Grammar</h2></div>' + G.data.chapters.map((c, i) => {
+      const [a, b] = c.title.split(/:\s*/);
+      const toc = c.blocks.filter(x => x.h === 2).map(x => plain(x.x)).slice(0, 5).join(' · ');
+      return '<button type="button" class="gch" data-c="' + i + '"><span class="gi"><svg class="i"><use href="#' + (GI[c.id] || 'i-book') + '"/></svg></span><span class="gtx"><b>' + esc(a) + '</b><small>' + esc(b || '') + '</small><span class="gtoc">' + esc(toc) + '</span></span>' + ico('fwd') + '</button>';
+    }).join('') + '<p class="gcred">From <i>Ti Liv Kréyòl</i> (2nd edition, 2020) by Adrien Guillory-Chatman, Oliver Mayeux, Nathan Wendte and Herbert Wiltz, TSÒHK. CC BY-NC-SA 4.0.</p></div>';
+    v.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { SFX.tap(); G.ch = +b.dataset.c; G.page = 0; G.pages = null; G.key = ''; renderGram(); });
+    fit(v.querySelector('.glist'), 0.6);
+    return;
+  }
+  const c = G.data.chapters[G.ch];
+  v.innerHTML = '<div class="gread"><div class="gbar"><button class="rb" type="button" id="gBk" aria-label="Chapters">' + ico('back') + '</button><div class="gt"><b>' + esc(c.title.split(/:\s*/)[0]) + '</b><small id="gS"></small></div><button class="rb" type="button" id="gTc" aria-label="Contents">' + ico('grid') + '</button></div>' +
+    '<div class="gpage" id="gP"></div><div class="gnav"><button class="rb" type="button" id="gPv" aria-label="Previous page">' + ico('back') + '</button><span class="pgb"><i id="gPb"></i></span><button class="rb" type="button" id="gNx" aria-label="Next page">' + ico('fwd') + '</button></div></div>';
+  $('gBk').onclick = () => { SFX.tap(); G.ch = -1; renderGram(); };
+  $('gTc').onclick = gToc;
+  $('gPv').onclick = () => gTurn(-1);
+  $('gNx').onclick = () => gTurn(1);
+  const box = $('gP');
+  box.addEventListener('click', ev => { const r = ev.target.closest('.r[data-say]'); if (r && !ev.target.closest('a')) { TTS.say(r.dataset.say, { tap: true }); r.classList.remove('on'); void r.offsetWidth; r.classList.add('on'); } });
+  let sx = 0, sy = 0; box.addEventListener('pointerdown', ev => { sx = ev.clientX; sy = ev.clientY; }); box.addEventListener('pointerup', ev => { const dx = ev.clientX - sx, dy = ev.clientY - sy; if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.3) gTurn(dx < 0 ? 1 : -1); });
+  G.key = ''; gPaginate(); gDraw();
+}
+function gDraw(dir) {
+  const box = $('gP'); if (!box || !G.pages) return;
+  const pg = G.pages[G.page];
+  box.style.setProperty('--k', '1');
+  box.innerHTML = pg.blocks.map(gBlock).join('');
+  fit(box, 0.62);
+  $('gS').textContent = pg.sec;
+  $('gPb').style.width = ((G.page + 1) / G.pages.length * 100).toFixed(1) + '%';
+  $('gPv').disabled = !G.page; $('gNx').disabled = G.page >= G.pages.length - 1;
+  if (dir) box.animate([{ transform: 'translateX(' + (dir * 22) + 'px)', opacity: 0.3 }, { transform: 'none', opacity: 1 }], { duration: 220, easing: 'ease-out' });
+}
+function gTurn(d) { if (!G.pages) return; const n = Math.max(0, Math.min(G.pages.length - 1, G.page + d)); if (n === G.page) return; G.page = n; SFX.tap(); gDraw(d); }
+function gToc() {
+  SFX.tap();
+  const c = G.data.chapters[G.ch], items = [];
+  G.pages.forEach((p, i) => p.blocks.forEach(b => { if (b.h && !items.some(x => x.t === plain(b.x))) items.push({ t: plain(b.x), h: b.h, i }); }));
+  const el = overlay('gtoc', '<div class="card" style="width:min(480px,100%)"><div class="ch"><span style="width:40px"></span><h2>' + esc(c.title.split(/:\s*/)[0]) + '</h2><button class="rb" type="button" data-x>' + ico('x') + '</button></div><div class="cb"><div class="toc">' + items.map(x => '<button type="button" class="t' + x.h + (x.i === G.page ? ' on' : '') + '" data-p="' + x.i + '">' + esc(x.t) + '</button>').join('') + '</div></div></div>');
+  el.querySelector('[data-x]').onclick = () => closeOv('gtoc');
+  el.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { G.page = +b.dataset.p; closeOv('gtoc'); gDraw(); });
+  fit(el.querySelector('.cb'), 0.5);
+}
+
+/* ============================================================= wiring */
+let TAB = 'learn';
+const VIEWS = { learn: ['vLearn', 'tLearn'], x: ['v101', 'tX'], gram: ['vGram', 'tG'], dict: ['vDict', 'tDict'] };
+function setTab(t) {
+  if (!VIEWS[t]) t = 'learn';
+  TAB = t;
+  for (const k in VIEWS) { const [v, b] = VIEWS[k]; $(v).hidden = k !== t; $(b).setAttribute('aria-selected', String(k === t)); }
+  try { sessionStorage.setItem('dk-tab', t); } catch (e) {}
+  renderTab();
+}
+function renderTab() { if (!READY) return; if (TAB === 'dict') renderDict(); else if (TAB === 'x') renderX(); else if (TAB === 'gram') renderGram(); else renderLearn(); }
+function renderAll() { if (!READY) return; renderTab(); renderHeader(); if ($('sheet')) drawSheet(); }
+for (const k in VIEWS) $(VIEWS[k][1]).onclick = () => { if (TAB === k && k === 'gram' && G.ch >= 0) { G.ch = -1; } SFX.tap(); setTab(k); };
 $('av').onclick = openSheet;
 $('logo').onclick = () => { if (!READY) return; const pool = E.filter(e => e.ex.length); const e = pool[rnd(pool.length)]; openEntry(e.id, [e.id]); };
 let qT = 0;
@@ -2359,8 +2921,10 @@ async function boot() {
   E.forEach(e => keyId.set(e.key, e.id));
   READY = true;
   touch();
-  renderAll();
-  setTab('learn');
+  let t0 = 'learn'; try { t0 = sessionStorage.getItem('dk-tab') || 'learn'; } catch (e) {}
+  setTab(t0 === 'x' || t0 === 'gram' ? 'learn' : t0);
+  renderHeader();
+  Promise.all([loadX(), loadG()]).then(() => { if ((t0 === 'x' && XREADY) || (t0 === 'gram' && G.data)) setTab(t0); });
   await FB.decidedP;
   let member = false; try { member = localStorage.getItem('7stages.member') === '1'; } catch (e) {}
   if (FB.user) { hideGate(); push().then(afterSync); }
@@ -2369,7 +2933,7 @@ async function boot() {
   $('boot').classList.add('out'); setTimeout(() => $('boot').remove(), 400);
   const w = new URLSearchParams(location.search).get('w');
   if (w) { const f = DK.fold(w); const e = E.find(x => DK.fold(x.word) === f) || E.find(x => x.forms.some(y => DK.fold(y) === f)); if (e) openEntry(e.id, [e.id]); }
-  window.__dk = { E, S, C, K, st: () => st, P, D, recs, FB, push, loadFb, reset: resetAll, mergeRemote, startLesson, startReview, startJump, startPlacement, startUnitReview, startBlitz, setTab, firstOpen, TTS, rerender: nextStep };
+  window.__dk = { E, S, C, K, st: () => st, P, D, recs, FB, push, loadFb, reset: resetAll, mergeRemote, startLesson, startReview, startJump, startPlacement, startUnitReview, startBlitz, setTab, firstOpen, TTS, rerender: nextStep, V: () => V, G, xLearn, xReview, celebrate, retry, finish, settle, outScreen };
 }
 if (ROOT && 'serviceWorker' in navigator) { addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {})); const m = document.createElement('link'); m.rel = 'manifest'; m.href = 'manifest.webmanifest'; document.head.appendChild(m); }
 boot();
