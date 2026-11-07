@@ -624,6 +624,25 @@ body.tts .gex .r .k::after{content:'';display:inline-block;width:.85em;height:.8
 .cred b{font-weight:600;color:var(--fg)}
 .gpage>*,.glist>*,.xw>*,.secs>*,.vgrid>*{flex:none}
 
+/* admin (Lord's account only) */
+.admb{display:none!important;color:var(--gold);border-color:rgba(243,201,105,.4)}
+body.admin .admb{display:inline-flex!important}
+.ph .admb{width:36px;height:36px}
+.adm{font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:#1d1500;background:var(--gold);border-radius:999px;padding:.12rem .5rem;margin-left:.3rem}
+.cb.ed{display:flex;flex-direction:column;gap:calc(.8rem*var(--k))}
+.eg{display:flex;flex-direction:column;gap:calc(.45rem*var(--k));padding:calc(.7rem*var(--k)) .8rem;border:1px solid var(--line);border-radius:16px;background:var(--raised)}
+.eg>small{color:var(--gold);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase}
+.ef{display:flex;flex-direction:column;gap:.2rem}
+.ef span{color:var(--mid);font-size:calc(.78rem*var(--k))}
+.ef input,.ef textarea{width:100%;padding:calc(.45rem*var(--k)) .7rem;border-radius:10px;border:1px solid var(--line2);background:var(--panel);font-size:max(16px,calc(1rem*var(--k)));outline:0;resize:none;line-height:1.35}
+.ef input:focus,.ef textarea:focus{border-color:var(--gold)}
+.ef2{flex:none;display:flex;gap:.6rem;padding:.6rem 1rem calc(1rem + var(--sb))}
+.ef2 .btn{flex:1}
+.admrow{display:flex;align-items:center;gap:.5rem;padding:.5rem .6rem;border:1px solid rgba(243,201,105,.35);border-radius:14px;background:var(--gold-a)}
+.admrow span{flex:1;color:var(--gold);font-size:.92rem}
+.admrow .btn{height:40px;padding:0 .8rem;font-size:.9rem}
+.ov#edit{z-index:96}
+
 </style>
 </head>
 <body>
@@ -661,6 +680,7 @@ body.tts .gex .r .k::after{content:'';display:inline-block;width:.85em;height:.8
  <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4.5a2.5 2.5 0 0 0 2.6 3.6M17 6h2.5a2.5 2.5 0 0 1-2.6 3.6"/><line x1="12" y1="14" x2="12" y2="18"/><path d="M8.5 21h7l-.8-3h-5.4z"/></symbol>
   <symbol id="i-turtle" viewBox="0 0 24 24"><path d="M4 15.5c0-3.9 3.1-7 7-7s7 3.1 7 7z"/><path d="M18 13.5h1.5a2 2 0 0 0 0-4H18"/><path d="M6.5 15.5l-1 3M15.5 15.5l1 3M9 8.8l1.5 6.7M13 8.8l-1.5 6.7"/></symbol>
   <symbol id="i-bksp" viewBox="0 0 24 24"><path d="M21 6H9l-6 6 6 6h12z"/><line x1="16.5" y1="9.5" x2="11.5" y2="14.5"/><line x1="11.5" y1="9.5" x2="16.5" y2="14.5"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M15.5 4.5l4 4L8.5 19.5 4 20l.5-4.5z"/><line x1="13" y1="7" x2="17" y2="11"/></symbol>
   <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18.5h10.5a4 4 0 0 0 .6-8 6 6 0 0 0-11.6 1.4A3.4 3.4 0 0 0 7 18.5z"/></symbol>
 </svg>
 
@@ -1808,6 +1828,7 @@ function layoutPath() {
   });
 }
 function renderHeader() {
+  document.body.classList.toggle('admin', adminOn());
   const sk = streak(), el = $('hStreak');
   el.querySelector('span').textContent = sk;
   el.hidden = !sk;
@@ -1875,8 +1896,9 @@ function startSession(mode, steps, meta) {
   if (!steps || !steps.length) return;
   SFX.tap();
   Object.assign(P, { on: true, fin: false, out: false, mode, meta, steps: steps.map(s => Object.assign({}, s)), i: 0, ok: 0, tried: 0, mistakes: 0, strikes: 0, grades: new Map(), t0: now(), answered: false, cur: null });
-  const el = overlay('pl', '<div class="ph"><button class="rb" id="pX" type="button" aria-label="Close">' + ico('x') + '</button><div class="pbar"><i id="pB"></i></div><div class="combo" id="pC"></div><div class="strikes" id="pH"></div></div><div class="stage" id="stg"></div><div id="kbx"></div><div class="pf" id="pf"></div><div class="fb" id="fb"><div class="in"></div></div>', '');
+  const el = overlay('pl', '<div class="ph"><button class="rb" id="pX" type="button" aria-label="Close">' + ico('x') + '</button><div class="pbar"><i id="pB"></i></div><div class="combo" id="pC"></div><div class="strikes" id="pH"></div><button class="rb admb" id="pE" type="button" aria-label="Correct this card">' + ico('pen') + '</button></div><div class="stage" id="stg"></div><div id="kbx"></div><div class="pf" id="pf"></div><div class="fb" id="fb"><div class="in"></div></div>', '');
   el.querySelector('#pX').onclick = quitAsk;
+  el.querySelector('#pE').onclick = editStep;
   strikesUI();
   if (mode === 'blitz') { P.left = 60; P.pairs = 0; clearInterval(P.clock); const tick = () => { const c = $('pC'); if (!P.on || P.fin) { clearInterval(P.clock); return; } if (c) { c.innerHTML = ico('bolt', 'f') + P.left + 's'; c.classList.toggle('low', P.left <= 10); } if (P.left <= 0) { clearInterval(P.clock); finish(); return; } P.left--; }; tick(); P.clock = setInterval(tick, 1000); }
   nextStep();
@@ -1950,7 +1972,7 @@ function feedback(res) {
   const head = res.ok ? (res.near ? 'Almost' : ['Correct', 'Nice', 'Great', 'Yes'][P.ok % 4]) : P.out ? 'Strike three' : 'Not quite';
   inn.innerHTML = '<div class="hd"><span class="ic">' + ico(res.ok ? 'check' : 'x') + '</span>' + head + (res.say ? spk(res.say, 'fbs') : '') + '</div>' +
     (res.ans && (!res.ok || res.near || res.show) ? '<div class="ans">' + res.ans + '</div>' : '') + (res.sub ? '<div class="sub">' + res.sub + '</div>' : '') +
-    (res.accept ? '<button class="lnk" type="button" id="pAcc">My answer was right</button>' : '') +
+    (res.accept || (adminOn() && !res.ok && res.typed) ? '<button class="lnk" type="button" id="pAcc">My answer was right' + (adminOn() ? ', accept it from now on' : '') + '</button>' : '') +
     '<div class="row2"><button class="btn ' + (res.ok ? 'okb' : 'badb') + '" id="pN" type="button">Continue</button></div>';
   fb.className = 'fb show ' + (res.ok ? 'ok' : 'bad');
   setFoot('');
@@ -1959,6 +1981,7 @@ function feedback(res) {
   const a = inn.querySelector('#pAcc');
   if (a) a.onclick = () => { // the learner overrides a strict English check: the strike comes back too
     const step = P.steps[P.i]; P.mistakes--; P.ok++;
+    if (adminOn()) acceptAnswer(step, res);
     if (STRIKES[P.mode] && P.strikes > 0) { P.strikes--; P.out = false; strikesUI(); }
     if (step.req == null && P.steps.length && P.steps[P.steps.length - 1].req && P.steps[P.steps.length - 1].w === step.w && P.steps[P.steps.length - 1].type === step.type) P.steps.pop();
     (step.targets || []).forEach(id => P.grades.set(id, 1));
@@ -2281,7 +2304,7 @@ function typeEx(step, stg) {
     const r = en ? DK.gradeEN(inp.value, answers, false) : DK.gradeKL(inp.value, answers);
     inp.classList.add(r.ok ? 'ok' : 'bad'); inp.readOnly = true;
     const yours = !en && inp.value.trim() && (!r.ok || r.near) ? diffHTML(inp.value.trim(), r.best || answers[0]) : '';
-    return { ok: r.ok, near: r.near, ans: yours || ansH, sub, accept: en && !r.ok, targets: step.targets, say: en ? null : e.forms[0] };
+    return { ok: r.ok, near: r.near, ans: yours || ansH, sub, accept: en && !r.ok, typed: inp.value.trim(), targets: step.targets, say: en ? null : e.forms[0] };
   };
   return ctrl;
 }
@@ -2303,11 +2326,11 @@ function fill(step, stg) {
   inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); if (!btn.disabled) btn.click(); } });
   ctrl.check = () => {
     inp.blur(); btn.dataset.done = 1;
-    const r = DK.gradeKL(inp.value, [want]);
+    const r = DK.gradeKL(inp.value, [want].concat(fillAcc(want)));
     inp.classList.add(r.ok ? 'ok' : 'bad'); inp.readOnly = true;
     const typed = inp.value.trim();
     if (r.ok) inp.value = want;
-    return { ok: r.ok, near: r.near, ans: sentHTML(x, { hl: step.w, plain: true }) + (typed && (!r.ok || r.near) ? '<div class="yours">' + diffHTML(typed, want) + '</div>' : ''), sub: '', targets: step.targets, say: x.s };
+    return { ok: r.ok, near: r.near, typed, ans: sentHTML(x, { hl: step.w, plain: true }) + (typed && (!r.ok || r.near) ? '<div class="yours">' + diffHTML(typed, want) + '</div>' : ''), sub: '', targets: step.targets, say: x.s };
   };
   return ctrl;
 }
@@ -2462,8 +2485,9 @@ let ENT = null;
 function openEntry(id, list) {
   SFX.tap();
   ENT = { id, list: list && list.length ? list : [id], page: 0 };
-  const el = overlay('ent', '<div class="card" style="height:100%"><div class="ch"><button class="rb" type="button" id="eP" aria-label="Previous">' + ico('back') + '</button><h2 id="eT"></h2><button class="rb" type="button" id="eN" aria-label="Next">' + ico('fwd') + '</button><button class="rb" type="button" id="eX" aria-label="Close">' + ico('x') + '</button></div><div class="cb en" id="eB"></div><div class="epg" id="eG"></div><div style="flex:none;display:flex;gap:.5rem;padding:0 1rem calc(1rem + var(--sb))"><button class="btn" type="button" id="eS" style="flex:1"></button><button class="btn" type="button" id="eC" style="flex:1">' + ico('copy') + 'Copy</button><button class="btn" type="button" id="eH" style="flex:1">' + ico('share') + 'Share</button></div></div>');
+  const el = overlay('ent', '<div class="card" style="height:100%"><div class="ch"><button class="rb" type="button" id="eP" aria-label="Previous">' + ico('back') + '</button><h2 id="eT"></h2><button class="rb admb" type="button" id="eE" aria-label="Correct">' + ico('pen') + '</button><button class="rb" type="button" id="eN" aria-label="Next">' + ico('fwd') + '</button><button class="rb" type="button" id="eX" aria-label="Close">' + ico('x') + '</button></div><div class="cb en" id="eB"></div><div class="epg" id="eG"></div><div style="flex:none;display:flex;gap:.5rem;padding:0 1rem calc(1rem + var(--sb))"><button class="btn" type="button" id="eS" style="flex:1"></button><button class="btn" type="button" id="eC" style="flex:1">' + ico('copy') + 'Copy</button><button class="btn" type="button" id="eH" style="flex:1">' + ico('share') + 'Share</button></div></div>');
   el.querySelector('#eX').onclick = () => closeOv('ent');
+  el.querySelector('#eE').onclick = () => openEditor({ f: 'd', e: E[ENT.id], x: null });
   el.querySelector('#eP').onclick = () => stepEntry(-1);
   el.querySelector('#eN').onclick = () => stepEntry(1);
   el.querySelector('#eS').onclick = () => { const e = E[ENT.id]; const on = starOn(ENT.id); st.stars[e.key] = on ? -now() : now(); save(); SFX.tap(); drawEntry(); renderDict(); };
@@ -2541,12 +2565,16 @@ function drawSheet() {
     (TTS.ok() && st.set.voice !== 0 ? '<button type="button" class="srow pick" id="sVp"><span class="lb">' + (v ? esc(voiceName(v)) + ' <small>' + voiceWhere(v) + '</small>' : 'No French voice on this device') + '</span>' + ico('fwd') + '</button>' +
       '<div class="srow"><span class="lb">Speed</span><span class="seg"><button type="button" data-r="0" aria-pressed="' + (st.set.rate === 0) + '">Slower</button><button type="button" data-r="1" aria-pressed="' + (st.set.rate !== 0) + '">Normal</button></span></div>' : '') +
     '<div class="srow"><span class="lb">Sounds</span><button type="button" class="tg" id="sSnd" aria-pressed="' + (!!st.set.snd) + '" aria-label="Sounds"></button></div>' +
+    (ADMIN ? '<div class="srow"><span class="lb">Admin mode</span><button type="button" class="tg" id="sAd" aria-pressed="' + adminOn() + '" aria-label="Admin mode"></button></div>' + (adminOn() ? '<div class="admrow"><span>' + edCount() + (edCount() === 1 ? ' correction' : ' corrections') + '</span><button class="btn" type="button" id="sAx"' + (edCount() ? '' : ' disabled') + '>' + ico('share') + 'Export</button><button class="btn" type="button" id="sAp">' + ico('rev') + 'Apply now</button></div>' : '') : '') +
     '<div class="links"><button class="lnk" type="button" id="sPl">Placement test</button><button class="lnk" type="button" id="sExp">Export starred words</button><button class="lnk" type="button" id="sCr">Credits</button><button class="lnk red" type="button" id="sRst">' + (resetArm ? 'Tap again to erase all progress' : 'Reset progress') + '</button></div>';
   if ($('sIn')) $('sIn').onclick = signIn;
   if ($('sOut')) $('sOut').onclick = () => { try { firebase.auth().signOut(); } catch (e) {} };
   $('sSnd').onclick = () => { st.set.snd = st.set.snd ? 0 : 1; st.set.t = now(); save(); SFX.tap(); drawSheet(); };
   $('sExp').onclick = exportStars;
   $('sCr').onclick = openCredits;
+  if ($('sAd')) $('sAd').onclick = () => { st.set.admin = adminOn() ? 0 : 1; st.set.t = now(); save(); document.body.classList.toggle('admin', adminOn()); SFX.tap(); drawSheet(); };
+  if ($('sAx')) $('sAx').onclick = exportEd;
+  if ($('sAp')) $('sAp').onclick = () => location.reload();
   $('sVoi').onclick = () => { st.set.voice = st.set.voice === 0 ? 1 : 0; st.set.t = now(); save(); drawSheet(); if (st.set.voice) TTS.say('Bonjou'); };
   if ($('sVp')) $('sVp').onclick = openVoices;
   b.querySelectorAll('[data-r]').forEach(x => x.onclick = () => { st.set.rate = +x.dataset.r; st.set.t = now(); save(); drawSheet(); TTS.say('Komen to yê?'); });
@@ -2586,7 +2614,7 @@ function exportStars() {
   const blob = new Blob([lines.join('\n') + '\n'], { type: 'text/tab-separated-values' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'diksyonaer-starred.tsv'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
-function resetAll() { const keep = { set: st.set, stars: st.stars }; st = Object.assign(fresh(), keep, { rst: now(), mig: 1, migR: 1 }); viewU = null; touch(); save(); push(); renderAll(); toast('Progress reset'); }
+function resetAll() { const keep = { set: st.set, stars: st.stars, ed: st.ed || {} }; st = Object.assign(fresh(), keep, { rst: now(), mig: 1, migR: 1 }); viewU = null; touch(); save(); push(); renderAll(); toast('Progress reset'); }
 
 /* ================================================================ sync */
 const FB_CONFIG = { apiKey: "AIzaSyArsiLnB_B__5gIXn9RTdFWR7hYE2zXXVw", authDomain: "stages-5b440.firebaseapp.com", projectId: "stages-5b440", storageBucket: "stages-5b440.firebasestorage.app", messagingSenderId: "850080442646", appId: "1:850080442646:web:e7e25684927f41b2e70837" };
@@ -2603,7 +2631,7 @@ function loadFb() {
     FB.db = firebase.firestore(); FB.ready = true; FB.loading = false;
     firebase.auth().getRedirectResult().catch(() => {});
     firebase.auth().onAuthStateChanged(u => {
-      FB.user = u;
+      FB.user = u; checkAdmin(u);
       try { if (u) localStorage.setItem('7stages.member', '1'); else localStorage.removeItem('7stages.member'); } catch (e) {}
       if (u) {
         if (st.uid && st.uid !== u.uid) { st = Object.assign(fresh(), { mig: 1 }); viewU = null; touch(); }
@@ -2620,7 +2648,7 @@ function signIn() {
   const go = async () => { const pr = new firebase.auth.GoogleAuthProvider(); try { await firebase.auth().signInWithPopup(pr); } catch (e) { if (e && /popup-closed|cancelled-popup/.test(e.code || '')) return; try { await firebase.auth().signInWithRedirect(pr); } catch (_) { toast('Sign-in did not go through'); } } };
   if (FB.ready) go(); else { const t = setInterval(() => { if (FB.ready) { clearInterval(t); go(); } }, 200); setTimeout(() => clearInterval(t), 12000); }
 }
-const wire = () => JSON.stringify({ v: 1, rst: st.rst || 0, w: st.w, x: st.x, days: st.days, set: st.set, stars: st.stars, placed: st.placed || 0, cp: st.cp || {}, best: st.best || {} });
+const wire = () => JSON.stringify({ v: 1, rst: st.rst || 0, w: st.w, x: st.x, ed: st.ed || {}, days: st.days, set: st.set, stars: st.stars, placed: st.placed || 0, cp: st.cp || {}, best: st.best || {} });
 function mergeRemote(dk) {
   if (!dk) return false;
   let changed = false;
@@ -2633,12 +2661,13 @@ function mergeRemote(dk) {
     for (const k in st.w) if (st.w[k][5] > cut) w[k] = st.w[k];
     for (const k in st.x) if (st.x[k][5] > cut) x[k] = st.x[k];
     for (const d in st.days) if (d >= rd) days[d] = st.days[d];
-    st = Object.assign(fresh(), { rst: r.rst, mig: 1, migR: 1, stars: st.stars, set: st.set, w, x, days, uid: st.uid }); changed = true;
+    st = Object.assign(fresh(), { rst: r.rst, mig: 1, migR: 1, stars: st.stars, set: st.set, ed: st.ed || {}, w, x, days, uid: st.uid }); changed = true;
   }
   else if ((r.rst || 0) < (st.rst || 0)) return true;
   for (const D of ['w', 'x']) { st[D] = st[D] || {}; for (const k in (r[D] || {})) { const a = st[D][k], b = r[D][k]; if (!Array.isArray(b)) continue; if (!a || b[5] > a[5] || (b[5] === a[5] && b[3] > a[3])) { st[D][k] = b; changed = true; } } }
   for (const d in (r.days || {})) { const v = +r.days[d] || 0; if (v > (st.days[d] || 0)) { st.days[d] = v; changed = true; } }
   if (r.set && (r.set.t || 0) > (st.set.t || 0)) { st.set = Object.assign({}, st.set, r.set); changed = true; }
+  st.ed = st.ed || {}; for (const k in (r.ed || {})) { const a = st.ed[k], b = r.ed[k]; if (b && (!a || (b.t || 0) > (a.t || 0))) { st.ed[k] = b; changed = true; } }
   for (const k in (r.stars || {})) { const a = +st.stars[k] || 0, b = +r.stars[k] || 0; if (Math.abs(b) > Math.abs(a)) { st.stars[k] = b; changed = true; } }
   if ((r.placed || 0) > (st.placed || 0)) { st.placed = r.placed; changed = true; }
   st.cp = st.cp || {}; st.best = st.best || {};
@@ -2715,7 +2744,7 @@ function placeRound() {
 let V = [], XREADY = false;
 async function loadX() {
   try {
-    V = DK.parseTSV(await getText('vocab101.tsv')).filter(e => !e.skip);
+    V = afterParse(DK.parseTSV(patchTSV(await getText('vocab101.tsv'), 'x')), 'x').filter(e => !e.skip);
     const seen = new Map(), by = new Map();
     V.forEach((e, i) => { e.id = i; const n = (seen.get(e.key) || 0) + 1; seen.set(e.key, n); e.xk = n > 1 ? e.key + '#' + n : e.key; const k = DK.fold(e.short); if (!by.has(k)) by.set(k, []); by.get(k).push(e); });
     V.forEach(e => { const g = by.get(DK.fold(e.short)); if (g.length > 1) e.accept = DK.uniq(g.flatMap(x => x.forms)); });
@@ -2888,6 +2917,108 @@ function gToc() {
   fit(el.querySelector('.cb'), 0.5);
 }
 
+/* ================================================================ admin */
+/* Lord's own correction mode: only his Google account sees it (matched by a hash, so the address is not in the page).
+   Corrections live in st.ed, apply to his account only, and export as a file to be built into the app for everyone. */
+const ADMIN_HASH = '4cb8b22a15b084a55472d88d1f154663b7d744fc1543c500a77695a86c529fba';
+let ADMIN = false;
+const RAW = { d: new Map(), x: new Map() };
+const adminOn = () => ADMIN && !!st.set.admin;
+async function checkAdmin(u) {
+  let ok = false;
+  try { if (u && u.email && u.emailVerified !== false && crypto.subtle) { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(u.email.trim().toLowerCase())); ok = [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('') === ADMIN_HASH; } } catch (e) {}
+  ADMIN = ok; document.body.classList.toggle('admin', adminOn()); if ($('sheet')) drawSheet();
+}
+const edOf = (f, k) => (st.ed || {})[f + '|' + k];
+function rows(text) { return String(text || '').replace(/^﻿/, '').split(/\r?\n/); }
+/* rewrite a TSV with his corrections before the engine reads it */
+function patchTSV(text, f) {
+  const sed = Object.values(st.ed || {}).filter(e => e.f === 's' && !e.off && e.k && e.s);
+  return rows(text).map(l => {
+    if (!l.trim()) return l;
+    const c = l.split('\t'), key = (c[0] || '').trim().normalize('NFC');
+    if (f !== 'k') RAW[f].set(key, c.slice(0, 4).map(x => x || ''));
+    const e = f !== 'k' && edOf(f, key);
+    if (e && !e.off) ['a', 'b', 'c', 'd'].forEach((x, i) => { if (e[x] != null) c[i] = e[x]; });
+    sed.forEach(s => { [0, 1, 2, 3].forEach(i => { if (c[i] && s.k && c[i].includes(s.k)) c[i] = c[i].split(s.k).join(s.s); if (c[i] && s.ot && s.tr != null && c[i].includes(s.ot)) c[i] = c[i].split(s.ot).join(s.tr); }); });
+    return c.join('\t');
+  }).join('\n');
+}
+/* keep progress on renamed words, add his extra accepted answers */
+function afterParse(list, f) {
+  list.forEach(e => {
+    const ren = Object.values(st.ed || {}).find(x => x.f === f && !x.off && x.a != null && x.a.trim().normalize('NFC') === e.raw && x.k !== e.raw);
+    if (ren) { e.ok0 = e.key; e.key = ren.k; }
+    const ed = edOf(f, e.key);
+    if (ed && !ed.off && ed.acc) ed.acc.forEach(a => { if (ed.en) { if (!e.items.includes(a)) e.items.push(a); } else if (!e.forms.includes(a)) { e.forms.push(a); if (e.accept) e.accept.push(a); } });
+  });
+  return list;
+}
+const fillAcc = w => { const e = edOf('w', DK.fold(w)); return e && !e.off && e.acc ? e.acc : []; };
+function saveEd(id, rec) { st.ed = st.ed || {}; const old = st.ed[id] || {}; st.ed[id] = Object.assign({}, old, rec, { t: now() }); save(); push(); }
+/* the answer he typed was right: accept it from now on */
+function acceptAnswer(step, res) {
+  if (!res.typed) return;
+  if (step.type === 'fill') { const x = S[step.s], w = x.words[step.k].x, e = edOf('w', DK.fold(w)) || {}; saveEd('w|' + DK.fold(w), { f: 'w', k: DK.fold(w), word: w, acc: DK.uniq((e.acc || []).concat(res.typed)) }); return; }
+  const f = step.x ? 'x' : 'd', ent0 = ent(step, step.w); if (!ent0) return;
+  const en = step.dir === 'kl2en', e = edOf(f, ent0.key) || {};
+  saveEd(f + '|' + ent0.key, { f, k: ent0.key, en: e.en != null && e.acc && e.acc.length ? e.en : en, acc: DK.uniq((e.acc || []).concat(res.typed)) });
+  if (en) ent0.items.push(res.typed); else ent0.forms.push(res.typed);
+}
+/* the editor: the word, its example, and the sentence on screen */
+function openEditor(o) {
+  SFX.tap();
+  const f = o.f || 'd', e = o.e, raw = e ? (RAW[f].get(e.ok0 || e.key) || [e.key, '', '', '']) : null, ed = e ? (edOf(f, e.key) || {}) : {};
+  const cur = i => ed[['a', 'b', 'c', 'd'][i]] != null ? ed[['a', 'b', 'c', 'd'][i]] : raw[i];
+  const x = o.x, sed = x ? (Object.values(st.ed || {}).find(r => r.f === 's' && r.s === x.s) || edOf('s', x.s) || {}) : null;
+  const fld = (id, lab, val, big) => '<label class="ef"><span>' + lab + '</span>' + (big ? '<textarea id="' + id + '" rows="2">' : '<input id="' + id + '" value="') + esc(val || '') + (big ? '</textarea>' : '" autocomplete="off" autocapitalize="off" spellcheck="false">') + '</label>';
+  const el = overlay('edit', '<div class="card" style="height:100%"><div class="ch"><span class="adm">Admin</span><h2>Correct</h2><button class="rb" type="button" data-x>' + ico('x') + '</button></div><div class="cb ed">' +
+    (e ? '<div class="eg"><small>' + (f === 'x' ? 'Vocab 101 word' : 'Dictionary word') + '</small>' + fld('eA', 'Word (part of speech)', cur(0)) + fld('eB', 'Meaning', cur(1), 1) + fld('eC', 'Example', cur(2), 1) + fld('eD', 'Translation', cur(3), 1) + fld('eK', 'Also accept (one per line)', (ed.acc || []).join('\n'), 1) + '</div>' : '') +
+    (x ? '<div class="eg"><small>Sentence on screen</small>' + fld('sS', 'Kréyòl', sed.s || x.s, 1) + fld('sT', 'English', sed.tr != null ? sed.tr : x.t, 1) + '</div>' : '') +
+    fld('eN', 'Note', ed.note || (sed && sed.note) || '', 1) + '</div><div class="ef2"><button class="btn" type="button" id="eU">' + ico('rev') + 'Undo</button><button class="btn pri" type="button" id="eV">Save</button></div></div>');
+  el.querySelector('[data-x]').onclick = () => closeOv('edit');
+  const v = id => { const n = el.querySelector('#' + id); return n ? n.value.replace(/\r/g, '') : null; };
+  el.querySelector('#eU').onclick = () => { const t = now(); if (e && st.ed[f + '|' + e.key]) st.ed[f + '|' + e.key] = { f, k: e.key, off: 1, t }; if (x) for (const k in st.ed) if (st.ed[k].f === 's' && (st.ed[k].k === x.s || st.ed[k].s === x.s)) st.ed[k] = { f: 's', k: st.ed[k].k, off: 1, t }; save(); push(); closeOv('edit'); toast('Correction removed. Applies next time the app opens'); if ($('sheet')) drawSheet(); };
+  el.querySelector('#eV').onclick = () => {
+    const note = v('eN').trim();
+    if (e) {
+      const rec = { f, k: e.key, note };
+      [['a', 'eA', 0], ['b', 'eB', 1], ['c', 'eC', 2], ['d', 'eD', 3]].forEach(([k, id, i]) => { const nv = v(id); if (nv != null && nv.trim() !== (raw[i] || '').trim()) rec[k] = nv.trim(); else rec[k] = null; });
+      rec.acc = v('eK').split('\n').map(s => s.trim()).filter(Boolean);
+      if (rec.acc.length) rec.en = rec.en != null ? rec.en : !!ed.en;
+      saveEd(f + '|' + e.key, rec);
+    }
+    if (x) { const ns = v('sS').trim(), nt = v('sT').trim(), k0 = sed.k || x.s; if (ns !== k0 || nt !== (sed.ot || x.t) || note) saveEd('s|' + k0, { f: 's', k: k0, ot: sed.ot || x.t, s: ns, tr: nt, note }); }
+    closeOv('edit'); SFX.ok(); toast('Saved. Applies next time the app opens');
+    if ($('sheet')) drawSheet();
+  };
+  fit(el.querySelector('.cb'), 0.7);
+}
+function editStep() {
+  const s = P.steps[P.i]; if (!s) return;
+  const f = s.x ? 'x' : 'd';
+  const id = s.w != null ? s.w : s.phrase != null ? s.phrase : (s.targets || [])[0];
+  openEditor({ f, e: id != null ? ent(s, id) : null, x: s.s != null ? S[s.s] : null });
+}
+function edCount() { return Object.values(st.ed || {}).filter(r => !r.off).length; }
+function exportEd() {
+  const L = [['file', 'original', 'field', 'was', 'now', 'note'].join('\t')];
+  const cl = s => String(s == null ? '' : s).replace(/[\t\n]+/g, ' ');
+  Object.values(st.ed || {}).filter(r => !r.off).sort((a, b) => a.t - b.t).forEach(r => {
+    const file = r.f === 'd' ? 'diksyonaer.tsv' : r.f === 'x' ? 'vocab101.tsv' : r.f === 's' ? 'sentence' : r.f === 'w' ? 'sentence word' : '';
+    if (!file) return;
+    const raw = (RAW[r.f] && RAW[r.f].get(r.k)) || [];
+    let any = false;
+    [['a', 'word', 0], ['b', 'meaning', 1], ['c', 'example', 2], ['d', 'translation', 3]].forEach(([k, lab, i]) => { if (r[k] != null) { any = true; L.push([file, cl(r.k), lab, cl(raw[i]), cl(r[k]), cl(r.note)].join('\t')); } });
+    if (r.f === 's') { if (r.s !== r.k) { any = true; L.push([file, cl(r.k), 'kréyòl', cl(r.k), cl(r.s), cl(r.note)].join('\t')); } if (r.tr != null && r.tr !== r.ot) { any = true; L.push([file, cl(r.k), 'english', cl(r.ot), cl(r.tr), any ? '' : cl(r.note)].join('\t')); } }
+    if (r.acc && r.acc.length) { any = true; L.push([file, cl(r.word || r.k), r.en ? 'also accept (English)' : 'also accept (Kréyòl)', '', cl(r.acc.join(' | ')), cl(r.note)].join('\t')); }
+    if (!any && r.note) L.push([file, cl(r.k), 'note', '', '', cl(r.note)].join('\t'));
+  });
+  const name = 'diksyonaer-corrections.tsv', blob = new Blob([L.join('\n') + '\n'], { type: 'text/tab-separated-values' });
+  try { const file = new File([blob], name, { type: 'text/tab-separated-values' }); if (navigator.canShare && navigator.canShare({ files: [file] })) { navigator.share({ files: [file], title: 'Diksyonær corrections' }).catch(() => {}); return; } } catch (e) {}
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
 /* ============================================================= wiring */
 let TAB = 'learn';
 const VIEWS = { learn: ['vLearn', 'tLearn'], x: ['v101', 'tX'], gram: ['vGram', 'tG'], dict: ['vDict', 'tDict'] };
@@ -2913,9 +3044,9 @@ async function boot() {
   let tsv = null;
   for (let i = 0; ; i++) { try { tsv = await getText('diksyonaer.tsv'); break; } catch (e) { await sleep(Math.min(8000, 1200 * (i + 1))); } }
   const [comp, core] = await Promise.all([getText('kours.tsv').catch(() => ''), getText('essential-500.tsv').catch(() => '')]);
-  E = DK.parseTSV(tsv);
+  E = afterParse(DK.parseTSV(patchTSV(tsv, 'd')), 'd');
   lex = DK.Lexicon(E);
-  S = DK.buildSentences(lex, E, comp.split(/\r?\n/).filter(l => l.trim()).map(l => l.split('\t').map(x => x.trim().normalize('NFC'))).filter(r => r[0] && r[1]));
+  S = DK.buildSentences(lex, E, patchTSV(comp, 'k').split(/\r?\n/).filter(l => l.trim()).map(l => l.split('\t').map(x => x.trim().normalize('NFC'))).filter(r => r[0] && r[1]));
   C = DK.buildCourse(E, lex, S, core.split(/\r?\n/).filter(Boolean).map(l => l.split('\t')[0]));
   K = DK.Course(E, lex, S, C);
   E.forEach(e => keyId.set(e.key, e.id));
