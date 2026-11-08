@@ -1756,9 +1756,15 @@ function Course(E, lex, S, course) {
     while (pick.length < 12 && guard++ < 4000) { const i = pool[R() * pool.length | 0]; if (seen.has(i)) continue; if (R() * 2 > weight(i)) continue; seen.add(i); pick.push(i); }
     const knownFn = i => C.lessonOf[i] < first;
     const used = new Set(), steps = [];
+    /* with sound, half the jump test is heard only */
+    const hp = opts.audio ? hearPool(U, ids.slice(-150), knownFn, R) : null;
+    let hi = 0;
     pick.forEach((id, k) => {
-      const want = ['en2kl', 'fill', 'kl2en', 'build'][k % 4];
-      let st = (want === 'fill' || want === 'build') ? sentenceStep(id, first - 1, knownFn, used, R, want, ids) : null;
+      const want = opts.audio ? ['hear', 'fill', 'listen', 'en2kl'][k % 4] : ['en2kl', 'fill', 'kl2en', 'build'][k % 4];
+      let st = null;
+      if (want === 'hear' && hp) { const it = hp.sentItems[hi] || hp.wordItems[hi]; hi++; if (it) st = hearStep(it, hp.sentEn.concat(hp.wordEn), 'mc', R); }
+      else if (want === 'listen') st = listenStep([id].concat(shuffle(ids, R).slice(0, 30)), knownFn, used, R, ids, 9);
+      else if (want === 'fill' || want === 'build') st = sentenceStep(id, first - 1, knownFn, used, R, want, ids);
       steps.push(st || typeStep(id, k % 2 ? 'kl2en' : 'en2kl'));
     });
     return steps;
@@ -1770,12 +1776,33 @@ function Course(E, lex, S, course) {
     const pool = shuffle(ids.filter(i => !E[i].multi), R).concat(shuffle(ids.filter(i => E[i].multi), R));
     const knownFn = i => C.lessonOf[i] <= C.units[U].ls[C.units[U].ls.length - 1];
     const used = new Set(), steps = [];
+    /* with sound: four questions, three of them heard only (listening is the surest sign of fluency) */
+    if (opts.audio) {
+      const hp = hearPool(U, ids, knownFn, R);
+      const mc = hp.sentItems.length ? hearStep(hp.sentItems[0], hp.sentEn.concat(hp.wordEn), 'mc', R) : hp.wordItems.length ? hearStep(hp.wordItems[0], hp.wordEn, 'mc', R) : null;
+      const lb = listenStep(shuffle(ids, R), knownFn, used, R, ids, 10) || (pool[0] != null ? dictStep(pool[0]) : null);
+      const mc2 = hp.wordItems.length > 1 ? hearStep(hp.wordItems[1], hp.wordEn, 'mc', R) : null;
+      const rd = pool[1] != null ? typeStep(pool[1], 'en2kl') : null;
+      [mc, lb, mc2, rd].forEach(st => { if (st) steps.push(Object.assign(st, { u: U })); });
+      if (steps.length >= 3) return steps;
+      steps.length = 0;
+    }
     pool.slice(0, 3).forEach((id, k) => {
       const want = ['en2kl', 'fill', 'kl2en'][k];
       const st = want === 'fill' ? sentenceStep(id, C.units[U].ls[0], knownFn, used, R, k % 2 ? 'fill' : 'build', ids) : null;
       steps.push(Object.assign(st || typeStep(id, want === 'fill' ? 'en2kl' : want), { u: U }));
     });
     return steps;
+  }
+  /* words and short known sentences of a unit, with wrong-answer pools, for hearing cards */
+  function hearPool(U, ids, knownFn, R) {
+    const prior = []; for (let l = Math.max(0, C.units[U].ls[0] - 12); l < C.units[U].ls[0]; l++) prior.push(...C.lessons[l].ids);
+    const wordItems = shuffle(ids.filter(i => E[i].short), R).map(i => ({ k: E[i].forms[0], en: E[i].short, w: i, targets: [i] }));
+    const wordEn = ids.concat(prior).map(i => E[i].short).filter(Boolean);
+    const sents = [...new Map(ids.flatMap(i => C.hasIdx[i].map(sentOf)).filter(x => x && x.t && x.n >= 2 && x.n <= 8 && sentKnownBy(x, knownFn)).map(x => [x.id, x])).values()];
+    const sentItems = shuffle(sents, R).map(x => ({ k: x.s, en: x.t, s: x.id, targets: x.words.flatMap(w => (w.ids || []).filter(knownFn)).slice(0, 4) }));
+    const sentEn = sents.map(x => x.t);
+    return { wordItems, wordEn, sentItems, sentEn };
   }
   /* Hearing cards: the Kréyòl is only heard. tf = an English meaning is shown, green if it matches, red if not.
      mc = pick the English meaning from three. Items are words or whole sentences. */
@@ -1797,12 +1824,7 @@ function Course(E, lex, S, course) {
     const ls = C.units[U].ls.filter(l => opts.upTo == null || l <= opts.upTo), lastL = ls[ls.length - 1];
     const ids = []; ls.forEach(l => ids.push(...C.lessons[l].ids));
     const knownFn = i => C.lessonOf[i] >= 0 && C.lessonOf[i] <= lastL;
-    const prior = []; for (let l = Math.max(0, C.units[U].ls[0] - 12); l < C.units[U].ls[0]; l++) prior.push(...C.lessons[l].ids);
-    const wordItems = shuffle(ids.filter(i => E[i].short), R).map(i => ({ k: E[i].forms[0], en: E[i].short, w: i, targets: [i] }));
-    const wordEn = ids.concat(prior).map(i => E[i].short).filter(Boolean);
-    const sents = [...new Map(ids.flatMap(i => C.hasIdx[i].map(sentOf)).filter(x => x && x.t && x.n >= 2 && x.n <= 8 && sentKnownBy(x, knownFn)).map(x => [x.id, x])).values()];
-    const sentItems = shuffle(sents, R).map(x => ({ k: x.s, en: x.t, s: x.id, targets: x.words.flatMap(w => (w.ids || []).filter(knownFn)).slice(0, 4) }));
-    const sentEn = sents.map(x => x.t);
+    const { wordItems, wordEn, sentItems, sentEn } = hearPool(U, ids, knownFn, R);
     const pool = ids.slice(), used = new Set(), steps = [];
     const W = shuffle(ids.filter(i => !E[i].multi), R);
     let wi = 0, si = 0, di = 0;
@@ -1821,7 +1843,7 @@ function Course(E, lex, S, course) {
     }
     return steps;
   }
-  return { lesson, review, jump, unitTest, unitReview, listenTest, blitzBoard, answersFor, words };
+  return { lesson, review, jump, unitTest, unitReview, listenTest, hearPool, blitzBoard, answersFor, words };
 }
 
 G.DK = { DIALECT, toFr, sndKey, speechScore, dec, fold, loose, low, uniq, parseTSV, tokenize, Lexicon, buildSentences, makeSentence, buildCourse, Course, gradeKL, gradeEN, enWords, normKL, lev, rng, shuffle, recNew, recall, schedule, strength, isWeak, DAY, CATS, START, LESSON, UNIT };
@@ -2351,7 +2373,7 @@ function startReview(mode) {
   if (!steps.length) return;
   startSession(m, steps, {});
 }
-function startJump(U) { startSession('jump', K.jump(U, { seed: seed() }), { U }); }
+function startJump(U) { startSession('jump', K.jump(U, { seed: seed(), audio: TTS.has() && st.set.voice !== 0 }), { U }); }
 function retry() {
   const m = P.mode, M = P.meta || {};
   P.on = false; TTS.stop(); closeOv('pl', true);
@@ -3242,17 +3264,17 @@ function openPlace() {
   el.querySelector('#plGo').onclick = () => { el.remove(); startPlacement(); };
   el.querySelector('#plNo').onclick = () => { el.remove(); st.placed = now(); save(); push(); SFX.tap(); renderAll(); };
 }
-function startPlacement() { startSession('place', K.unitTest(0, { seed: rnd(900) + 1 }), { pl: { pass: -1, fail: null, u: 0, rounds: 0, res: [] } }); }
+function startPlacement() { startSession('place', K.unitTest(0, { seed: rnd(900) + 1, audio: TTS.has() && st.set.voice !== 0 }), { pl: { pass: -1, fail: null, u: 0, rounds: 0, res: [] } }); }
 /* adaptive: climb units 1, 3, 7, 15... until a miss, then narrow down between the last pass and the miss */
 function placeRound() {
-  const pl = P.meta.pl, ok = pl.res.filter(Boolean).length >= 2, last = C.units.length - 1;
+  const pl = P.meta.pl, n = pl.res.length, ok = pl.res.filter(Boolean).length >= (n >= 4 ? 3 : 2), last = C.units.length - 1;
   pl.res = []; pl.rounds++;
   if (ok) pl.pass = Math.max(pl.pass, pl.u); else pl.fail = pl.fail == null ? pl.u : Math.min(pl.fail, pl.u);
   let nx;
   if (pl.fail == null) nx = pl.u >= last ? null : Math.min(last, pl.u * 2 + 2);
   else { const lo = pl.pass + 1, hi = pl.fail - 1; nx = lo > hi ? null : (lo + hi) >> 1; }
   if (nx == null || pl.rounds >= 10) return false;
-  pl.u = nx; K.unitTest(nx, { seed: rnd(900) + 1 }).forEach(s => P.steps.push(s));
+  pl.u = nx; K.unitTest(nx, { seed: rnd(900) + 1, audio: TTS.has() && st.set.voice !== 0 && !P.noAudio }).forEach(s => P.steps.push(s));
   return true;
 }
 
