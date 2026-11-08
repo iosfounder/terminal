@@ -1337,23 +1337,38 @@ function gradeEN(input, items, sentence) {
 
 
 /* ------------------------------------------- speech: Kréyòl spelling read by a French voice */
-const FV = 'aeiouyéèêôàâîïûü', FVC = 'aeiouéèêôàâîïûü';
+// Kréyòl → French spelling matrix. Each row is [Kréyòl pattern, French spelling, what it does].
+// Rows run top to bottom on each word; a French voice then reads the result.
+const KV = 'aeiouyéèêôàâîïûü';
+const MATRIX = [
+  [/æ/g, 'è', 'æ is open è (pær = père)'],
+  [/œ/g, 'eu', 'œ is eu (plœré)'],
+  [/ò/g, 'o', 'ò is open o'],
+  [/ì/g, 'i', 'ì is a plain i'],
+  [/ù/g, 'ou', 'ù is ou'],
+  [/ç/g, 's', 'ç is s (ça)'],
+  [/(?<!t)ch/g, 'tch', 'ch is tch (charogn)'],
+  [/sh/g, 'ch', 'sh is French ch (dìmansh)'],
+  [/ñ/g, 'gn', 'ñ is gn'],
+  [/w/g, 'ou', 'w is ou (zwazo = zouazo)'],
+  [/([^i])yin$/, '$1ien', 'final yin is ien (byin = bien)'],
+  [new RegExp('e(?=[^' + KV + 'nmh]+$)'), 'è', 'e in a closed last syllable is è (avek = avèque)'],
+  [/g(?=[eiéèêy])/g, 'gu', 'g stays hard before e, i, y'],
+  [new RegExp('ey(?![' + KV + '])', 'g'), 'èy', 'ey before a consonant'],
+  [/e(?!u)(?![nm](?![aeiouyéèêô]))/g, 'eu', 'plain e is the short eu sound (jedi = jeudi)'],
+  [new RegExp('([' + KV + '])s(?=[' + KV + '])', 'g'), '$1ss', 's between vowels stays s, not z (sosis)'],
+  [/ay$/, 'aille', 'final ay (travay = travaille)'],
+  [/èy$/, 'eille', 'final ey (zorey = zoreille)'],
+  [/ouy$/, 'ouille', 'final ouy (fouy = fouille)'],
+  [/oun$/, 'oune', 'final oun is oral (moun = moune)'],
+  [/k$/, 'que', 'final k is said (avek = avèque)'],
+  [/s$/, 'sse', 'final s is said (sis)'],
+  [new RegExp('([' + KV + '])([^' + KV + 'h]+)$'), (m, a, b) => b === 'n' ? m : a + b + 'e', 'final consonants are said (kat = kate, nonm = nonme); a lone final n stays nasal (dan)']
+];
 function frPart(p) {
   let s = p;
   if (!s) return s;
-  s = s.replace(/æ/g, 'è').replace(/œ/g, 'eu').replace(/ò/g, 'o').replace(/ì/g, 'i').replace(/ç/g, 's').replace(/ù/g, 'ou');
-  s = s.replace(/ch/g, 'tch').replace(/sh/g, 'ch').replace(/ñ/g, 'gn');
-  s = s.replace(/yin/g, 'ien').replace(/w/g, 'ou');
-  s = s.replace(/g(?=[eiéèêy])/g, 'gu');
-  s = s.replace(/ey(?![aeiouéèêôy])/g, 'èy');
-  s = s.replace(/e(?!u)(?![nm](?![aeiouyéèêô]))/g, 'eu');
-  s = s.replace(new RegExp('([' + FV + '])s(?=[' + FV + '])', 'g'), '$1ss');
-  const m = s.match(new RegExp('[^' + FVC + ']+$'));
-  if (m && m[0].length < s.length) {
-    const tail = m[0], before = s.slice(0, -tail.length);
-    const nasal = /^[nm]$/.test(tail) && /[aeiou]$/.test(before) && !/ou$/.test(before);
-    if (!nasal && tail !== 'h') s = before + (tail === 's' ? 'ss' : tail === 'k' ? 'qu' : tail) + 'e';
-  }
+  for (const [re, to] of MATRIX) s = s.replace(re, to);
   return s;
 }
 function toFr(text) {
@@ -2834,7 +2849,7 @@ function drawSheet() {
     (TTS.ok() && st.set.voice !== 0 ? '<button type="button" class="srow pick" id="sVp"><span class="lb">' + (v ? esc(voiceName(v)) + ' <small>' + voiceWhere(v) + '</small>' : 'No French voice on this device') + '</span>' + ico('fwd') + '</button>' +
       '<div class="srow"><span class="lb">Speed</span><span class="seg"><button type="button" data-r="0" aria-pressed="' + (st.set.rate === 0) + '">Slower</button><button type="button" data-r="1" aria-pressed="' + (st.set.rate !== 0) + '">Normal</button></span></div>' : '') +
     '<div class="srow"><span class="lb">Sounds</span><button type="button" class="tg" id="sSnd" aria-pressed="' + (!!st.set.snd) + '" aria-label="Sounds"></button></div>' +
-    (ADMIN ? '<div class="srow"><span class="lb">Admin mode</span><button type="button" class="tg" id="sAd" aria-pressed="' + adminOn() + '" aria-label="Admin mode"></button></div>' + (adminOn() ? '<div class="admrow"><span>' + edCount() + (edCount() === 1 ? ' correction' : ' corrections') + '</span><button class="btn" type="button" id="sAx"' + (edCount() ? '' : ' disabled') + '>' + ico('share') + 'Export</button></div>' : '') : '') +
+    (ADMIN ? '<div class="srow"><span class="lb">Admin mode</span><button type="button" class="tg" id="sAd" aria-pressed="' + adminOn() + '" aria-label="Admin mode"></button></div>' + (adminOn() ? '<div class="admrow"><span>' + edCount() + (edCount() === 1 ? ' correction' : ' corrections') + '</span><button class="btn" type="button" id="sAx"' + (edCount() ? '' : ' disabled') + '>' + ico('share') + 'Export</button><button class="btn" type="button" id="sAc"' + (edCount() ? '' : ' disabled') + '>' + (clearArm ? 'Tap again' : 'Clear') + '</button></div>' : '') : '') +
     '<div class="links"><button class="lnk" type="button" id="sPl">Placement test</button><button class="lnk" type="button" id="sExp">Export starred words</button><button class="lnk" type="button" id="sCr">Credits</button><button class="lnk red" type="button" id="sRst">' + (resetArm ? 'Tap again to erase all progress' : 'Reset progress') + '</button></div>';
   if ($('sIn')) $('sIn').onclick = signIn;
   if ($('sOut')) $('sOut').onclick = () => { try { firebase.auth().signOut(); } catch (e) {} };
@@ -2843,6 +2858,7 @@ function drawSheet() {
   $('sCr').onclick = openCredits;
   if ($('sAd')) $('sAd').onclick = () => { st.set.admin = adminOn() ? 0 : 1; st.set.t = now(); save(); document.body.classList.toggle('admin', adminOn()); SFX.tap(); drawSheet(); };
   if ($('sAx')) $('sAx').onclick = exportEd;
+  if ($('sAc')) $('sAc').onclick = () => { if (!clearArm) { clearArm = 1; drawSheet(); setTimeout(() => { clearArm = 0; if ($('sheet')) drawSheet(); }, 4000); return; } clearArm = 0; clearEd(); };
   $('sVoi').onclick = () => { st.set.voice = st.set.voice === 0 ? 1 : 0; st.set.t = now(); save(); drawSheet(); if (st.set.voice) TTS.say('Bonjou'); };
   if ($('sVp')) $('sVp').onclick = openVoices;
   b.querySelectorAll('[data-r]').forEach(x => x.onclick = () => { st.set.rate = +x.dataset.r; st.set.t = now(); save(); drawSheet(); TTS.say('Komen to yê?'); });
@@ -2882,7 +2898,7 @@ function exportStars() {
   const blob = new Blob([lines.join('\n') + '\n'], { type: 'text/tab-separated-values' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'diksyonaer-starred.tsv'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
-function resetAll() { const keep = { set: st.set, stars: st.stars, ed: st.ed || {} }; st = Object.assign(fresh(), keep, { rst: now(), mig: 1, migR: 1 }); viewU = null; touch(); save(); push(); renderAll(); toast('Progress reset'); }
+function resetAll() { const keep = { set: st.set, stars: st.stars, ed: st.ed || {} }; st = Object.assign(fresh(), keep, { rst: now(), mig: 1, migR: 1 }); viewU = null; touch(); save(); push(); renderAll(); toast(edCount() ? 'Progress reset. Corrections kept' : 'Progress reset'); }
 
 /* ================================================================ sync */
 const FB_CONFIG = { apiKey: "AIzaSyArsiLnB_B__5gIXn9RTdFWR7hYE2zXXVw", authDomain: "stages-5b440.firebaseapp.com", projectId: "stages-5b440", storageBucket: "stages-5b440.firebasestorage.app", messagingSenderId: "850080442646", appId: "1:850080442646:web:e7e25684927f41b2e70837" };
@@ -3077,7 +3093,7 @@ function openXList() {
   const el = overlay('xlist', '<div class="card" style="height:100%"><div class="ch"><span class="x101">101</span><h2>Word list</h2><button class="rb" type="button" data-x>' + ico('x') + '</button></div><div class="sw xs"><svg class="i mag"><use href="#i-mag"/></svg><input id="xq" type="search" placeholder="Search" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"></div><div class="list" id="xL"></div><div class="pager" id="xP"></div></div>');
   el.querySelector('[data-x]').onclick = () => closeOv('xlist');
   const list = el.querySelector('#xL');
-  const row = i => { const e = V[i], r = xrec(e); return '<div class="row xr">' + picHTML(e, 'xs') + '<span class="tx"><div class="w">' + esc(e.word) + (e.posLabel ? '<span class="p">' + esc(e.posLabel.split(',')[0]) + '</span>' : '') + '</div><div class="m">' + esc(e.senses.map(s => s.g).filter(Boolean).join('; ')) + '</div></span>' + spk(e.forms[0], 'sm') + '<span class="sg">' + barsHTML(r) + '</span></div>'; };
+  const row = i => { const e = V[i], r = xrec(e); return '<div class="row xr">' + picHTML(e, 'xs') + '<span class="tx"><div class="w">' + esc(e.word) + (e.posLabel ? '<span class="p">' + esc(e.posLabel.split(',')[0]) + '</span>' : '') + '</div><div class="m">' + esc(e.senses.map(s => s.g).filter(Boolean).join('; ')) + '</div></span>' + spk(e.forms[0], 'sm') + (adminOn() ? '<button class="rb admb" type="button" data-xe="' + i + '">' + ico('pen') + '</button>' : '') + '<span class="sg">' + barsHTML(r) + '</span></div>'; };
   const draw = () => {
     const H = list.clientHeight; if (!H) return;
     if (!L.rowH) { list.innerHTML = row(L.ids[0] || 0); L.rowH = list.firstChild.getBoundingClientRect().height || 58; }
@@ -3088,6 +3104,7 @@ function openXList() {
     const pg = Math.max(1, Math.ceil(L.ids.length / L.per));
     el.querySelector('#xP').innerHTML = pg > 1 ? '<button class="rb" type="button" data-d="-1"' + (L.page ? '' : ' disabled style="opacity:.3"') + '>' + ico('back') + '</button><span class="pgb"><i style="width:' + ((L.page + 1) / pg * 100).toFixed(1) + '%"></i></span><button class="rb" type="button" data-d="1"' + (L.page < pg - 1 ? '' : ' disabled style="opacity:.3"') + '>' + ico('fwd') + '</button>' : '';
     el.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { L.page += +b.dataset.d; SFX.tap(); draw(); });
+    list.querySelectorAll('[data-xe]').forEach(b => b.onclick = ev => { ev.stopPropagation(); openEditor({ f: 'x', e: V[+b.dataset.xe], x: null }); });
   };
   let qt = 0;
   el.querySelector('#xq').addEventListener('input', ev => { clearTimeout(qt); qt = setTimeout(() => { const q = DK.fold(ev.target.value.trim()); L.ids = !q ? V.map(e => e.id) : V.filter(e => e.forms.some(f => DK.fold(f).includes(q)) || DK.fold(e.senses.map(s => s.g).join(' ')).includes(q)).map(e => e.id); L.page = 0; draw(); }, 90); });
@@ -3283,6 +3300,9 @@ function editStep() {
   const id = s.w != null ? s.w : s.phrase != null ? s.phrase : (s.targets || [])[0];
   openEditor({ f, e: id != null ? ent(s, id) : null, x: s.s != null ? S[s.s] : null });
 }
+let clearArm = 0;
+/* wipe every correction on purpose (a progress reset never touches them); soft delete so it syncs, then reload the untouched data */
+async function clearEd() { const t = now(); for (const k in st.ed || {}) st.ed[k] = { f: st.ed[k].f, k: st.ed[k].k, off: 1, t }; save(); toast('Corrections cleared'); try { await push(); } catch (e) {} setTimeout(() => location.reload(), 400); }
 function edCount() { return Object.values(st.ed || {}).filter(r => !r.off).length; }
 function exportEd() {
   const L = [['file', 'original', 'field', 'was', 'now', 'note'].join('\t')];
