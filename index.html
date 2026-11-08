@@ -4,7 +4,7 @@
 <script>if (location.hostname === 'www.iosci.org') location.replace('https://iosci.org' + location.pathname + location.search + location.hash);</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#000000">
-<script>try { if (localStorage.getItem('dk-theme') === 'light') { document.documentElement.classList.add('light'); document.querySelector('meta[name=theme-color]').content = '#faf6ee'; } } catch (e) {}</script>
+<script>try { if (localStorage.getItem('dk-theme') !== 'dark') { document.documentElement.classList.add('light'); document.querySelector('meta[name=theme-color]').content = '#faf6ee'; } } catch (e) {}</script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -900,12 +900,28 @@ img.pic.li,.pic.li.ph{width:2.1rem;height:2.1rem;flex:none}
 .tfb.ok{outline:4px solid var(--ok);outline-offset:3px}
 .tfb.bad{outline:4px solid var(--bad);outline-offset:3px}
 
+/* the two readers */
+.avx{display:flex;flex-direction:column;align-items:center;gap:.15rem;flex:none}
+.avx svg{width:calc(3.6rem*var(--k));height:calc(3.6rem*var(--k));border-radius:50%;box-shadow:0 2px 0 rgba(0,0,0,.12)}
+.avx small{font-size:.72rem;color:var(--mid);letter-spacing:.02em}
+.avx.big svg{width:96px;height:96px}
+.avx.big small{font-size:.85rem}
+.play .avx{align-self:flex-end}
+.sbub{position:relative;display:flex;align-items:center;gap:.8rem;padding:calc(.7rem*var(--k)) calc(.9rem*var(--k));border-radius:22px;background:var(--raised);border:1px solid var(--line)}
+.sbub::before{content:'';position:absolute;left:-9px;bottom:22px;width:16px;height:16px;background:var(--raised);border-left:1px solid var(--line);border-bottom:1px solid var(--line);transform:rotate(45deg)}
+.play{gap:.7rem}
+.vduo{display:flex;justify-content:center;gap:2rem;padding:.6rem 0}
+.lhp#lsA{width:auto;height:auto;background:none;border-radius:0;position:relative}
+.lhp#lsA .lw{inset:0;width:96px;height:96px;border-color:var(--gold)}
+.lbub{display:flex;flex-direction:column;align-items:center;gap:.4rem;padding:.8rem 1.2rem;border-radius:22px;background:var(--raised);border:1px solid var(--line);position:relative;max-width:min(92%,24rem);margin-top:.4rem}
+.lbub::before{content:'';position:absolute;top:-9px;left:50%;margin-left:-8px;width:16px;height:16px;background:var(--raised);border-left:1px solid var(--line);border-top:1px solid var(--line);transform:rotate(45deg)}
+
 </style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs><linearGradient id="bgr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset=".45" stop-color="#f3c969"/><stop offset="1" stop-color="#b47c1f"/></linearGradient><linearGradient id="kg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset=".5" stop-color="#f3c969"/><stop offset="1" stop-color="#c38a2a"/></linearGradient><linearGradient id="kc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d5fd0"/><stop offset="1" stop-color="#1d327f"/></linearGradient><radialGradient id="ks" cx="50%" cy="50%" r="50%"><stop offset=".55" stop-color="#f3c969" stop-opacity=".55"/><stop offset="1" stop-color="#f3c969" stop-opacity="0"/></radialGradient><linearGradient id="dkg" gradientUnits="userSpaceOnUse" x1="0" y1="2" x2="0" y2="88"><stop offset="0" stop-color="#fff3c4"/><stop offset=".45" stop-color="#f3c969"/><stop offset="1" stop-color="#c38a2a"/></linearGradient></defs>
-  <symbol id="i-ros" viewBox="0 0 100 100"><path d="M57.5 7.7Q66.8 4.0 71.5 12.8Q81.5 12.5 82.9 22.4Q92.4 25.5 90.4 35.3Q98.3 41.5 93.0 50.0Q98.3 58.5 90.4 64.7Q92.4 74.5 82.9 77.6Q81.5 87.5 71.5 87.2Q66.8 96.0 57.5 92.3Q50.0 99.0 42.5 92.3Q33.2 96.0 28.5 87.2Q18.5 87.5 17.1 77.6Q7.6 74.5 9.6 64.7Q1.7 58.5 7.0 50.0Q1.7 41.5 9.6 35.3Q7.6 25.5 17.1 22.4Q18.5 12.5 28.5 12.8Q33.2 4.0 42.5 7.7Q50.0 1.0 57.5 7.7Z"/></symbol><symbol id="i-fleur" viewBox="0 0 100 100"><path d="M50 3.5 C57.5 13,63 24,63 35.5 C63 45.5,58 52.5,55.5 60 L44.5 60 C42 52.5,37 45.5,37 35.5 C37 24,42.5 13,50 3.5 Z"/><path d="M55.5 60 C56 45,63 30,76.5 25.5 C87 22,96.5 28,96.5 37.5 C96.5 45,91 50,84 49.5 C88.5 46.5,90.5 41.5,88 38 C85 34,78.5 34,74 38 C69 43,67 51,67 60 Z"/><path d="M54 67 C55.5 76,62.5 82.5,72 82 C80 81.5,84 75,81.5 69.5 C80.5 74,76.5 76.5,72.5 75.5 C66.5 74.5,63.5 71,63.5 67 Z"/><path transform="matrix(-1 0 0 1 100 0)" d="M55.5 60 C56 45,63 30,76.5 25.5 C87 22,96.5 28,96.5 37.5 C96.5 45,91 50,84 49.5 C88.5 46.5,90.5 41.5,88 38 C85 34,78.5 34,74 38 C69 43,67 51,67 60 Z"/><path transform="matrix(-1 0 0 1 100 0)" d="M54 67 C55.5 76,62.5 82.5,72 82 C80 81.5,84 75,81.5 69.5 C80.5 74,76.5 76.5,72.5 75.5 C66.5 74.5,63.5 71,63.5 67 Z"/><rect x="31" y="57.5" width="38" height="10" rx="3.5"/><path d="M45.5 67 C45.5 74,47.5 80,50 86 C52.5 80,54.5 74,54.5 67 Z"/><g fill="none" stroke="#9a6a1c" stroke-width=".7" opacity=".5"><path d="M50 12 C50 30,50 45,50 57"/><line x1="31.5" y1="62.5" x2="68.5" y2="62.5"/></g></symbol>
+  <symbol id="i-ros" viewBox="0 0 100 100"><path d="M57.5 7.7Q66.8 4.0 71.5 12.8Q81.5 12.5 82.9 22.4Q92.4 25.5 90.4 35.3Q98.3 41.5 93.0 50.0Q98.3 58.5 90.4 64.7Q92.4 74.5 82.9 77.6Q81.5 87.5 71.5 87.2Q66.8 96.0 57.5 92.3Q50.0 99.0 42.5 92.3Q33.2 96.0 28.5 87.2Q18.5 87.5 17.1 77.6Q7.6 74.5 9.6 64.7Q1.7 58.5 7.0 50.0Q1.7 41.5 9.6 35.3Q7.6 25.5 17.1 22.4Q18.5 12.5 28.5 12.8Q33.2 4.0 42.5 7.7Q50.0 1.0 57.5 7.7Z"/></symbol><symbol id="av-t" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#cfe3f7"/><path d="M8 64c2-12 12-17 24-17s22 5 24 17z" fill="#2f4f7a"/><path d="M26 44h12v6c-2 2-10 2-12 0z" fill="#93603f"/><path d="M27 50l5 6 5-6" fill="#fff" opacity=".9"/><ellipse cx="17.5" cy="31" rx="3" ry="4" fill="#a06844"/><ellipse cx="46.5" cy="31" rx="3" ry="4" fill="#a06844"/><ellipse cx="32" cy="30" rx="14.5" ry="17" fill="#a86f4c"/><path d="M17.5 27c-.5-11 6-16 14.5-16s15 5 14.5 16c-2-5-5-7-8-7.5-4 2-10 2.5-14 .5-3 1-5.5 3-7 7z" fill="#2a1d17"/><path d="M19 33c0 10 6 15 13 15s13-5 13-15c-2 5-4 6-6 6.5-4-2-10-2-14 0-2-.5-4-1.5-6-6.5z" fill="#2a1d17" opacity=".85"/><path d="M27 41c3 2 7 2 10 0" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/><ellipse cx="26" cy="29" rx="1.7" ry="2.1" fill="#1b1310"/><ellipse cx="38" cy="29" rx="1.7" ry="2.1" fill="#1b1310"/><path d="M22.5 24.5c2-1.3 4.5-1.4 6.5-.4M35 24.1c2-1 4.5-.9 6.5.4" stroke="#2a1d17" stroke-width="1.7" fill="none" stroke-linecap="round"/><path d="M32 30v5.5h-2" stroke="#7d4d31" stroke-width="1.3" fill="none" stroke-linecap="round"/></symbol><symbol id="av-a" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#fadbe3"/><g fill="#2b1a14"><circle cx="18" cy="22" r="9"/><circle cx="46" cy="22" r="9"/><circle cx="32" cy="14" r="11"/><circle cx="14" cy="34" r="8"/><circle cx="50" cy="34" r="8"/><circle cx="22" cy="12" r="7"/><circle cx="42" cy="12" r="7"/><circle cx="16" cy="44" r="6"/><circle cx="48" cy="44" r="6"/></g><path d="M8 64c2-12 12-17 24-17s22 5 24 17z" fill="#e2a93b"/><path d="M26.5 44h11v6c-2 2-9 2-11 0z" fill="#b57a52"/><ellipse cx="32" cy="31" rx="13.5" ry="16" fill="#c48a62"/><path d="M18.5 28c1-9 7-13 13.5-13s12.5 4 13.5 13c-3-5-8-7-13.5-7s-10.5 2-13.5 7z" fill="#2b1a14"/><circle cx="18.6" cy="38" r="2.4" fill="none" stroke="#f3c969" stroke-width="1.5"/><circle cx="45.4" cy="38" r="2.4" fill="none" stroke="#f3c969" stroke-width="1.5"/><ellipse cx="26.5" cy="31" rx="1.7" ry="2.1" fill="#1b1310"/><ellipse cx="37.5" cy="31" rx="1.7" ry="2.1" fill="#1b1310"/><path d="M24.3 28.4l-1.2-1.1M39.7 28.4l1.2-1.1" stroke="#1b1310" stroke-width="1.1" stroke-linecap="round"/><circle cx="23.5" cy="36" r="2.4" fill="#e77b7b" opacity=".35"/><circle cx="40.5" cy="36" r="2.4" fill="#e77b7b" opacity=".35"/><path d="M28 39.5c2.3 2.2 5.7 2.2 8 0" stroke="#8a3b3b" stroke-width="1.7" fill="none" stroke-linecap="round"/><path d="M32 32v4h-1.6" stroke="#9a6644" stroke-width="1.2" fill="none" stroke-linecap="round"/></symbol><symbol id="i-fleur" viewBox="0 0 100 100"><path d="M50 3.5 C57.5 13,63 24,63 35.5 C63 45.5,58 52.5,55.5 60 L44.5 60 C42 52.5,37 45.5,37 35.5 C37 24,42.5 13,50 3.5 Z"/><path d="M55.5 60 C56 45,63 30,76.5 25.5 C87 22,96.5 28,96.5 37.5 C96.5 45,91 50,84 49.5 C88.5 46.5,90.5 41.5,88 38 C85 34,78.5 34,74 38 C69 43,67 51,67 60 Z"/><path d="M54 67 C55.5 76,62.5 82.5,72 82 C80 81.5,84 75,81.5 69.5 C80.5 74,76.5 76.5,72.5 75.5 C66.5 74.5,63.5 71,63.5 67 Z"/><path transform="matrix(-1 0 0 1 100 0)" d="M55.5 60 C56 45,63 30,76.5 25.5 C87 22,96.5 28,96.5 37.5 C96.5 45,91 50,84 49.5 C88.5 46.5,90.5 41.5,88 38 C85 34,78.5 34,74 38 C69 43,67 51,67 60 Z"/><path transform="matrix(-1 0 0 1 100 0)" d="M54 67 C55.5 76,62.5 82.5,72 82 C80 81.5,84 75,81.5 69.5 C80.5 74,76.5 76.5,72.5 75.5 C66.5 74.5,63.5 71,63.5 67 Z"/><rect x="31" y="57.5" width="38" height="10" rx="3.5"/><path d="M45.5 67 C45.5 74,47.5 80,50 86 C52.5 80,54.5 74,54.5 67 Z"/><g fill="none" stroke="#9a6a1c" stroke-width=".7" opacity=".5"><path d="M50 12 C50 30,50 45,50 57"/><line x1="31.5" y1="62.5" x2="68.5" y2="62.5"/></g></symbol>
   <symbol id="i-king" viewBox="0 0 120 150"><g id="sun" opacity=".9"><circle cx="60" cy="52" r="50" fill="url(#ks)"/><g stroke="#f3c969" stroke-width="3" stroke-linecap="round" opacity=".55"><line x1="60" y1="0" x2="60" y2="10"/><line x1="8" y1="52" x2="18" y2="52"/><line x1="102" y1="52" x2="112" y2="52"/><line x1="23" y1="15" x2="30" y2="22"/><line x1="97" y1="15" x2="90" y2="22"/><line x1="23" y1="89" x2="30" y2="82"/><line x1="97" y1="89" x2="90" y2="82"/></g></g><path d="M12 150 C14 120 32 104 60 104 C88 104 106 120 108 150 Z" fill="url(#kc)"/><g fill="#f3c969" opacity=".9"><path d="M30 132 l2.2 -5 2.2 5 -2.2 2z"/><path d="M86 132 l2.2 -5 2.2 5 -2.2 2z"/><path d="M58 142 l2.2 -5 2.2 5 -2.2 2z"/><path d="M42 146 l2 -4.5 2 4.5 -2 1.8z"/><path d="M74 146 l2 -4.5 2 4.5 -2 1.8z"/></g><path d="M30 112 C44 122 76 122 90 112 L84 104 C70 110 50 110 36 104 Z" fill="#fbf7ef"/><g fill="#1a1a1a"><circle cx="44" cy="113" r="1.3"/><circle cx="56" cy="116" r="1.3"/><circle cx="68" cy="115" r="1.3"/><circle cx="79" cy="111" r="1.3"/></g><path d="M54 104 L60 116 L66 104 Z" fill="#fbf7ef"/><path d="M57 106 L60 113 L63 106Z" fill="#e8e0d0"/><g fill="#5a3216"><circle cx="31" cy="60" r="14"/><circle cx="27" cy="77" r="13"/><circle cx="29" cy="93" r="12.5"/><circle cx="36" cy="106" r="10"/><circle cx="89" cy="60" r="14"/><circle cx="93" cy="77" r="13"/><circle cx="91" cy="93" r="12.5"/><circle cx="84" cy="106" r="10"/><circle cx="42" cy="44" r="14"/><circle cx="78" cy="44" r="14"/><circle cx="60" cy="40" r="15"/></g><g fill="#7a4620"><circle cx="29" cy="58" r="8"/><circle cx="25" cy="76" r="7.5"/><circle cx="28" cy="92" r="7"/><circle cx="35" cy="104" r="5.5"/><circle cx="91" cy="58" r="8"/><circle cx="95" cy="76" r="7.5"/><circle cx="92" cy="92" r="7"/><circle cx="85" cy="104" r="5.5"/><circle cx="44" cy="41" r="7.5"/><circle cx="76" cy="41" r="7.5"/></g><ellipse cx="60" cy="68" rx="21" ry="24" fill="#f7d5b5"/><circle cx="48" cy="77" r="4.2" fill="#f29b8f" opacity=".55"/><circle cx="72" cy="77" r="4.2" fill="#f29b8f" opacity=".55"/><g class="eyes"><ellipse cx="51.5" cy="67" rx="2.6" ry="3.2" fill="#2a1a10"/><ellipse cx="68.5" cy="67" rx="2.6" ry="3.2" fill="#2a1a10"/><circle cx="52.3" cy="66" r=".9" fill="#fff"/><circle cx="69.3" cy="66" r=".9" fill="#fff"/></g><path d="M46.5 61.5 Q51.5 59 55.5 61" stroke="#5a3216" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M64.5 61 Q68.5 59 73.5 61.5" stroke="#5a3216" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M60 69 Q62.5 74 59.5 75" stroke="#d9a07c" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M54 80 Q60 85 66 80" stroke="#8a3a22" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M40 38 L42 18 L51 29 L60 11 L69 29 L78 18 L80 38 Z" fill="url(#kg)" stroke="#a87418" stroke-width="1"/><rect x="39" y="34" width="42" height="7" rx="2.5" fill="url(#kg)" stroke="#a87418" stroke-width="1"/><circle cx="60" cy="26" r="3.2" fill="#d6304a"/><circle cx="46" cy="30" r="2" fill="#2f6be0"/><circle cx="74" cy="30" r="2" fill="#2f6be0"/><g fill="#fff3c4"><circle cx="42" cy="18" r="2"/><circle cx="60" cy="11" r="2.2"/><circle cx="78" cy="18" r="2"/></g><g fill="#d6304a"><circle cx="47" cy="37.5" r="1.4"/><circle cx="60" cy="37.5" r="1.4"/><circle cx="73" cy="37.5" r="1.4"/></g></symbol>
   <symbol id="i-gram" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="16" rx="2.5"/><line x1="3.5" y1="9" x2="20.5" y2="9"/><line x1="10" y1="9" x2="10" y2="20"/><line x1="10" y1="14.5" x2="20.5" y2="14.5"/></symbol>
   <symbol id="i-back" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></symbol>
@@ -1965,16 +1981,24 @@ const TTS = (() => {
   const BAD = /eloquence|\b(eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley|albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|fred|junior|kathy|ralph)\b|novelty/i;
   const score = v => { const n = v.name + ' ' + (v.voiceURI || ''); return (BAD.test(n) ? -40 : 0) + (/premium/i.test(n) ? 12 : /enhanced|améliorée/i.test(n) ? 10 : 0) + (/natural|neural|online/i.test(n) ? 11 : 0) + (/siri/i.test(n) ? 8 : 0) + (/google/i.test(n) ? 6 : 0) + (/\b(thomas|amélie|amelie|audrey|aurélie|aurelie|marie|daniel|virginie|denise|henri|eloise|vivienne|rémy|remy|juliette|jules|chantal|nicolas)\b/i.test(n) ? 4 : 0) + (/fr[-_]FR/i.test(v.lang) ? 2 : /fr[-_]CA/i.test(v.lang) ? 1 : 0) + (v.localService === false ? 1 : 0); };
   const list = () => { if (!ok()) return []; return speechSynthesis.getVoices().filter(v => /^fr([-_]|$)/i.test(v.lang)).sort((a, b) => score(b) - score(a)); };
+  /* two speakers take turns: Thomas and Amélie (Apple names); elsewhere the nearest man's and woman's French voices */
+  const MALE = /thomas|daniel|henri|paul|nicolas|jacques|guillaume|antoine|claude|r[ée]my|mathieu|henri|jean|eloi|fabrice|gerard|g[ée]rard|alain|louis|vincent|hugo|yves|olivier|remi|male|homme/i;
+  const FEMALE = /am[ée]lie|audrey|marie|aur[ée]lie|julie|denise|c[ée]line|virginie|sylvie|chantal|l[ée]a|hortense|elsa|caroline|eloise|jacqueline|vivienne|sophie|clara|female|femme/i;
+  let pair = { t: null, a: null }, who = 't';
   const pick = () => {
-    const vs = list(); let want = ''; try { want = localStorage.getItem(VK) || ''; } catch (e) {}
-    voice = (want && vs.find(v => v.voiceURI === want || v.name === want)) || vs[0] || null;
+    const vs = list();
+    const th = vs.find(v => /thomas/i.test(v.name)) || vs.find(v => MALE.test(v.name)) || vs[0] || null;
+    const am = vs.find(v => /am[ée]lie/i.test(v.name)) || vs.find(v => FEMALE.test(v.name) && v !== th) || vs.find(v => v !== th) || th;
+    pair = { t: th, a: am }; voice = th;
     document.body.classList.toggle('tts', !!voice);
   };
   if (ok()) { pick(); try { speechSynthesis.addEventListener('voiceschanged', pick); } catch (e) { speechSynthesis.onvoiceschanged = pick; } }
   const rate = slow => (slow ? 0.62 : 0.9) * (st.set.rate === 0 ? 0.8 : 1);
   function utter(text, slow, end) {
-    const u = new SpeechSynthesisUtterance(DK.toFr(text));
-    u.voice = voice; u.lang = voice.lang; u.rate = rate(slow);
+    const u = new SpeechSynthesisUtterance(DK.toFr(text)), v = pair[who] || voice;
+    u.voice = v; u.lang = v.lang; u.rate = rate(slow);
+    /* one French voice only: lower for Thomas, higher for Amélie */
+    if (pair.t === pair.a) u.pitch = who === 'a' ? 1.25 : 0.85;
     if (end) { let done = false; const fin = () => { if (!done) { done = true; clearTimeout(tm); end(); } }; u.onend = fin; u.onerror = fin; const tm = setTimeout(fin, 1600 + text.length * 120 / u.rate); }
     return u;
   }
@@ -1988,6 +2012,7 @@ const TTS = (() => {
     if (!voice) pick();
     if (!voice) { if (!warned && o.tap) { warned = 1; toast('No French voice on this device. Profile › Voice shows how to add one'); } if (o.end) o.end(); return; }
     wake();
+    if (o.who) who = o.who;
     const t = now(), slow = o.slow || (o.tap && text === last && t - lastT < 2500 && !o.fast);
     last = text; lastT = slow ? 0 : t;
     try { speechSynthesis.cancel(); speechSynthesis.speak(utter(text, slow, o.end)); } catch (e) { if (o.end) o.end(); }
@@ -2011,7 +2036,8 @@ const TTS = (() => {
     };
     next();
   }
-  function set(uri) { try { localStorage.setItem(VK, uri); } catch (e) {} pick(); }
+  function set() { pick(); }
+  const speaker = w => { if (w) who = w; return who; };
   /* English, for the hands-free listening lessons */
   const enVoice = () => { if (!ok()) return null; return speechSynthesis.getVoices().filter(v => /^en([-_]|$)/i.test(v.lang)).sort((a, b) => score(b) - score(a) + ((/en[-_](GB|US)/i.test(b.lang) ? 1 : 0) - (/en[-_](GB|US)/i.test(a.lang) ? 1 : 0)))[0] || null; };
   function sayEn(text, end) {
@@ -2020,7 +2046,7 @@ const TTS = (() => {
     const v = enVoice(); wake();
     try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'en-GB'; u.rate = 0.95; let done = false; const fin = () => { if (!done) { done = true; clearTimeout(tm); if (end) end(); } }; u.onend = fin; u.onerror = fin; const tm = setTimeout(fin, 1800 + text.length * 110); speechSynthesis.speak(u); } catch (e) { if (end) end(); }
   }
-  return { say, sayEn, seq, set, list, cur: () => voice, stop() { gen++; try { if (ok()) speechSynthesis.cancel(); } catch (e) {} }, has: () => !!voice, ok, score };
+  return { say, sayEn, seq, set, list, speaker, cur: () => voice, stop() { gen++; try { if (ok()) speechSynthesis.cancel(); } catch (e) {} }, has: () => !!voice, ok, score };
 })();
 const spk = (text, extra = '') => '<button class="spk ' + extra + '" type="button" data-say="' + esc(text) + '" aria-label="Listen">' + ico('snd') + '</button>';
 document.addEventListener('click', ev => { const b = ev.target.closest && ev.target.closest('.spk'); if (b && b.dataset.say != null) { ev.stopPropagation(); TTS.say(b.dataset.say, { tap: true }); } }, true);
@@ -2201,7 +2227,7 @@ function layoutPath() {
   });
 }
 function applyTheme() {
-  const L = st.set.theme === 'light';
+  const L = st.set.theme !== 'dark';
   document.documentElement.classList.toggle('light', L);
   const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = L ? '#faf6ee' : '#000000';
   try { localStorage.setItem('dk-theme', L ? 'light' : 'dark'); } catch (e) {}
@@ -2422,6 +2448,7 @@ function nextStep() {
   if ((!TTS.has() || P.noAudio || st.set.voice === 0) && step.type === 'hear') { P.i++; return nextStep(); }
   if ((!TTS.has() || P.noAudio || st.set.voice === 0) && (step.listen || step.dir === 'dict')) { step = P.steps[P.i] = Object.assign({}, step, step.listen ? { listen: false } : { dir: 'en2kl' }); }
   TTS.stop(); $('kbx').innerHTML = '';
+  TTS.speaker(P.i % 2 ? 'a' : 't');
   const stg = $('stg');
   stg.className = 'stage' + (step.type === 'intro' || step.type === 'speak' || step.type === 'read' ? ' mid' : ''); void stg.offsetWidth; stg.classList.add('enter');
   stg.innerHTML = '';
@@ -2632,7 +2659,10 @@ function keyboard(inp, en) {
   return k;
 }
 const hw = e => (e.teach || e.word);
-const playHTML = () => '<div class="play"><button class="pbig" type="button" id="pPl" aria-label="Play">' + ico('snd') + '</button><button class="pslow" type="button" id="pSl" aria-label="Slow">' + ico('turtle') + '</button></div><button class="nolisten" type="button" id="pNL">' + ico('eye') + 'Can\'t listen now</button>';
+/* the two readers: original cartoon portraits */
+const AVN = { t: 'Thomas', a: 'Amélie' };
+const avHTML = (w, big) => '<span class="avx av-' + w + (big ? ' big' : '') + '"><svg viewBox="0 0 64 64"><use href="#av-' + w + '"/></svg><small>' + AVN[w] + '</small></span>';
+const playHTML = () => '<div class="play">' + avHTML(TTS.speaker()) + '<div class="sbub"><button class="pbig" type="button" id="pPl" aria-label="Play">' + ico('snd') + '</button><button class="pslow" type="button" id="pSl" aria-label="Slow">' + ico('turtle') + '</button></div></div><button class="nolisten" type="button" id="pNL">' + ico('eye') + 'Can\'t listen now</button>';
 function wirePlay(stg, text) { const nl = stg.querySelector('#pNL'); if (nl) nl.onclick = () => { P.noAudio = true; TTS.stop(); nextStep(); }; const a = stg.querySelector('#pPl'), b = stg.querySelector('#pSl'); if (a) a.onclick = () => { a.classList.remove('go'); void a.offsetWidth; a.classList.add('go'); TTS.say(text, { fast: true }); }; if (b) b.onclick = () => TTS.say(text, { slow: true }); }
 /* hear it, then answer: tf = does this English match what you heard (red no, green yes); mc = pick the meaning */
 function hear(step, stg) {
@@ -3089,15 +3119,15 @@ function drawSheet() {
   b.innerHTML = acct +
     '<div class="kv"><div><b>' + learnedN() + '</b><small>course words</small></div><div><b>' + Object.keys(st.x).length + '</b><small>101 words</small></div><div><b>' + bestStreak() + '</b><small>best streak</small></div></div>' +
     '<div class="srow"><span class="lb">Voice</span><button type="button" class="tg" id="sVoi" aria-pressed="' + (st.set.voice !== 0) + '" aria-label="Voice"></button></div>' +
-    (TTS.ok() && st.set.voice !== 0 ? '<button type="button" class="srow pick" id="sVp"><span class="lb">' + (v ? esc(voiceName(v)) + ' <small>' + voiceWhere(v) + '</small>' : 'No French voice on this device') + '</span>' + ico('fwd') + '</button>' +
+    (TTS.ok() && st.set.voice !== 0 ? (v ? '' : '<button type="button" class="srow pick" id="sVp"><span class="lb">No French voice: how to add one</span>' + ico('fwd') + '</button>') +
       '<div class="srow"><span class="lb">Speed</span><span class="seg"><button type="button" data-r="0" aria-pressed="' + (st.set.rate === 0) + '">Slower</button><button type="button" data-r="1" aria-pressed="' + (st.set.rate !== 0) + '">Normal</button></span></div>' : '') +
-    '<div class="srow"><span class="lb">Sounds</span><button type="button" class="tg" id="sSnd" aria-pressed="' + (!!st.set.snd) + '" aria-label="Sounds"></button><span class="lb" style="text-align:right">Light theme</span><button type="button" class="tg" id="sLt" aria-pressed="' + (st.set.theme === 'light') + '" aria-label="Light theme"></button></div>' +
+    '<div class="srow"><span class="lb">Sounds</span><button type="button" class="tg" id="sSnd" aria-pressed="' + (!!st.set.snd) + '" aria-label="Sounds"></button><span class="lb" style="text-align:right">Light theme</span><button type="button" class="tg" id="sLt" aria-pressed="' + (st.set.theme !== 'dark') + '" aria-label="Light theme"></button></div>' +
     (ADMIN ? '<div class="srow"><span class="lb">Admin mode</span><button type="button" class="tg" id="sAd" aria-pressed="' + adminOn() + '" aria-label="Admin mode"></button></div>' + (adminOn() ? '<div class="admrow"><span>' + edCount() + (edCount() === 1 ? ' correction' : ' corrections') + '</span><button class="btn" type="button" id="sAx"' + (edCount() ? '' : ' disabled') + '>' + ico('share') + 'Export</button><button class="btn" type="button" id="sAc"' + (edCount() ? '' : ' disabled') + '>' + (clearArm ? 'Tap again' : 'Clear') + '</button></div>' : '') : '') +
     '<div class="links"><button class="lnk" type="button" id="sBd">Badges ' + BADGES.earned().length + '/' + BADGES.L.length + '</button><button class="lnk" type="button" id="sPl">Placement test</button><button class="lnk" type="button" id="sExp">Export starred words</button><button class="lnk" type="button" id="sCr">Credits</button><button class="lnk red" type="button" id="sRst">' + (resetArm ? 'Tap again to erase all progress' : 'Reset progress') + '</button></div>';
   if ($('sIn')) $('sIn').onclick = signIn;
   if ($('sOut')) $('sOut').onclick = () => { try { firebase.auth().signOut(); } catch (e) {} };
   $('sBd').onclick = openBadges;
-  $('sLt').onclick = () => { st.set.theme = st.set.theme === 'light' ? 'dark' : 'light'; st.set.t = now(); save(); push(); applyTheme(); SFX.tap(); drawSheet(); };
+  $('sLt').onclick = () => { st.set.theme = st.set.theme !== 'dark' ? 'dark' : 'light'; st.set.t = now(); save(); push(); applyTheme(); SFX.tap(); drawSheet(); };
   $('sSnd').onclick = () => { st.set.snd = st.set.snd ? 0 : 1; st.set.t = now(); save(); SFX.tap(); drawSheet(); };
   $('sExp').onclick = exportStars;
   $('sCr').onclick = openCredits;
@@ -3122,15 +3152,14 @@ function voiceHelp(ios) {
 }
 function openVoices() {
   SFX.tap();
-  const el = overlay('voices', '<div class="card"><div class="ch"><span style="width:40px"></span><h2>Voice</h2><button class="rb" type="button" data-x>' + ico('x') + '</button></div><div class="cb vl" id="vB"></div></div>');
+  const el = overlay('voices', '<div class="card"><div class="ch"><span style="width:40px"></span><h2>Voices</h2><button class="rb" type="button" data-x>' + ico('x') + '</button></div><div class="cb vl" id="vB"></div></div>');
   el.querySelector('[data-x]').onclick = () => closeOv('voices');
   const draw = () => {
     const vs = TTS.list(), cur = TTS.cur(), best = vs[0];
     const ios = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    el.querySelector('#vB').innerHTML = '<div class="vgrid">' + vs.slice(0, 12).map((v, i) => '<button type="button" class="vrow' + (cur === v ? ' on' : '') + '" data-i="' + i + '"><span class="vn">' + esc(voiceName(v)) + (v === best ? '<span class="tagb">Best</span>' : '') + '</span><small>' + voiceWhere(v) + (/premium|enhanced/i.test(v.name + v.voiceURI) ? ' · enhanced' : '') + '</small>' + (cur === v ? ico('check') : '') + '</button>').join('') + '</div>' +
+    el.querySelector('#vB').innerHTML = '<div class="vduo">' + avHTML('t', 1) + avHTML('a', 1) + '</div><p class="vtip">Thomas and Amélie take turns reading to you.</p>' +
       (vs.length ? '' : '<p class="vtip"><b>No French voice yet.</b> Diksyonær reads Kréyòl with a French voice, so add one, then reopen the app:</p>') +
       '<p class="vtip">' + voiceHelp(ios) + '</p>';
-    el.querySelectorAll('[data-i]').forEach(x => x.onclick = () => { const v = vs[+x.dataset.i]; TTS.set(v.voiceURI || v.name); draw(); drawSheet(); TTS.say('Bonjou! Komen to yê?'); });
     fit(el.querySelector('.cb'), 0.6);
   };
   draw();
@@ -3727,12 +3756,14 @@ function openListen(U, hk) {
   const items = listenItems(U, hk), D = distOf(U);
   const L = { i: 0, on: false, show: true, tok: 0 };
   const el = overlay('listen', '<div class="card lsn"><div class="ch"><button class="rb" type="button" data-x aria-label="Close">' + ico('x') + '</button><div class="ut"><small>' + esc(D.kr) + ' · Unit ' + (U % SEC + 1) + '</small><b>Listen</b></div><button class="rb" type="button" id="lsT" aria-label="Show or hide text">' + ico('eye') + '</button></div>' +
-    '<div class="cb lsb"><div class="lhp"><svg class="i"><use href="#i-hp"/></svg><i class="lw"></i><i class="lw w2"></i></div><div class="lpic" id="lsP"></div><div class="lk" id="lsK"></div><div class="len" id="lsE"></div><div class="lbar"><i id="lsB"></i></div><small class="lcnt" id="lsN"></small></div>' +
+    '<div class="cb lsb"><div class="lhp" id="lsA"></div><div class="lbub"><div class="lpic" id="lsP"></div><div class="lk" id="lsK"></div><div class="len" id="lsE"></div></div><div class="lbar"><i id="lsB"></i></div><small class="lcnt" id="lsN"></small></div>' +
     '<div class="lctl"><button class="rb lg" type="button" id="lsPv" aria-label="Previous">' + ico('back') + '</button><button class="lplay" type="button" id="lsGo" aria-label="Play">' + ico('play', 'f') + '</button><button class="rb lg" type="button" id="lsNx" aria-label="Next">' + ico('fwd') + '</button></div>' +
     '<div class="lfoot"><button class="btn acc" type="button" id="lsTest">' + ico('hp') + (hk != null && !hpDone(U, hk) ? 'Take the listening test' : 'Listening test') + '</button></div></div>');
   const $l = id => el.querySelector('#' + id);
   const draw = () => {
     const it = items[L.i] || {};
+    const w = L.i % 2 ? 'a' : 't'; TTS.speaker(w);
+    $l('lsA').innerHTML = avHTML(w, 1) + '<i class="lw"></i><i class="lw w2"></i>';
     $l('lsP').innerHTML = pimg(it.pic, 'lg');
     $l('lsK').textContent = L.show ? it.k || '' : '· · ·';
     $l('lsE').textContent = L.show ? it.en || '' : '';
