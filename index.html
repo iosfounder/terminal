@@ -641,7 +641,9 @@ body.tts .gex .r .k::after{content:'';display:inline-block;width:.85em;height:.8
 body.admin .admb{display:inline-flex!important}
 .ph .admb{width:36px;height:36px}
 .adm{font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:#1d1500;background:var(--gold);border-radius:999px;padding:.12rem .5rem;margin-left:.3rem}
-.cb.ed{display:flex;flex-direction:column;gap:calc(.8rem*var(--k))}
+.cb.ed{display:flex;flex-direction:column;gap:calc(.8rem*var(--k));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-bottom:2rem}
+.cb.ed>*{flex:none}
+#sheet .cb{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .eg{display:flex;flex-direction:column;gap:calc(.45rem*var(--k));padding:calc(.7rem*var(--k)) .8rem;border:1px solid var(--line);border-radius:16px;background:var(--raised)}
 .eg>small{color:var(--gold);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase}
 .ef{display:flex;flex-direction:column;gap:.2rem}
@@ -874,6 +876,29 @@ img.pic.li,.pic.li.ph{width:2.1rem;height:2.1rem;flex:none}
 .lplay svg{width:30px;height:30px;stroke-width:2.6}
 .lfoot{flex:none;display:flex;padding:.6rem 1rem calc(1rem + var(--sb))}
 .lfoot .btn{flex:1}
+
+/* golden listening checkpoint */
+.node.hp .c{border-radius:50%;background:linear-gradient(145deg,#ffe9a8,#f3c969 45%,#b47c1f);border-color:#f3c969;color:#3a2800}
+.node.hp.lock .c{background:var(--raised);border-color:var(--gold);color:var(--gold);opacity:.8}
+.node.hp.done .c{background:var(--gold-a);border-color:var(--gold);color:var(--gold)}
+.node.hp.open .c::before{border-color:var(--gold)}
+.node.hp .lb{color:var(--gold)}
+/* hearing cards */
+.hear{display:flex;flex-direction:column;align-items:center;gap:.7rem;width:100%;text-align:center}
+.hear .hq{margin:.4rem 0 0;color:var(--mid);font-size:.95rem}
+.hclaim{font-size:clamp(1.3rem,6vw,1.9rem);line-height:1.25;padding:.9rem 1.1rem;border-radius:18px;background:var(--raised);border:1px solid var(--line);max-width:24rem}
+.hopts{display:flex;flex-direction:column;gap:.5rem;width:min(100%,24rem)}
+.hopt{padding:.85rem 1rem;border-radius:14px;background:var(--raised);border:2px solid var(--line2);font-size:1.05rem;color:var(--fg);box-shadow:0 3px 0 var(--line2);text-align:center}
+.hopt:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line2)}
+.hopt.ok{border-color:var(--ok);background:var(--ok-a);color:var(--ok)}
+.hopt.bad{border-color:var(--bad);background:var(--bad-a);color:var(--bad)}
+.tfb{flex:1;height:64px;border-radius:18px;display:flex;align-items:center;justify-content:center;border:0;color:#fff}
+.tfb svg{width:30px;height:30px;stroke-width:3}
+.tfb.no{background:#d9483e;box-shadow:0 5px 0 #8f2820}
+.tfb.yes{background:#2ea866;box-shadow:0 5px 0 #1a6b3f}
+.tfb:active{transform:translateY(4px);box-shadow:none}
+.tfb.ok{outline:4px solid var(--ok);outline-offset:3px}
+.tfb.bad{outline:4px solid var(--bad);outline-offset:3px}
 
 </style>
 </head>
@@ -1752,18 +1777,46 @@ function Course(E, lex, S, course) {
     });
     return steps;
   }
-  /* Listening test: every prompt is sound only. Hear a sentence and build it, hear a word and write it. */
+  /* Hearing cards: the Kréyòl is only heard. tf = an English meaning is shown, green if it matches, red if not.
+     mc = pick the English meaning from three. Items are words or whole sentences. */
+  function hearStep(item, wrongs, kind, R) {
+    const others = uniq(wrongs.filter(w => w && w.toLowerCase() !== item.en.toLowerCase()));
+    if (!others.length) return null;
+    if (kind === 'tf') {
+      const truth = R() < 0.5;
+      return { type: 'hear', kind, k: item.k, en: item.en, claim: truth ? item.en : others[Math.floor(R() * others.length)], truth, w: item.w, s: item.s, targets: item.targets };
+    }
+    if (others.length < 2) return null;
+    const opts = shuffle([item.en].concat(shuffle(others, R).slice(0, 2)), R);
+    return { type: 'hear', kind, k: item.k, en: item.en, opts, w: item.w, s: item.s, targets: item.targets };
+  }
+  /* Listening test: every prompt is sound only. Hear and judge (green or red), hear and pick the meaning,
+     hear a sentence and build it, hear a word and write it. */
   function listenTest(U, opts = {}) {
     const R = rng((opts.seed || 13) * 613 + U * 53);
-    const lastL = C.units[U].ls[C.units[U].ls.length - 1];
-    const ids = []; C.units[U].ls.forEach(l => ids.push(...C.lessons[l].ids));
+    const ls = C.units[U].ls.filter(l => opts.upTo == null || l <= opts.upTo), lastL = ls[ls.length - 1];
+    const ids = []; ls.forEach(l => ids.push(...C.lessons[l].ids));
     const knownFn = i => C.lessonOf[i] >= 0 && C.lessonOf[i] <= lastL;
+    const prior = []; for (let l = Math.max(0, C.units[U].ls[0] - 12); l < C.units[U].ls[0]; l++) prior.push(...C.lessons[l].ids);
+    const wordItems = shuffle(ids.filter(i => E[i].short), R).map(i => ({ k: E[i].forms[0], en: E[i].short, w: i, targets: [i] }));
+    const wordEn = ids.concat(prior).map(i => E[i].short).filter(Boolean);
+    const sents = [...new Map(ids.flatMap(i => C.hasIdx[i].map(sentOf)).filter(x => x && x.t && x.n >= 2 && x.n <= 8 && sentKnownBy(x, knownFn)).map(x => [x.id, x])).values()];
+    const sentItems = shuffle(sents, R).map(x => ({ k: x.s, en: x.t, s: x.id, targets: x.words.flatMap(w => (w.ids || []).filter(knownFn)).slice(0, 4) }));
+    const sentEn = sents.map(x => x.t);
     const pool = ids.slice(), used = new Set(), steps = [];
     const W = shuffle(ids.filter(i => !E[i].multi), R);
-    for (let k = 0; k < 12 && (W.length || ids.length); k++) {
+    let wi = 0, si = 0, di = 0;
+    const take = kind => {
+      const useS = si < sentItems.length && (kind === 'mc' ? R() < 0.6 : R() < 0.5);
+      return useS ? hearStep(sentItems[si++], sentEn, kind, R) : wi < wordItems.length ? hearStep(wordItems[wi++], wordEn, kind, R) : null;
+    };
+    const plan = ['tf', 'mc', 'build', 'tf', 'mc', 'dict', 'tf', 'mc', 'build', 'tf', 'mc', 'dict'];
+    for (const p of plan) {
       let st = null;
-      if (k % 3 !== 2) st = listenStep(shuffle(ids, R), knownFn, used, R, pool, 10);
-      if (!st && W.length) st = dictStep(W[k % W.length]);
+      if (p === 'tf' || p === 'mc') st = take(p);
+      else if (p === 'build') st = listenStep(shuffle(ids, R), knownFn, used, R, pool, 10);
+      else if (W.length) st = dictStep(W[di++ % W.length]);
+      if (!st) st = take('tf');
       if (st) steps.push(st);
     }
     return steps;
@@ -1817,6 +1870,12 @@ const lessonDone = L => { const r = recs(); return C.lessons[L].ids.every(i => r
 let _fo = null;
 const firstOpen = () => { if (_fo != null) return _fo; let L = 0; while (L < C.lessons.length && lessonDone(L)) L++; return (_fo = L); };
 const unitDone = u => C.units[u].ls.filter(lessonDone).length;
+/* golden headphone listening checkpoints inside each unit: after lesson 3, or after 2 and 4 in every third unit */
+const hpPos = u => { const n = C.units[u].ls.length; return n >= 5 && u % 3 === 2 ? [2, 4] : n >= 3 ? [3] : []; };
+const hpKey = (u, k) => 'h' + u + '.' + k;
+const hpDone = (u, k) => !!(st.cp && st.cp[hpKey(u, k)]);
+/* the checkpoint a lesson is waiting on, or -1 */
+const hpBlock = L => { const u = C.lessons[L].u, i = C.units[u].ls.indexOf(L); if (lessonDone(L)) return -1; const ps = hpPos(u); for (let k = 0; k < ps.length; k++) if (ps[k] <= i && !hpDone(u, k)) return k; return -1; };
 const starOn = id => (st.stars[E[id].key] || 0) > 0;
 
 /* ================================================================ sound */
@@ -1987,7 +2046,7 @@ addEventListener('resize', onRz);
 if (window.visualViewport) { visualViewport.addEventListener('resize', onRz); visualViewport.addEventListener('scroll', vv); }
 addEventListener('scroll', () => { if (scrollY) scrollTo(0, 0); });
 /* fixed screens never scroll, even when focus or the keyboard tries to move them */
-document.addEventListener('scroll', ev => { const t = ev.target; if (t && t.nodeType === 1 && t.scrollTop && (t.classList.contains('ov') || t.classList.contains('stage') || t.id === 'app' || t.classList.contains('view') || t.classList.contains('list') || t.classList.contains('cb'))) t.scrollTop = 0; }, true);
+document.addEventListener('scroll', ev => { const t = ev.target; if (t && t.nodeType === 1 && t.scrollTop && !t.classList.contains('scr') && (t.classList.contains('ov') || t.classList.contains('stage') || t.id === 'app' || t.classList.contains('view') || t.classList.contains('list') || t.classList.contains('cb'))) t.scrollTop = 0; }, true);
 function fit(el, min = 0.6) {
   if (!el) return 1;
   let k = 1; el.style.setProperty('--k', '1');
@@ -2059,7 +2118,7 @@ function overlay(id, html, cls = 'dim') {
 function closeOv(id, silent) { const el = $(id); if (!el) return; el.remove(); const i = stack.lastIndexOf(id); if (i >= 0) stack.splice(i, 1); if (!silent && id === 'pl') P.on = false; }
 function closeTop() { const id = stack[stack.length - 1]; if (!id) return false; if (id === 'pl') { quitAsk(); return true; } closeOv(id); return true; }
 addEventListener('popstate', () => { if (stack.length) { const id = stack[stack.length - 1]; if (id === 'pl') { if (P.on && P.answered && !P.fin) { try { history.pushState({ ov: 'pl' }, ''); } catch (e) {} quitAsk(); } else endPlayer(); } else closeOv(id); } });
-function fitOverlays() { ['ent', 'units', 'sheet', 'kind', 'voices', 'credits', 'gtoc', 'edit'].forEach(id => { const el = $(id); if (el) { const b = el.querySelector('.cb'); if (b && id !== 'ent') fit(b, 0.55); if (id === 'ent') layoutEntry(); } }); }
+function fitOverlays() { ['ent', 'units', 'sheet', 'kind', 'voices', 'credits', 'gtoc', 'edit'].forEach(id => { const el = $(id); if (el) { const b = el.querySelector('.cb'); if (b && id !== 'ent') fit(b, id === 'edit' ? 0.9 : id === 'sheet' ? 0.8 : 0.55); if (id === 'ent') layoutEntry(); } }); }
 
 /* =============================================================== learn */
 /* the course is long, so it is shown a section (10 units) at a time, with no totals */
@@ -2087,20 +2146,26 @@ function nextHTML(fo) {
 function layoutPath() {
   const box = $('path'); if (!box || !C) return;
   const u = C.units[viewU], fo = firstOpen();
-  const W = box.clientWidth, H = box.clientHeight, n = u.ls.length + 1;
+  const hp = hpPos(viewU), seq = []; u.ls.forEach((L, i) => { hp.forEach((p, k) => { if (p === i) seq.push('H' + k); }); seq.push(L); }); hp.forEach((p, k) => { if (p >= u.ls.length) seq.push('H' + k); }); seq.push('T');
+  const W = box.clientWidth, H = box.clientHeight, n = seq.length;
   if (!W || !H) return;
   const top = 30, slot = (H - top - 4) / n, ns = Math.max(38, Math.min(74, slot * 0.58, W * 0.2));
   box.style.setProperty('--ns', ns + 'px');
   const amp = Math.min(W * 0.26, 120), offs = [0, 0.7, 0.15, -0.7, -0.35, 0.3];
-  const pts = u.ls.concat(['T']).map((L, k) => ({ L, x: W / 2 + offs[k % 6] * amp, y: top + slot * (k + 0.5) - 8 }));
+  const pts = seq.map((L, k) => ({ L, x: W / 2 + offs[k % 6] * amp, y: top + slot * (k + 0.5) - 8 }));
   let h = '<svg class="trail" viewBox="0 0 ' + W + ' ' + H + '"><path d="' + pts.map((p, k) => (k ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1)).join(' ') + '"/></svg>';
-  const allDone = u.ls.every(lessonDone), cpDone = !!(st.cp && st.cp[viewU]);
+  const allDone = u.ls.every(lessonDone) && hp.every((_, k) => hpDone(viewU, k)), cpDone = !!(st.cp && st.cp[viewU]);
   pts.forEach(p => {
     if (p.L === 'T') {
       h += '<button class="node trophy ' + (cpDone ? 'done' : allDone ? 'open' : 'lock') + '" type="button" data-t="1" style="left:' + p.x.toFixed(1) + 'px;top:' + p.y.toFixed(1) + 'px">' + (allDone && !cpDone ? '<span class="go">Challenge</span>' : '') + '<span class="c">' + (allDone ? '<svg class="i fl"><use href="#i-fleur"/></svg>' : ico('lock')) + '</span><span class="lb">Unit challenge</span></button>';
       return;
     }
-    const L = p.L, done = lessonDone(L), open = L === fo, lock = !done && !open;
+    if (typeof p.L === 'string' && p.L[0] === 'H') {
+      const k = +p.L.slice(1), before = u.ls.slice(0, hp[k]), ready = before.every(lessonDone), done = hpDone(viewU, k), open = ready && !done;
+      h += '<button class="node hp ' + (done ? 'done' : open ? 'open' : 'lock') + '" type="button" data-h="' + k + '" style="left:' + p.x.toFixed(1) + 'px;top:' + p.y.toFixed(1) + 'px">' + (open ? '<span class="go">Listen</span>' : '') + '<span class="c">' + ico(done ? 'check' : 'hp') + '</span><span class="lb">Listening</span></button>';
+      return;
+    }
+    const L = p.L, done = lessonDone(L), open = L === fo && hpBlock(L) < 0, lock = !done && !open;
     const lbl = C.lessons[L].ids.slice(0, 2).map(i => tw(E[i])).join(' · ');
     h += '<button class="node ' + (done ? 'done' : open ? 'open' : 'lock') + '" type="button" data-l="' + L + '" style="left:' + p.x.toFixed(1) + 'px;top:' + p.y.toFixed(1) + 'px">' + (open ? '<span class="go">Start</span>' : '') + '<span class="c">' + ico(done ? 'check' : lock ? 'lock' : 'spark') + '</span><span class="lb">' + esc(lbl) + '</span></button>';
   });
@@ -2109,6 +2174,7 @@ function layoutPath() {
   box.querySelectorAll('.node').forEach(b => b.onclick = () => {
     if (b.classList.contains('lock')) { wob(b); buzz(30); return; }
     if (b.dataset.t) { startUnitReview(viewU); return; }
+    if (b.dataset.h != null) { openListen(viewU, +b.dataset.h); return; }
     startLesson(+b.dataset.l);
   });
 }
@@ -2248,10 +2314,9 @@ function drawMap(reveal) {
 let unitU = 0;
 function openUnit(u) {
   unitU = u;
-  const el = overlay('unit', '<div class="card unitc"><div class="ch"><button class="rb" type="button" data-x aria-label="Back">' + ico('back') + '</button><div class="ut"><small id="uD"></small><b id="uT"></b></div><button class="rb" type="button" id="uHp" aria-label="Listen">' + ico('hp') + '</button><button class="rb nb" type="button" id="uNotes" aria-label="Notes">' + ico('book') + '</button></div><div class="cb ub"><div class="uw" id="uW"></div><div class="path" id="path"></div><div id="uJ"></div></div></div>');
+  const el = overlay('unit', '<div class="card unitc"><div class="ch"><button class="rb" type="button" data-x aria-label="Back">' + ico('back') + '</button><div class="ut"><small id="uD"></small><b id="uT"></b></div><button class="rb nb" type="button" id="uNotes" aria-label="Notes">' + ico('book') + '</button></div><div class="cb ub"><div class="uw" id="uW"></div><div class="path" id="path"></div><div id="uJ"></div></div></div>');
   el.querySelector('[data-x]').onclick = () => closeOv('unit');
   el.querySelector('#uNotes').onclick = () => openNotes(unitU);
-  el.querySelector('#uHp').onclick = () => openListen(unitU);
   drawUnit();
 }
 function drawUnit() {
@@ -2271,11 +2336,11 @@ function drawUnit() {
 const P = { on: false };
 const canMic = () => !!SRC && !P.noSR && window.__dkSR !== false;
 /* three strikes and the session is over: lessons, unit challenges, jumps and new 101 words */
-const STRIKES = { lesson: 1, unit: 1, jump: 1, xlearn: 1, plearn: 1 };
+const STRIKES = { lesson: 1, unit: 1, jump: 1, xlearn: 1, plearn: 1, ltest: 1 };
 function warmIds(L) { const r = recs(), t = now(), mine = new Set(C.lessons[L].ids); return Object.keys(r).map(Number).filter(i => !mine.has(i) && r[i][1] * 6e4 <= t && !E[i].multi).sort((a, b) => DK.recall(r[a], t) - DK.recall(r[b], t)).slice(0, 2); }
 const seed = () => (now() / 1000 | 0) % 997 + 1;
-function startLesson(L) { const steps = K.lesson(L, { seed: seed(), audio: TTS.has(), mic: canMic(), warm: warmIds(L) }); startSession('lesson', steps, { L }); }
-function startListenTest(U) { closeOv('listen', true); startSession('ltest', K.listenTest(U, { seed: seed() }), { U }); }
+function startLesson(L) { const hb = hpBlock(L); if (hb >= 0) { openListen(C.lessons[L].u, hb); return; } const steps = K.lesson(L, { seed: seed(), audio: TTS.has(), mic: canMic(), warm: warmIds(L) }); startSession('lesson', steps, { L }); }
+function startListenTest(U, k) { closeOv('listen', true); const ls = C.units[U].ls, upTo = k == null ? null : ls[Math.min(ls.length, hpPos(U)[k]) - 1]; startSession('ltest', K.listenTest(U, { seed: seed(), upTo }), { U, k }); }
 function startUnitReview(U) { startSession('unit', K.unitReview(U, { seed: seed(), audio: TTS.has() }), { U }); }
 function startBlitz() { const ids = Object.keys(recs()).map(Number).filter(i => !E[i].multi); if (ids.length < 5) return; const b = K.blitzBoard(ids, Math.random); if (!b) return; startSession('blitz', [b], {}); }
 function startReview(mode) {
@@ -2332,13 +2397,14 @@ function nextStep() {
   let step = P.steps[P.i];
   const noMic = !SRC || P.noSR || window.__dkSR === false;
   if (step.repeat && noMic) { P.i++; return nextStep(); }
+  if ((!TTS.has() || P.noAudio || st.set.voice === 0) && step.type === 'hear') { P.i++; return nextStep(); }
   if ((!TTS.has() || P.noAudio || st.set.voice === 0) && (step.listen || step.dir === 'dict')) { step = P.steps[P.i] = Object.assign({}, step, step.listen ? { listen: false } : { dir: 'en2kl' }); }
   TTS.stop(); $('kbx').innerHTML = '';
   const stg = $('stg');
   stg.className = 'stage' + (step.type === 'intro' || step.type === 'speak' || step.type === 'read' ? ' mid' : ''); void stg.offsetWidth; stg.classList.add('enter');
   stg.innerHTML = '';
   $('fb').className = 'fb';
-  const R = step.repeat ? repeat : { intro, match, build, type: typeEx, fill, speak, read }[step.type];
+  const R = step.repeat ? repeat : { intro, match, build, type: typeEx, fill, speak, read, hear }[step.type];
   P.cur = R(step, stg);
   fit(stg, 0.5);
   const cur = P.cur; if (cur && cur.focus) setTimeout(() => { if (P.cur === cur && P.on) cur.focus(); }, 60);
@@ -2417,6 +2483,9 @@ function finish() {
     if (!before && unitAll(u)) { unitDoneNow = u; viewU = Math.min(C.units.length - 1, u + 1); }
   } else if (mode === 'blitz') {
     st.best = st.best || {}; P.newBest = P.pairs > (st.best.blitz || 0); if (P.newBest) st.best.blitz = P.pairs;
+  } else if (mode === 'ltest') {
+    P.grades.forEach((g, id) => { const k = E[id].key; if (st.w[k]) st.w[k] = DK.schedule(st.w[k], g, t); });
+    if (P.meta.k != null) { st.cp = st.cp || {}; st.cp[hpKey(P.meta.U, P.meta.k)] = t; P.hpPassed = 1; }
   } else if (mode === 'unit') {
     P.grades.forEach((g, id) => { const k = E[id].key; if (st.w[k]) st.w[k] = DK.schedule(st.w[k], g, t); });
     st.cp = st.cp || {}; st.cp[P.meta.U] = t;
@@ -2443,7 +2512,7 @@ function finish() {
   touch(); save(); push();
   const sk = streak();
   progress(); $('pB').style.width = '100%';
-  const title = mode === 'blitz' ? (P.newBest ? 'New best' : 'Speed round') : mode === 'unit' ? 'Challenge complete' : mode === 'ltest' ? 'Listening test done' : mode === 'place' ? 'You start in ' + distOf(viewU).kr + ', Unit ' + (viewU % SEC + 1) : mode === 'lesson' ? (P.strikes ? 'Lesson complete' : 'Flawless') : mode === 'jump' ? 'Unit unlocked' : mode === 'xlearn' ? 'New words' : mode === 'plearn' ? 'Proverb learned' : 'Review complete';
+  const title = mode === 'blitz' ? (P.newBest ? 'New best' : 'Speed round') : mode === 'unit' ? 'Challenge complete' : mode === 'ltest' ? (P.hpPassed ? 'Listening passed' : 'Listening test done') : mode === 'place' ? 'You start in ' + distOf(viewU).kr + ', Unit ' + (viewU % SEC + 1) : mode === 'lesson' ? (P.strikes ? 'Lesson complete' : 'Flawless') : mode === 'jump' ? 'Unit unlocked' : mode === 'xlearn' ? 'New words' : mode === 'plearn' ? 'Proverb learned' : 'Review complete';
   const isX = mode === 'xlearn' || mode === 'xreview';
   const ws = mode === 'lesson' ? C.lessons[P.meta.L].ids : mode === 'xlearn' ? P.meta.ids : mode === 'place' || mode === 'blitz' || mode === 'plearn' ? [] : [...P.grades.keys()].filter(k => typeof k === 'number').slice(0, 14);
   const W = i => isX ? V[i] : E[i];
@@ -2543,6 +2612,33 @@ function keyboard(inp, en) {
 const hw = e => (e.teach || e.word);
 const playHTML = () => '<div class="play"><button class="pbig" type="button" id="pPl" aria-label="Play">' + ico('snd') + '</button><button class="pslow" type="button" id="pSl" aria-label="Slow">' + ico('turtle') + '</button></div><button class="nolisten" type="button" id="pNL">' + ico('eye') + 'Can\'t listen now</button>';
 function wirePlay(stg, text) { const nl = stg.querySelector('#pNL'); if (nl) nl.onclick = () => { P.noAudio = true; TTS.stop(); nextStep(); }; const a = stg.querySelector('#pPl'), b = stg.querySelector('#pSl'); if (a) a.onclick = () => { a.classList.remove('go'); void a.offsetWidth; a.classList.add('go'); TTS.say(text, { fast: true }); }; if (b) b.onclick = () => TTS.say(text, { slow: true }); }
+/* hear it, then answer: tf = does this English match what you heard (red no, green yes); mc = pick the meaning */
+function hear(step, stg) {
+  const pic = step.w != null ? picOf(E[step.w]) : step.s != null ? sentPic(S[step.s]) : null;
+  const reveal = () => '<b>' + esc(step.k) + '</b><br>' + esc(step.en);
+  stg.innerHTML = '<div class="hear">' + playHTML() + (step.kind === 'tf'
+    ? '<p class="hq">Does it mean</p><div class="hclaim">' + esc(step.claim) + '</div>'
+    : '<p class="hq">What does it mean?</p><div class="hopts">' + step.opts.map((o, i) => '<button class="hopt" type="button" data-o="' + i + '">' + esc(o) + '</button>').join('') + '</div>') + '</div>';
+  wirePlay(stg, step.k);
+  setTimeout(() => { if (P.cur && P.steps[P.i] === step) TTS.say(step.k); }, 350);
+  let done = false;
+  const answer = (ok, btn) => {
+    if (done) return; done = true; TTS.stop();
+    if (btn) btn.classList.add(ok ? 'ok' : 'bad');
+    settle({ ok, ans: reveal(), say: step.k, show: true });
+  };
+  if (step.kind === 'tf') {
+    setFoot('<button class="tfb no" type="button" id="hN" aria-label="No">' + ico('x') + '</button><button class="tfb yes" type="button" id="hY" aria-label="Yes">' + ico('check') + '</button>');
+    $('hN').onclick = () => answer(!step.truth, $('hN'));
+    $('hY').onclick = () => answer(step.truth, $('hY'));
+  } else {
+    setFoot('<button class="btn ghost dkb" id="pD" type="button">Don\'t know</button>');
+    $('pD').onclick = () => answer(false);
+    stg.querySelectorAll('[data-o]').forEach(b => b.onclick = () => { const ok = step.opts[+b.dataset.o] === step.en; if (!ok) stg.querySelectorAll('[data-o]').forEach(x => { if (step.opts[+x.dataset.o] === step.en) x.classList.add('ok'); }); answer(ok, b); });
+  }
+  void pic;
+  return {};
+}
 /* what you typed against the right answer: wrong letters red, missing letters green */
 function diffHTML(a, b) {
   const A = [...a], B = [...b], n = A.length, m = B.length, L = Array.from({ length: n + 1 }, () => new Int16Array(m + 1));
@@ -2955,7 +3051,7 @@ function layoutEntry() {
 /* =============================================================== sheet */
 function openSheet() {
   SFX.tap();
-  const el = overlay('sheet', '<div class="card sheet"><div class="ch"><span style="width:40px"></span><h2>Profile</h2><button class="rb" type="button" data-x>' + ico('x') + '</button></div><div class="cb" id="shB"></div></div>');
+  const el = overlay('sheet', '<div class="card sheet"><div class="ch"><span style="width:40px"></span><h2>Profile</h2><button class="rb" type="button" data-x>' + ico('x') + '</button></div><div class="cb scr" id="shB"></div></div>');
   el.querySelector('[data-x]').onclick = () => closeOv('sheet');
   drawSheet();
 }
@@ -2991,7 +3087,7 @@ function drawSheet() {
   b.querySelectorAll('[data-r]').forEach(x => x.onclick = () => { st.set.rate = +x.dataset.r; st.set.t = now(); save(); drawSheet(); TTS.say('Komen to yê?'); });
   $('sPl').onclick = () => { closeOv('sheet'); startPlacement(); };
   $('sRst').onclick = () => { if (!resetArm) { resetArm = 1; drawSheet(); setTimeout(() => { resetArm = 0; drawSheet(); }, 4000); return; } resetArm = 0; resetAll(); drawSheet(); };
-  fit(b, 0.6);
+  fit(b, 0.8);
 }
 /* every French voice on this device, best first; the choice stays on this device */
 function voiceHelp(ios) {
@@ -3407,7 +3503,7 @@ function openEditor(o) {
   const cur = i => ed[['a', 'b', 'c', 'd'][i]] != null ? ed[['a', 'b', 'c', 'd'][i]] : raw[i];
   const x = o.x, sed = x ? (Object.values(st.ed || {}).find(r => r.f === 's' && r.s === x.s) || edOf('s', x.s) || {}) : null;
   const fld = (id, lab, val, big) => '<label class="ef"><span>' + lab + '</span>' + (big ? '<textarea id="' + id + '" rows="2">' : '<input id="' + id + '" value="') + esc(val || '') + (big ? '</textarea>' : '" autocomplete="off" autocapitalize="off" spellcheck="false">') + '</label>';
-  const el = overlay('edit', '<div class="card" style="height:100%"><div class="ch"><span class="adm">Admin</span><h2>Correct</h2><button class="rb" type="button" data-x>' + ico('x') + '</button></div><div class="cb ed">' +
+  const el = overlay('edit', '<div class="card" style="height:100%"><div class="ch"><span class="adm">Admin</span><h2>Correct</h2><button class="rb" type="button" data-x>' + ico('x') + '</button></div><div class="cb ed scr">' +
     (e && f === 'p' ? '<div class="eg"><small>Proverb</small>' + fld('eA', 'Kréyòl', cur(0), 1) + fld('eB', 'English', cur(1), 1) + fld('eC', 'Meaning', cur(2), 1) + '</div>' : e ? '<div class="eg"><small>' + (f === 'x' ? 'Vocab 101 word' : 'Dictionary word') + '</small>' + fld('eA', 'Word (part of speech)', cur(0)) + fld('eB', 'Meaning', cur(1), 1) + fld('eC', 'Example', cur(2), 1) + fld('eD', 'Translation', cur(3), 1) + fld('eK', 'Also accept (one per line)', (ed.acc || []).join('\n'), 1) + '</div>' : '') +
     (x ? '<div class="eg"><small>Sentence on screen</small>' + fld('sS', 'Kréyòl', sed.s || x.s, 1) + fld('sT', 'English', sed.tr != null ? sed.tr : x.t, 1) + '</div>' : '') +
     fld('eN', 'Note', ed.note || (sed && sed.note) || '', 1) + '</div><div class="ef2"><button class="btn" type="button" id="eU">' + ico('rev') + 'Undo</button><button class="btn pri" type="button" id="eV">Save</button></div></div>');
@@ -3427,7 +3523,9 @@ function openEditor(o) {
     closeOv('edit'); SFX.ok(); toast('Saved for export');
     if ($('sheet')) drawSheet();
   };
-  fit(el.querySelector('.cb'), 0.7);
+  fit(el.querySelector('.cb'), 0.9);
+  /* on a phone the keyboard covers the lower fields: the form scrolls, and the field in use moves into view */
+  { const cb = el.querySelector('.cb'); el.querySelectorAll('input,textarea').forEach(n => n.addEventListener('focus', () => setTimeout(() => { const r = n.getBoundingClientRect(), c = cb.getBoundingClientRect(); cb.scrollTo({ top: cb.scrollTop + r.top - c.top - (c.height - r.height) / 2, behavior: 'smooth' }); }, 320))); }
 }
 function editStep() {
   const s = P.steps[P.i]; if (!s) return;
@@ -3591,8 +3689,8 @@ function setTab(t) {
 function renderTab() { if (!READY) return; if (TAB === 'dict') renderDict(); else if (TAB === 'x') renderX(); else if (TAB === 'gram') renderGram(); else renderLearn(); }
 /* ============================================================ listening */
 /* Hands-free: each word and sentence in Kréyòl, again slowly, then in English. Headphones on, screen can stay in a pocket. */
-function listenItems(U) {
-  const lastL = C.units[U].ls[C.units[U].ls.length - 1], ids = C.units[U].ls.flatMap(L => C.lessons[L].ids);
+function listenItems(U, k) {
+  const ls = C.units[U].ls.slice(0, k == null ? undefined : hpPos(U)[k]), lastL = ls[ls.length - 1], ids = ls.flatMap(L => C.lessons[L].ids);
   const known = i => C.lessonOf[i] >= 0 && C.lessonOf[i] <= lastL;
   const out = [];
   ids.forEach(id => {
@@ -3602,14 +3700,14 @@ function listenItems(U) {
   });
   return out;
 }
-function openListen(U) {
+function openListen(U, hk) {
   SFX.tap();
-  const items = listenItems(U), D = distOf(U);
+  const items = listenItems(U, hk), D = distOf(U);
   const L = { i: 0, on: false, show: true, tok: 0 };
   const el = overlay('listen', '<div class="card lsn"><div class="ch"><button class="rb" type="button" data-x aria-label="Close">' + ico('x') + '</button><div class="ut"><small>' + esc(D.kr) + ' · Unit ' + (U % SEC + 1) + '</small><b>Listen</b></div><button class="rb" type="button" id="lsT" aria-label="Show or hide text">' + ico('eye') + '</button></div>' +
     '<div class="cb lsb"><div class="lhp"><svg class="i"><use href="#i-hp"/></svg><i class="lw"></i><i class="lw w2"></i></div><div class="lpic" id="lsP"></div><div class="lk" id="lsK"></div><div class="len" id="lsE"></div><div class="lbar"><i id="lsB"></i></div><small class="lcnt" id="lsN"></small></div>' +
     '<div class="lctl"><button class="rb lg" type="button" id="lsPv" aria-label="Previous">' + ico('back') + '</button><button class="lplay" type="button" id="lsGo" aria-label="Play">' + ico('play', 'f') + '</button><button class="rb lg" type="button" id="lsNx" aria-label="Next">' + ico('fwd') + '</button></div>' +
-    '<div class="lfoot"><button class="btn acc" type="button" id="lsTest">' + ico('hp') + 'Listening test</button></div></div>');
+    '<div class="lfoot"><button class="btn acc" type="button" id="lsTest">' + ico('hp') + (hk != null && !hpDone(U, hk) ? 'Take the listening test' : 'Listening test') + '</button></div></div>');
   const $l = id => el.querySelector('#' + id);
   const draw = () => {
     const it = items[L.i] || {};
@@ -3634,7 +3732,7 @@ function openListen(U) {
   $l('lsNx').onclick = () => { L.i = Math.min(items.length - 1, L.i + 1); if (L.on) play(); else { draw(); TTS.say(items[L.i].k); } };
   $l('lsPv').onclick = () => { L.i = Math.max(0, L.i - 1); if (L.on) play(); else { draw(); TTS.say(items[L.i].k); } };
   $l('lsT').onclick = () => { L.show = !L.show; draw(); };
-  $l('lsTest').onclick = () => { if (!TTS.has()) { toast('No French voice on this device. Profile › Voice shows how to add one'); return; } stop(); startListenTest(U); };
+  $l('lsTest').onclick = () => { if (!TTS.has()) { toast('No French voice on this device. Profile › Voice shows how to add one'); return; } stop(); startListenTest(U, hk); };
   el.querySelector('[data-x]').onclick = () => { stop(); closeOv('listen'); };
   if ('mediaSession' in navigator) try { navigator.mediaSession.setActionHandler('play', () => { if (!L.on) { L.on = true; play(); } }); navigator.mediaSession.setActionHandler('pause', stop); navigator.mediaSession.setActionHandler('nexttrack', () => $l('lsNx').onclick()); navigator.mediaSession.setActionHandler('previoustrack', () => $l('lsPv').onclick()); } catch (e) {}
   draw();
