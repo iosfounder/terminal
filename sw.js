@@ -1,5 +1,5 @@
 /* Diksyonær offline support: network first, cached copy when offline. Clears caches left by earlier apps on this domain. */
-const V = 'diksyonaer-v8';
+const V = 'diksyonaer-v9';
 const SHELL = ['./', 'index.html', 'diksyonaer.tsv', 'kours.tsv', 'essential-500.tsv', 'vocab101.tsv', 'proverbs.tsv', 'grammar.json', 'manifest.webmanifest', 'dk-icon-48.png', 'dk-icon-180.png', 'dk-icon-192.png', 'dk-icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(SHELL).catch(() => {})).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil((async () => { for (const k of await caches.keys()) if (k !== V) await caches.delete(k); await self.clients.claim(); })()); });
