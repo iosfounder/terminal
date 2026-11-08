@@ -720,7 +720,7 @@ body.wide .mbar{background:none;justify-content:flex-end}
 .fog i:nth-child(1){left:0;top:70px}.fog i:nth-child(2){left:40%;top:120px;animation-delay:-5s}.fog i:nth-child(3){left:15%;top:170px;animation-delay:-9s}
 @keyframes fogm{50%{transform:translateX(12%)}}
 .map-king{position:absolute;z-index:3;width:92px;height:115px;filter:drop-shadow(0 8px 12px rgba(0,0,0,.45));animation:bob 3s ease-in-out infinite}
-.map-say{position:absolute;z-index:3;background:#fff;color:#000;font-size:.95rem;padding:.35rem .7rem;border-radius:14px 14px 14px 4px;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.map-say{position:absolute;z-index:3;background:#fff;color:#000;font-size:.82rem;line-height:1.3;max-width:min(150px,calc(50% - 60px));font-size:.76rem;cursor:pointer;padding:.45rem .65rem;border-radius:14px 14px 14px 4px;box-shadow:0 4px 12px rgba(0,0,0,.4)}
 svg.king{display:block}
 
 /* district scenery */
@@ -940,6 +940,36 @@ img.pic.li,.pic.li.ph{width:2.1rem;height:2.1rem;flex:none}
 .chat .ln.on .bb{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-a)}
 .dhint{flex:none;text-align:center;color:var(--dim);font-size:.78rem;margin:.2rem 0 0}
 
+.x101 svg.i{width:66%;height:66%;stroke-width:2.6;fill:currentColor}
+.ov#edq{z-index:97}
+.edq{text-align:center}
+.edq h2{font-weight:400;font-size:1.3rem;margin:.6rem 0 1rem}
+.edq{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:1.2rem 1.1rem}
+.edq .nbf{display:flex;gap:.5rem;width:100%}.edq .nbf .btn{flex:1}
+/* the three unit stops */
+.node.big .c{position:relative}
+.node .lring{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-90deg);pointer-events:none;overflow:visible}
+.node .lring circle{fill:none;stroke-width:6}
+.node .lring .b{stroke:var(--line)}
+.node .lring .f{stroke:var(--gold);stroke-linecap:round;transition:stroke-dashoffset .6s}
+.node.big .lb{font-size:.85rem;max-width:12rem;color:var(--soft)}
+.node.big .go{font-size:.9rem}
+#pN.auto{position:relative;overflow:hidden}
+#pN.auto::after{content:'';position:absolute;left:0;bottom:0;height:4px;width:100%;background:rgba(255,255,255,.55);transform-origin:left;animation:autofill 1.5s linear forwards}
+@keyframes autofill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+
+.map-king{cursor:pointer;pointer-events:auto}
+.map-say.pop{animation:bpop .4s cubic-bezier(.2,1.6,.4,1)}
+/* transfer tip card */
+.kt{display:flex;align-items:flex-end;gap:.6rem;width:min(100%,28rem)}
+.kt .king{width:84px;height:84px;flex:none}
+.ktb{position:relative;flex:1;padding:.9rem 1rem;border-radius:20px 20px 20px 4px;background:var(--gold-a);border:1px solid var(--gold)}
+.ktb small{color:var(--gold);letter-spacing:.1em;text-transform:uppercase;font-size:.72rem}
+.ktb p{margin:.35rem 0 .6rem;font-size:1.02rem;line-height:1.4}
+.kte{display:flex;align-items:center;gap:.5rem;font-size:1.2rem}
+.kte span{color:var(--mid);font-size:.9rem}
+.map-say#kSay{border-radius:4px 14px 14px 14px}
+
 </style>
 </head>
 <body>
@@ -997,7 +1027,7 @@ img.pic.li,.pic.li.ph{width:2.1rem;height:2.1rem;flex:none}
   <div id="mid">
   <main id="views">
     <section class="view" id="vLearn" aria-label="Course"></section>
-    <section class="view" id="v101" aria-label="Vocab 101" hidden></section>
+    <section class="view" id="v101" aria-label="Vocab Booster" hidden></section>
     <section class="view" id="vGram" aria-label="Grammar" hidden></section>
     <section class="view" id="vDict" aria-label="Dictionary" hidden>
       <div class="sw"><svg class="i mag"><use href="#i-mag"/></svg><input id="q" type="search" placeholder="Search Kréyòl Lalwizyan or English" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"><button id="qc" type="button" aria-label="Clear" hidden><svg class="i"><use href="#i-x"/></svg></button></div>
@@ -1008,7 +1038,7 @@ img.pic.li,.pic.li.ph{width:2.1rem;height:2.1rem;flex:none}
   </main>
   <nav id="tabs" role="tablist">
     <button type="button" role="tab" id="tLearn" aria-selected="true"><svg class="i"><use href="#i-path"/></svg><span>Course</span></button>
-    <button type="button" role="tab" id="tX" aria-selected="false" hidden><span class="x101">101</span><span>Vocab 101</span></button>
+    <button type="button" role="tab" id="tX" aria-selected="false" hidden><span class="x101"><svg class="i"><use href="#i-bolt"/></svg></span><span>Vocab Booster</span></button>
     <button type="button" role="tab" id="tG" aria-selected="false" hidden><svg class="i"><use href="#i-gram"/></svg><span>Grammar</span></button>
     <button type="button" role="tab" id="tDict" aria-selected="false"><svg class="i"><use href="#i-book"/></svg><span>Dictionary</span></button>
   </nav>
@@ -1909,7 +1939,7 @@ const ROOT = /\/(index\.html)?$/.test(location.pathname);
 
 /* ================================================================ state */
 const LS = 'dk2-state';
-/* w: course words, x: Vocab 101 words (kept apart so the two decks never mix), days: sessions finished per day (streak) */
+/* w: course words, x: Vocab Booster words (kept apart so the two decks never mix), days: sessions finished per day (streak) */
 const fresh = () => ({ v: 1, rst: 0, w: {}, x: {}, days: {}, set: { snd: 1, voice: 1, rate: 1, t: 0 }, stars: {}, mig: 0, uid: '', placed: 0, cp: {}, best: {}, t: 0 });
 let st = (() => { try { const v = JSON.parse(localStorage.getItem(LS)); if (v && v.v === 1) { const f = fresh(); return Object.assign(f, v, { set: Object.assign(f.set, v.set || {}), x: v.x || {} }); } } catch (e) {} return fresh(); })();
 function save(push = true) { st.t = now(); try { localStorage.setItem(LS, JSON.stringify(st)); } catch (e) {} if (push) pushLater(); }
@@ -1933,11 +1963,11 @@ let _fo = null;
 const firstOpen = () => { if (_fo != null) return _fo; let L = 0; while (L < C.lessons.length && lessonDone(L)) L++; return (_fo = L); };
 const unitDone = u => C.units[u].ls.filter(lessonDone).length;
 /* golden headphone listening checkpoints inside each unit: after lesson 3, or after 2 and 4 in every third unit */
-const hpPos = u => { const n = C.units[u].ls.length; return n >= 5 && u % 3 === 2 ? [2, 4] : n >= 3 ? [3] : []; };
+const hpPos = u => [C.units[u].ls.length];
 const hpKey = (u, k) => 'h' + u + '.' + k;
 const hpDone = (u, k) => !!(st.cp && st.cp[hpKey(u, k)]);
 /* the checkpoint a lesson is waiting on, or -1 */
-const hpBlock = L => { const u = C.lessons[L].u, i = C.units[u].ls.indexOf(L); if (lessonDone(L)) return -1; const ps = hpPos(u); for (let k = 0; k < ps.length; k++) if (ps[k] <= i && !hpDone(u, k)) return k; return -1; };
+const hpBlock = L => { if (lessonDone(L)) return null; const u = C.lessons[L].u; if (u > 0 && C.units[u - 1].ls.every(lessonDone) && !hpDone(u - 1, 0)) return { u: u - 1, k: 0 }; return null; };
 const starOn = id => (st.stars[E[id].key] || 0) > 0;
 
 /* ================================================================ sound */
@@ -2218,36 +2248,29 @@ function nextHTML(fo) {
 function layoutPath() {
   const box = $('path'); if (!box || !C) return;
   const u = C.units[viewU], fo = firstOpen();
-  const hp = hpPos(viewU), seq = []; u.ls.forEach((L, i) => { hp.forEach((p, k) => { if (p === i) seq.push('H' + k); }); seq.push(L); }); hp.forEach((p, k) => { if (p >= u.ls.length) seq.push('H' + k); }); seq.push('T');
-  const W = box.clientWidth, H = box.clientHeight, n = seq.length;
-  if (!W || !H) return;
-  const top = 30, slot = (H - top - 4) / n, ns = Math.max(38, Math.min(74, slot * 0.58, W * 0.2));
+  /* three stops per unit: Learn (all the unit's words, part by part), Listening, Challenge */
+  const W = box.clientWidth, H = box.clientHeight; if (!W || !H) return;
+  const nd = u.ls.filter(lessonDone).length, nl = u.ls.length, learnDone = nd === nl;
+  const nextL = u.ls.find(L => !lessonDone(L)), canLearn = nextL != null && nextL === fo;
+  const hpOk = hpDone(viewU, 0), allDone = learnDone && hpOk, cpDone = !!(st.cp && st.cp[viewU]);
+  const ns = Math.max(64, Math.min(104, H * 0.15, W * 0.26));
   box.style.setProperty('--ns', ns + 'px');
-  const amp = Math.min(W * 0.26, 120), offs = [0, 0.7, 0.15, -0.7, -0.35, 0.3];
-  const pts = seq.map((L, k) => ({ L, x: W / 2 + offs[k % 6] * amp, y: top + slot * (k + 0.5) - 8 }));
-  let h = '<svg class="trail" viewBox="0 0 ' + W + ' ' + H + '"><path d="' + pts.map((p, k) => (k ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1)).join(' ') + '"/></svg>';
-  const allDone = u.ls.every(lessonDone) && hp.every((_, k) => hpDone(viewU, k)), cpDone = !!(st.cp && st.cp[viewU]);
-  pts.forEach(p => {
-    if (p.L === 'T') {
-      h += '<button class="node trophy ' + (cpDone ? 'done' : allDone ? 'open' : 'lock') + '" type="button" data-t="1" style="left:' + p.x.toFixed(1) + 'px;top:' + p.y.toFixed(1) + 'px">' + (allDone && !cpDone ? '<span class="go">Challenge</span>' : '') + '<span class="c">' + (allDone ? '<svg class="i fl"><use href="#i-fleur"/></svg>' : ico('lock')) + '</span><span class="lb">Unit challenge</span></button>';
-      return;
-    }
-    if (typeof p.L === 'string' && p.L[0] === 'H') {
-      const k = +p.L.slice(1), before = u.ls.slice(0, hp[k]), ready = before.every(lessonDone), done = hpDone(viewU, k), open = ready && !done;
-      h += '<button class="node hp ' + (done ? 'done' : open ? 'open' : 'lock') + '" type="button" data-h="' + k + '" style="left:' + p.x.toFixed(1) + 'px;top:' + p.y.toFixed(1) + 'px">' + (open ? '<span class="go">Listen</span>' : '') + '<span class="c">' + ico(done ? 'check' : 'hp') + '</span><span class="lb">Listening</span></button>';
-      return;
-    }
-    const L = p.L, done = lessonDone(L), open = L === fo && hpBlock(L) < 0, lock = !done && !open;
-    const lbl = C.lessons[L].ids.slice(0, 2).map(i => tw(E[i])).join(' · ');
-    h += '<button class="node ' + (done ? 'done' : open ? 'open' : 'lock') + '" type="button" data-l="' + L + '" style="left:' + p.x.toFixed(1) + 'px;top:' + p.y.toFixed(1) + 'px">' + (open ? '<span class="go">Start</span>' : '') + '<span class="c">' + ico(done ? 'check' : lock ? 'lock' : 'spark') + '</span><span class="lb">' + esc(lbl) + '</span></button>';
-  });
+  const ys = [0.2, 0.52, 0.84].map(f => H * f), xs = [W * 0.5, W * 0.5 + Math.min(W * 0.22, 100), W * 0.5];
+  let h = '<svg class="trail" viewBox="0 0 ' + W + ' ' + H + '"><path d="M' + xs[0] + ' ' + ys[0] + ' Q' + (W * 0.2) + ' ' + ((ys[0] + ys[1]) / 2) + ' ' + xs[1] + ' ' + ys[1] + ' Q' + (W * 0.85) + ' ' + ((ys[1] + ys[2]) / 2) + ' ' + xs[2] + ' ' + ys[2] + '"/></svg>';
+  const R = ns / 2 + 7, CC = 2 * Math.PI * R;
+  const ring = f => '<svg class="lring" viewBox="0 0 ' + (2 * R + 8) + ' ' + (2 * R + 8) + '" style="width:' + (2 * R + 8) + 'px;height:' + (2 * R + 8) + 'px"><circle cx="' + (R + 4) + '" cy="' + (R + 4) + '" r="' + R + '" class="b"/><circle cx="' + (R + 4) + '" cy="' + (R + 4) + '" r="' + R + '" class="f" stroke-dasharray="' + CC.toFixed(1) + '" stroke-dashoffset="' + (CC * (1 - f)).toFixed(1) + '"/></svg>';
+  const pos = (i, cls, inner) => '<button class="node big ' + cls + '" type="button" style="left:' + xs[i].toFixed(1) + 'px;top:' + ys[i].toFixed(1) + 'px"' + inner;
+  h += pos(0, 'learn ' + (learnDone ? 'done' : canLearn ? 'open' : 'lock'), ' data-learn="1">' + (canLearn ? '<span class="go">' + (nd ? 'Continue' : 'Start') + '</span>' : '') + '<span class="c">' + (!learnDone && nd ? ring(nd / nl) : '') + ico(learnDone ? 'check' : canLearn ? 'spark' : 'lock') + '</span><span class="lb">Learn · ' + (learnDone ? u.ls.reduce((a, L) => a + C.lessons[L].ids.length, 0) + ' words' : 'part ' + Math.min(nl, nd + 1) + ' of ' + nl) + '</span></button>');
+  const hpOpen = learnDone && !hpOk;
+  h += pos(1, 'hp ' + (hpOk ? 'done' : hpOpen ? 'open' : 'lock'), ' data-h="0">' + (hpOpen ? '<span class="go">Listen</span>' : '') + '<span class="c">' + ico(hpOk ? 'check' : 'hp') + '</span><span class="lb">Listening</span></button>');
+  h += pos(2, 'trophy ' + (cpDone ? 'done' : allDone ? 'open' : 'lock'), ' data-t="1">' + (allDone && !cpDone ? '<span class="go">Challenge</span>' : '') + '<span class="c">' + (allDone ? '<svg class="i fl"><use href="#i-fleur"/></svg>' : ico('lock')) + '</span><span class="lb">Unit challenge</span></button>');
   box.innerHTML = h;
   const wob = b => b.animate([{ transform: 'translate(-50%,-50%) rotate(0)' }, { transform: 'translate(-50%,-50%) rotate(-8deg)' }, { transform: 'translate(-50%,-50%) rotate(8deg)' }, { transform: 'translate(-50%,-50%) rotate(0)' }], { duration: 300 });
   box.querySelectorAll('.node').forEach(b => b.onclick = () => {
     if (b.classList.contains('lock')) { wob(b); buzz(30); return; }
     if (b.dataset.t) { startUnitReview(viewU); return; }
-    if (b.dataset.h != null) { openListen(viewU, +b.dataset.h); return; }
-    startLesson(+b.dataset.l);
+    if (b.dataset.h != null) { openListen(viewU, 0); return; }
+    if (b.dataset.learn) { if (learnDone) { startLesson(u.ls[rnd(nl)], true); return; } startLesson(nextL); }
   });
 }
 function applyTheme() {
@@ -2375,12 +2398,13 @@ function drawMap(reveal) {
     const x = n.x + (n.x < cx ? 1 : -1) * Math.min(110, W * 0.27), yy = n.y + STEP * 0.5;
     h += '<button type="button" class="dlg ' + (done ? 'done' : open ? 'open' : 'lock') + '" data-g="' + s + '" style="left:' + x.toFixed(1) + 'px;top:' + yy.toFixed(1) + 'px"><span class="c">' + (open || done ? pimg('speech-balloon') : ico('lock')) + (done ? '<i class="ck">' + ico('check') + '</i>' : '') + '</span><span class="lb">Talk</span></button>';
   });
-  h += '<svg class="king map-king" style="left:3%;top:160px"><use href="#i-king"/></svg><div class="map-say" style="left:calc(3% + 84px);top:156px">Bonjou!</div>';
+  h += '<svg class="king map-king" style="left:3%;top:160px"><use href="#i-king"/></svg><div class="map-say" id="kSay" style="left:2%;top:246px">' + esc(kingSay()) + '</div>';
   h += '<div class="fog" style="top:' + (endY - 300) + 'px"><i></i><i></i><i></i></div>';
   inn.style.height = endY + 'px';
   inn.innerHTML = h;
   inn.querySelectorAll('.dlg').forEach(b => b.onclick = () => { if (b.classList.contains('lock')) { buzz(30); toast('Finish the unit before to unlock this talk'); return; } openDlg(+b.dataset.g); });
   inn.querySelectorAll('.un').forEach(b => b.onclick = () => { const u = +b.dataset.u; if (b.classList.contains('lock') && u !== cu + 1) return; SFX.tap(); openUnit(u); });
+  { const k = inn.querySelector('.map-king'), s = $('kSay'); const nx = () => { SFX.tap(); s.textContent = kingSay(); s.classList.remove('pop'); void s.offsetWidth; s.classList.add('pop'); }; if (k) k.onclick = nx; if (s) s.onclick = nx; }
   // keep the scenery still when it is off screen
   if (window.IntersectionObserver) { const io = new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('live', e.isIntersecting)), { root: map, rootMargin: '200px' }); inn.querySelectorAll('.dist').forEach(s => io.observe(s)); }
   const curN = nodes[ci >= 0 ? ci : nodes.length - 1], here = $('mHere');
@@ -2420,7 +2444,8 @@ const canMic = () => !!SRC && !P.noSR && window.__dkSR !== false;
 const STRIKES = { lesson: 1, unit: 1, jump: 1, xlearn: 1, plearn: 1, ltest: 1, dlg: 1 };
 function warmIds(L) { const r = recs(), t = now(), mine = new Set(C.lessons[L].ids); return Object.keys(r).map(Number).filter(i => !mine.has(i) && r[i][1] * 6e4 <= t && !E[i].multi).sort((a, b) => DK.recall(r[a], t) - DK.recall(r[b], t)).slice(0, 2); }
 const seed = () => (now() / 1000 | 0) % 997 + 1;
-function startLesson(L) { const hb = hpBlock(L); if (hb >= 0) { openListen(C.lessons[L].u, hb); return; } const steps = K.lesson(L, { seed: seed(), audio: TTS.has(), mic: canMic(), warm: warmIds(L) }); startSession('lesson', steps, { L }); }
+function startLesson(L, again) { const hb = again ? null : hpBlock(L); if (hb) { toast('Pass the listening in Unit ' + (hb.u % SEC + 1) + ' first'); openListen(hb.u, hb.k); return; } const steps = K.lesson(L, { seed: seed(), audio: TTS.has(), mic: canMic(), warm: warmIds(L) });
+  tipSteps(C.lessons[L].ids).forEach(t => { const at = steps.findIndex(s => s.type === 'intro' && s.w === t.w); steps.splice(at >= 0 ? at + 1 : 1, 0, t); }); startSession('lesson', steps, { L }); }
 function startListenTest(U, k) { closeOv('listen', true); const ls = C.units[U].ls, upTo = k == null ? null : ls[Math.min(ls.length, hpPos(U)[k]) - 1]; startSession('ltest', K.listenTest(U, { seed: seed(), upTo }), { U, k }); }
 function startUnitReview(U) { startSession('unit', K.unitReview(U, { seed: seed(), audio: TTS.has() }), { U }); }
 function startBlitz() { const ids = Object.keys(recs()).map(Number).filter(i => !E[i].multi); if (ids.length < 5) return; const b = K.blitzBoard(ids, Math.random); if (!b) return; startSession('blitz', [b], {}); }
@@ -2446,7 +2471,7 @@ function retry() {
 function startSession(mode, steps, meta) {
   if (!steps || !steps.length) return;
   SFX.tap();
-  Object.assign(P, { on: true, fin: false, out: false, mode, meta, steps: steps.map(s => Object.assign({}, s)), i: 0, ok: 0, tried: 0, mistakes: 0, strikes: 0, grades: new Map(), t0: now(), answered: false, cur: null });
+  Object.assign(P, { on: true, fin: false, out: false, mode, meta, steps: steps.map(s => Object.assign({}, s)), i: 0, ok: 0, tried: 0, mistakes: 0, strikes: 0, grades: new Map(), t0: now(), answered: false, cur: null, learnU: null, hpPassed: 0, newBest: false });
   const el = overlay('pl', '<div class="ph"><button class="rb" id="pX" type="button" aria-label="Close">' + ico('x') + '</button><div class="pbar"><i id="pB"></i></div><div class="combo" id="pC"></div><div class="strikes" id="pH"></div><button class="rb admb" id="pE" type="button" aria-label="Correct this card">' + ico('pen') + '</button></div><div class="stage" id="stg"></div><div id="kbx"></div><div class="pf" id="pf"></div><div class="fb" id="fb"><div class="in"></div></div>', '');
   el.querySelector('#pX').onclick = quitAsk;
   el.querySelector('#pE').onclick = editStep;
@@ -2488,7 +2513,7 @@ function nextStep() {
   stg.className = 'stage' + (step.type === 'intro' || step.type === 'speak' || step.type === 'read' ? ' mid' : ''); void stg.offsetWidth; stg.classList.add('enter');
   stg.innerHTML = '';
   $('fb').className = 'fb';
-  const R = step.repeat ? repeat : { intro, match, build, type: typeEx, fill, speak, read, hear }[step.type];
+  const R = step.repeat ? repeat : { intro, match, build, type: typeEx, fill, speak, read, hear, tip }[step.type];
   P.cur = R(step, stg);
   fit(stg, 0.5);
   const cur = P.cur; if (cur && cur.focus) setTimeout(() => { if (P.cur === cur && P.on) cur.focus(); }, 60);
@@ -2530,7 +2555,10 @@ function feedback(res) {
   fb.className = 'fb show ' + (res.ok ? 'ok' : 'bad');
   setFoot('');
   const go = () => { if (P.out) { outScreen(); return; } P.i++; nextStep(); };
-  inn.querySelector('#pN').onclick = go;
+  inn.querySelector('#pN').onclick = () => { clearTimeout(P.auto); go(); };
+  /* a clean right answer moves on by itself: one tap less per card */
+  clearTimeout(P.auto);
+  if (res.ok && !res.near && !res.show && !res.accept) { const b = inn.querySelector('#pN'), i0 = P.i; b.classList.add('auto'); P.auto = setTimeout(() => { if (P.on && P.i === i0 && $('pN') === b) go(); }, 1500); fb.addEventListener('pointerdown', () => { clearTimeout(P.auto); b.classList.remove('auto'); }, { once: true }); }
   const a = inn.querySelector('#pAcc');
   if (a) a.onclick = () => { // the learner overrides a strict English check: the strike comes back too
     const step = P.steps[P.i]; P.mistakes--; P.ok++;
@@ -2564,7 +2592,7 @@ function finish() {
     const u = C.lessons[P.meta.L].u, before = unitAll(u);
     C.lessons[P.meta.L].ids.forEach(id => { const g = P.grades.has(id) ? P.grades.get(id) : 2, k = E[id].key, r = st.w[k]; st.w[k] = r ? DK.schedule(r, g, t) : DK.recNew(t, g === 2 ? 1 : g === 1 ? 0.7 : 0.5); });
     touch();
-    if (!before && unitAll(u)) { unitDoneNow = u; viewU = Math.min(C.units.length - 1, u + 1); }
+    if (!before && unitAll(u)) P.learnU = u;
   } else if (mode === 'blitz') {
     st.best = st.best || {}; P.newBest = P.pairs > (st.best.blitz || 0); if (P.newBest) st.best.blitz = P.pairs;
   } else if (mode === 'dlg') {
@@ -2574,7 +2602,7 @@ function finish() {
     if (P.meta.k != null) { st.cp = st.cp || {}; st.cp[hpKey(P.meta.U, P.meta.k)] = t; P.hpPassed = 1; }
   } else if (mode === 'unit') {
     P.grades.forEach((g, id) => { const k = E[id].key; if (st.w[k]) st.w[k] = DK.schedule(st.w[k], g, t); });
-    st.cp = st.cp || {}; st.cp[P.meta.U] = t;
+    st.cp = st.cp || {}; if (!st.cp[P.meta.U]) { unitDoneNow = P.meta.U; viewU = Math.min(C.units.length - 1, P.meta.U + 1); } st.cp[P.meta.U] = t;
   } else if (mode === 'place') {
     const h = P.meta.pl.pass; let k = 0;
     if (h >= 0) { const lastL = C.units[h].ls[C.units[h].ls.length - 1]; for (let L = 0; L <= lastL; L++) C.lessons[L].ids.forEach(id => { const key = E[id].key; if (st.w[key]) return; const g = P.grades.get(id); st.w[key] = DK.recNew(t, g === 2 ? 7 + (k % 10) : 3 + (k % 12)); k++; }); }
@@ -2611,12 +2639,15 @@ function finish() {
     (firstToday ? '<div class="gm">' + ico('flame', 'f') + '<span>' + (sk > 1 ? sk + '-day streak' : 'Streak started') + '</span></div>' : '') + '</div>';
   stg.querySelectorAll('.wc').forEach(b => b.onclick = () => { TTS.say(b.dataset.say, { tap: true }); b.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 220 }); });
   const again = mode !== 'place' && mode !== 'jump';
-  const ff = setFoot((again ? '<button class="btn" id="pR" type="button">' + ico('rev') + 'Retry</button>' : '') + '<button class="btn pri" id="pN" type="button">Continue</button>');
-  ff.querySelector('#pN').onclick = () => { const u = unitDoneNow != null ? unitDoneNow : mode === 'jump' ? P.meta.U : null; if (u != null) { P.on = false; TTS.stop(); closeOv('pl', true); renderAll(); celebrate(u, mode === 'jump'); } else endPlayer(); };
+  /* learning a unit runs part after part: go straight on to the next part */
+  const nextPart = mode === 'lesson' && pass && !P.learnU ? C.units[C.lessons[P.meta.L].u].ls.find(L => !lessonDone(L)) : null;
+  const ff = setFoot(nextPart != null ? '<button class="btn" id="pN" type="button">Done</button><button class="btn pri" id="pNx" type="button">Next part</button>' : (again ? '<button class="btn" id="pR" type="button">' + ico('rev') + 'Retry</button>' : '') + '<button class="btn pri" id="pN" type="button">' + (P.learnU != null ? 'Go to Listening' : 'Continue') + '</button>');
+  if (nextPart != null) ff.querySelector('#pNx').onclick = () => { P.on = false; TTS.stop(); closeOv('pl', true); startLesson(nextPart); };
+  ff.querySelector('#pN').onclick = () => { const u = unitDoneNow != null ? unitDoneNow : mode === 'jump' ? P.meta.U : null; if (u != null) { P.on = false; TTS.stop(); closeOv('pl', true); renderAll(); celebrate(u, mode === 'jump'); } else { const lu = P.learnU; endPlayer(); if (lu != null) { openUnit(lu); setTimeout(() => openListen(lu, 0), 250); } } };
   const pr = ff.querySelector('#pR'); if (pr) pr.onclick = retry;
   fit(stg, 0.5);
   if (pass) { SFX.done(); confetti(); } else SFX.bad();
-  setTimeout(() => { const b = $('pN'); if (b) b.focus({ preventScroll: true }); }, 30);
+  setTimeout(() => { const b = $('pNx') || $('pN'); if (b) b.focus({ preventScroll: true }); }, 30);
 }
 /* ============================================================ unit gold */
 function celebrate(u, jumped) {
@@ -3154,7 +3185,7 @@ function drawSheet() {
     : '<button class="gbtn" type="button" id="sIn"><span style="display:inline-flex;width:24px;height:24px;border-radius:50%;background:#000;color:#fff;align-items:center;justify-content:center;font-size:.85rem">G</span>Sign in with Google</button>';
   const v = TTS.cur();
   b.innerHTML = acct +
-    '<div class="kv"><div><b>' + learnedN() + '</b><small>course words</small></div><div><b>' + Object.keys(st.x).length + '</b><small>101 words</small></div><div><b>' + bestStreak() + '</b><small>best streak</small></div></div>' +
+    '<div class="kv"><div><b>' + learnedN() + '</b><small>course words</small></div><div><b>' + Object.keys(st.x).length + '</b><small>booster words</small></div><div><b>' + bestStreak() + '</b><small>best streak</small></div></div>' +
     '<div class="srow"><span class="lb">Voice</span><button type="button" class="tg" id="sVoi" aria-pressed="' + (st.set.voice !== 0) + '" aria-label="Voice"></button></div>' +
     (TTS.ok() && st.set.voice !== 0 ? (v ? '' : '<button type="button" class="srow pick" id="sVp"><span class="lb">No French voice: how to add one</span>' + ico('fwd') + '</button>') +
       '<div class="srow"><span class="lb">Speed</span><span class="seg"><button type="button" data-r="0" aria-pressed="' + (st.set.rate === 0) + '">Slower</button><button type="button" data-r="1" aria-pressed="' + (st.set.rate !== 0) + '">Normal</button></span></div>' : '') +
@@ -3204,7 +3235,7 @@ function openVoices() {
 function openCredits() {
   SFX.tap();
   const el = overlay('credits', '<div class="card" style="width:min(520px,100%)"><div class="ch"><span style="width:40px"></span><h2>Credits</h2><button class="rb" type="button" data-x>' + ico('x') + '</button></div><div class="cb cred">' +
-    '<p><b>Grammar</b>, <b>Vocab 101</b> and the <b>Talk</b> dialogues come from <i>Ti Liv Kréyòl</i> (2nd edition, 2020) by Adrien Guillory-Chatman, Oliver Mayeux, Nathan Wendte and Herbert Wiltz, TSÒHK, under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener">CC BY-NC-SA 4.0</a>. Adapted: tables reformatted, the language named Kréyòl, and the word list reordered for learning. These parts are shared under the same licence.</p>' +
+    '<p><b>Grammar</b>, <b>Vocab Booster</b> and the <b>Talk</b> dialogues come from <i>Ti Liv Kréyòl</i> (2nd edition, 2020) by Adrien Guillory-Chatman, Oliver Mayeux, Nathan Wendte and Herbert Wiltz, TSÒHK, under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener">CC BY-NC-SA 4.0</a>. Adapted: tables reformatted, the language named Kréyòl, and the word list reordered for learning. These parts are shared under the same licence.</p>' +
     '<p><b>Pictures</b>: Microsoft Fluent Emoji, <a href="https://github.com/microsoft/fluentui-emoji/blob/main/LICENSE" target="_blank" rel="noopener">MIT licence</a>.</p>' +
     '<p><b>Voice</b>: your device’s French voice reading a French spelling of the Kréyòl.</p></div></div>');
   el.querySelector('[data-x]').onclick = () => closeOv('credits');
@@ -3365,7 +3396,7 @@ const xDue = () => { const t = endOfToday(); return V.filter(e => { const r = xr
 function renderX() {
   const v = $('v101'); if (!XREADY) { v.innerHTML = ''; return; }
   const nx = xNext(), due = xDue().concat(pDue()), n = V.filter(xrec).length, fr = n / V.length, np = PV.find(p => !prec(p));
-  v.innerHTML = '<div class="xw"><div class="xhero"><span class="x101 big">101</span><div><h2>Vocab 101</h2><p>Everyday words, five at a time.</p></div></div>' +
+  v.innerHTML = '<div class="xw"><div class="xhero"><span class="x101 big"><svg class="i"><use href="#i-bolt"/></svg></span><div><h2>Vocab Booster</h2><p>Everyday words, five at a time.</p></div></div>' +
     '<div class="xbar" title=""><i style="width:' + Math.max(fr ? 2 : 0, Math.round(fr * 100)) + '%"></i></div>' +
     (nx.length ? '<div class="xnext"><div class="ws">' + nx.map(i => '<span>' + picHTML(V[i], 'xs') + esc(tw(V[i])) + '</span>').join('') + '</div><button class="btn pri" id="xGo" type="button">' + ico('spark') + 'Learn these words</button></div>'
       : '<div class="xnext"><div class="xall">' + ico('check') + 'Every word learned</div></div>') +
@@ -3410,7 +3441,7 @@ function xReview() {
 function openXList() {
   SFX.tap();
   const L = { q: '', page: 0, ids: V.map(e => e.id), per: 7 };
-  const el = overlay('xlist', '<div class="card" style="height:100%"><div class="ch"><span class="x101">101</span><h2>Word list</h2><button class="rb" type="button" data-x>' + ico('x') + '</button></div><div class="sw xs"><svg class="i mag"><use href="#i-mag"/></svg><input id="xq" type="search" placeholder="Search" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"></div><div class="list" id="xL"></div><div class="pager" id="xP"></div></div>');
+  const el = overlay('xlist', '<div class="card" style="height:100%"><div class="ch"><span class="x101"><svg class="i"><use href="#i-bolt"/></svg></span><h2>Word list</h2><button class="rb" type="button" data-x>' + ico('x') + '</button></div><div class="sw xs"><svg class="i mag"><use href="#i-mag"/></svg><input id="xq" type="search" placeholder="Search" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"></div><div class="list" id="xL"></div><div class="pager" id="xP"></div></div>');
   el.querySelector('[data-x]').onclick = () => closeOv('xlist');
   const list = el.querySelector('#xL');
   const row = i => { const e = V[i], r = xrec(e); return '<div class="row xr">' + picHTML(e, 'xs') + '<span class="tx"><div class="w">' + esc(e.word) + (e.posLabel ? '<span class="p">' + esc(e.posLabel.split(',')[0]) + '</span>' : '') + '</div><div class="m">' + esc(e.senses.map(s => s.g).filter(Boolean).join('; ')) + '</div></span>' + spk(e.forms[0], 'sm') + (adminOn() ? '<button class="rb admb" type="button" data-xe="' + i + '">' + ico('pen') + '</button>' : '') + '<span class="sg">' + barsHTML(r) + '</span></div>'; };
@@ -3585,14 +3616,22 @@ function acceptAnswer(step, res) {
   if (en) ent0.items.push(res.typed); else ent0.forms.push(res.typed);
 }
 /* the editor: the word, its example, and the sentence on screen */
+/* the pencil asks first, so nothing changes by accident */
 function openEditor(o) {
+  SFX.tap();
+  const what = o.f === 'p' ? 'this proverb' : o.e && o.x ? 'this word and sentence' : o.e ? 'this word' : 'this sentence';
+  const el = overlay('edq', '<div class="gc edq"><span class="adm">Admin</span><h2>Edit ' + what + '?</h2><div class="nbf"><button class="btn" type="button" id="qN">Cancel</button><button class="btn pri" type="button" id="qY">' + ico('pen') + 'Edit</button></div></div>', 'dim');
+  el.querySelector('#qN').onclick = () => closeOv('edq');
+  el.querySelector('#qY').onclick = () => { closeOv('edq', true); openEditorNow(o); };
+}
+function openEditorNow(o) {
   SFX.tap();
   const f = o.f || 'd', e = o.e, raw = e ? (RAW[f].get(e.ok0 || e.key) || [e.key, '', '', '']) : null, ed = e ? (edOf(f, e.key) || {}) : {};
   const cur = i => ed[['a', 'b', 'c', 'd'][i]] != null ? ed[['a', 'b', 'c', 'd'][i]] : raw[i];
   const x = o.x, sed = x ? (Object.values(st.ed || {}).find(r => r.f === 's' && r.s === x.s) || edOf('s', x.s) || {}) : null;
   const fld = (id, lab, val, big) => '<label class="ef"><span>' + lab + '</span>' + (big ? '<textarea id="' + id + '" rows="2">' : '<input id="' + id + '" value="') + esc(val || '') + (big ? '</textarea>' : '" autocomplete="off" autocapitalize="off" spellcheck="false">') + '</label>';
   const el = overlay('edit', '<div class="card" style="height:100%"><div class="ch"><span class="adm">Admin</span><h2>Correct</h2><button class="rb" type="button" data-x>' + ico('x') + '</button></div><div class="cb ed scr">' +
-    (e && f === 'p' ? '<div class="eg"><small>Proverb</small>' + fld('eA', 'Kréyòl', cur(0), 1) + fld('eB', 'English', cur(1), 1) + fld('eC', 'Meaning', cur(2), 1) + '</div>' : e ? '<div class="eg"><small>' + (f === 'x' ? 'Vocab 101 word' : 'Dictionary word') + '</small>' + fld('eA', 'Word (part of speech)', cur(0)) + fld('eB', 'Meaning', cur(1), 1) + fld('eC', 'Example', cur(2), 1) + fld('eD', 'Translation', cur(3), 1) + fld('eK', 'Also accept (one per line)', (ed.acc || []).join('\n'), 1) + '</div>' : '') +
+    (e && f === 'p' ? '<div class="eg"><small>Proverb</small>' + fld('eA', 'Kréyòl', cur(0), 1) + fld('eB', 'English', cur(1), 1) + fld('eC', 'Meaning', cur(2), 1) + '</div>' : e ? '<div class="eg"><small>' + (f === 'x' ? 'Vocab Booster word' : 'Dictionary word') + '</small>' + fld('eA', 'Word (part of speech)', cur(0)) + fld('eB', 'Meaning', cur(1), 1) + fld('eC', 'Example', cur(2), 1) + fld('eD', 'Translation', cur(3), 1) + fld('eK', 'Also accept (one per line)', (ed.acc || []).join('\n'), 1) + '</div>' : '') +
     (x ? '<div class="eg"><small>Sentence on screen</small>' + fld('sS', 'Kréyòl', sed.s || x.s, 1) + fld('sT', 'English', sed.tr != null ? sed.tr : x.t, 1) + '</div>' : '') +
     fld('eN', 'Note', ed.note || (sed && sed.note) || '', 1) + '</div><div class="ef2"><button class="btn" type="button" id="eU">' + ico('rev') + 'Undo</button><button class="btn pri" type="button" id="eV">Save</button></div></div>');
   el.querySelector('[data-x]').onclick = () => closeOv('edit');
@@ -3716,7 +3755,7 @@ function openNotes(u) {
 }
 
 /* ============================================================= proverbs */
-/* old Louisiana proverbs (Hearn, 1885, public domain) in modern spelling; they live in the Vocab 101 deck */
+/* old Louisiana proverbs (Hearn, 1885, public domain) in modern spelling; they live in the Vocab Booster deck */
 let PV = [];
 let DLG = [];
 async function loadD() { try { DLG = JSON.parse(await getText('dialogues.json')); } catch (e) { DLG = []; } if ($('map')) drawMap(); }
@@ -3778,6 +3817,50 @@ function setTab(t) {
   renderTab();
 }
 function renderTab() { if (!READY) return; if (TAB === 'dict') renderDict(); else if (TAB === 'x') renderX(); else if (TAB === 'gram') renderGram(); else renderLearn(); }
+/* ============================================================ transfer tips and King Louis */
+/* English and French already hand you a lot of Kréyòl: one pattern at a time, shown the first time a word fits it */
+const TIPS = [
+  { id: 'art', test: e => /^\((l|la|lé)\)/i.test(e.word), t: 'Many nouns kept the French word for “the” glued on. Your dictionary marks it with (l): lamézon is French <i>la maison</i>, house; labri is <i>l’abri</i>, shelter.' },
+  { id: 'er', test: e => /^(manjé|parlé|marshé|shanté|dansé|ashté|mandé|gardé|pasé|rèsté|rivé|tonbé|jwé|travayé|kouké|lavé|fermé|ouvær|pansé|trouvé|aprèsé|kité|marié|chèrshé|rgardé|gèté|vizité)$/.test(e.forms[0]), t: 'Most Kréyòl verbs end in -é, from French -er: manjé is <i>manger</i>, to eat; parlé is <i>parler</i>, to speak. Know the French verb and you can guess the Kréyòl.' },
+  { id: 'ic', test: e => /ik$/.test(e.forms[0]) && /ic\b/i.test(e.short), t: 'English -ic becomes -ik: music is lamizik, Catholic is katolik.' },
+  { id: 'ible', test: e => /(ib|ab)$/.test(e.forms[0]) && /(ible|able)\b/i.test(e.short), t: 'English -ible and -able become -ib and -ab: impossible is inpòsib.' },
+  { id: 'tion', test: e => /syon$/.test(e.forms[0]), t: 'English -tion becomes -syon: conversation is konværsasyon. Try it on other -tion words.' },
+  { id: 'ly', test: e => /man$/.test(e.forms[0]) && /ly\b/i.test(e.short), t: 'English -ly often matches -man, from French -ment: really is vréman.' },
+  { id: 'ate', test: e => /é$/.test(e.forms[0]) && /\bto \w+ate\b/i.test(e.short), t: 'English verbs in -ate often end in -é: to participate is participé.' }
+];
+const TK = 'dk-tips';
+function tipSteps(ids) {
+  let seen = []; try { seen = JSON.parse(localStorage.getItem(TK) || '[]'); } catch (e) {}
+  const out = [];
+  ids.forEach(id => { const e = E[id]; const r = TIPS.find(r => !seen.includes(r.id) && !out.some(o => o.tip === r.id) && r.test(e)); if (r) out.push({ type: 'tip', tip: r.id, w: id, targets: [] }); });
+  return out;
+}
+function tip(step, stg) {
+  const r = TIPS.find(x => x.id === step.tip), e = E[step.w];
+  try { const s = JSON.parse(localStorage.getItem(TK) || '[]'); if (!s.includes(r.id)) { s.push(r.id); localStorage.setItem(TK, JSON.stringify(s)); } } catch (x) {}
+  stg.innerHTML = '<div class="kt"><svg class="king"><use href="#i-king"/></svg><div class="ktb"><small>Transfer tip</small><p>' + r.t + '</p>' + (e ? '<div class="kte">' + esc(e.forms[0]) + ' <span>' + esc(e.short) + '</span>' + spk(e.forms[0], 'sm') + '</div>' : '') + '</div></div>';
+  setFoot('<button class="btn pri" id="pN" type="button">Got it</button>');
+  $('pN').onclick = () => { P.i++; nextStep(); };
+  return {};
+}
+/* the King's corner on the map: history and odd facts, a new one each visit, tap him for another */
+const KING = [
+  'Bonjou! Louisiana is named after me. La Salle claimed it for France in 1682 and called it La Louisiane.',
+  'I became King of France at four years old.',
+  'I reigned for 72 years, from 1643 to 1715. No European monarch has ruled longer.',
+  'They called me the Sun King, le Roi Soleil. As a boy I danced the part of the rising sun in a court ballet.',
+  'I moved my whole court to Versailles in 1682, the same year Louisiana got my name.',
+  'New Orleans was founded in 1718, three years after I died. It is named for the Duke of Orléans, who ruled for my great-grandson Louis XV.',
+  'The fleur-de-lis was the emblem of the French kings. You still see it all over Louisiana today.',
+  'Kouri-vini, another name for Kréyòl, comes from the French verbs courir and venir: to run and to come.',
+  'Kréyòl took shape in colonial Louisiana, built from French and the African languages of the people who spoke it every day.',
+  'A word of royal advice: ten minutes every day beats an hour once a week. Memory loves spacing.',
+  'Lost for a word? If it ends in -tion in English, try -syon in Kréyòl. A king improvises!',
+  'Proverbs were how old Louisiana taught. Find mine in the Vocab Booster tab.'
+];
+let kingI = -1;
+const kingSay = () => { kingI = (kingI < 0 ? rnd(KING.length) : kingI + 1) % KING.length; return KING[kingI]; };
+
 /* ============================================================ dialogues */
 /* Ti Liv Kréyòl's dialogues as little scenes: Thomas and Amélie act them out, then a listening check (red or green, pick the meaning) */
 const dlgStop = s => DLG.filter(d => d.lesson === s + 2);
@@ -3878,7 +3961,7 @@ const BADGES = (() => {
   const L = [];
   DIST.forEach((d, i) => L.push({ id: 'd-' + d.id, g: 'd', pic: d.props[0], t: d.kr, s: d.en, i, need: () => { const us = C.units.slice(i * SEC, i * SEC + SEC); return [us.filter((_, k) => unitDone(i * SEC + k) >= C.units[i * SEC + k].ls.length).length, us.length]; } }));
   [[10, 'seedling', 'First sprouts'], [50, 'sunflower', 'Sunflower'], [100, 'deciduous-tree', 'Live oak'], [250, 'crocodile', 'Kokodri'], [500, 'crown', 'Sun King'], [1000, 'glowing-star', 'Étoile']].forEach(([n, pic, t]) => L.push({ id: 'w' + n, g: 'm', pic, t, s: n + ' course words', need: () => [wordsN(), n] }));
-  [[25, 'open-book', 'Bookworm'], [100, 'books', 'Library'], [500, 'trophy', 'Five hundred']].forEach(([n, pic, t]) => L.push({ id: 'x' + n, g: 'm', pic, t, s: n + ' Vocab 101 words', need: () => [xN(), n] }));
+  [[25, 'open-book', 'Bookworm'], [100, 'books', 'Library'], [500, 'trophy', 'Five hundred']].forEach(([n, pic, t]) => L.push({ id: 'x' + n, g: 'm', pic, t, s: n + ' Vocab Booster words', need: () => [xN(), n] }));
   L.push({ id: 'p1', g: 'm', pic: 'owl', t: 'Wise owl', s: 'First proverb', need: () => [pN(), 1] });
   L.push({ id: 'p12', g: 'm', pic: 'owl', t: 'Old owl', s: '12 proverbs', need: () => [pN(), 12] });
   L.push({ id: 'pall', g: 'm', pic: 'owl', t: 'Gombo sage', s: 'Every proverb', need: () => [pN(), Math.max(1, PV.length)] });
