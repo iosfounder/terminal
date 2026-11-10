@@ -970,6 +970,8 @@ img.pic.li,.pic.li.ph{width:2.1rem;height:2.1rem;flex:none}
 .kte span{color:var(--mid);font-size:.9rem}
 .map-say#kSay{border-radius:4px 14px 14px 14px}
 
+.nw{white-space:nowrap;font-weight:inherit}
+
 </style>
 </head>
 <body>
@@ -3826,7 +3828,7 @@ const TIPS = [
   { id: 'ible', test: e => /(ib|ab)$/.test(e.forms[0]) && /(ible|able)\b/i.test(e.short), t: 'English -ible and -able become -ib and -ab: impossible is inpòsib.' },
   { id: 'tion', test: e => /syon$/.test(e.forms[0]), t: 'English -tion becomes -syon: conversation is konværsasyon. Try it on other -tion words.' },
   { id: 'ly', test: e => /man$/.test(e.forms[0]) && /ly\b/i.test(e.short), t: 'English -ly often matches -man, from French -ment: really is vréman.' },
-  { id: 'ate', test: e => /é$/.test(e.forms[0]) && /\bto \w+ate\b/i.test(e.short), t: 'English verbs in -ate often end in -é: to participate is participé.' }
+  { id: 'tionv', test: e => /^(répété|participé|kontiné|dejizé|èksplosé)$/.test(e.forms[0]), t: 'Every English -tion word hides a verb. Drop the <b class="nw">-tion</b> and end in <b class="nw">-é</b>, like French <b class="nw">-er</b>: celebration is <i>célébrer</i>, repetition is répété, participation is participé, continuation is kontiné. Know the -tion noun and you can build the verb.' }
 ];
 const TK = 'dk-tips';
 function tipSteps(ids) {
@@ -3855,7 +3857,7 @@ const KING = [
   'Kouri-vini, another name for Kréyòl, comes from the French verbs courir and venir: to run and to come.',
   'Kréyòl took shape in colonial Louisiana, built from French and the African languages of the people who spoke it every day.',
   'A word of royal advice: ten minutes every day beats an hour once a week. Memory loves spacing.',
-  'Lost for a word? If it ends in -tion in English, try -syon in Kréyòl. A king improvises!',
+  'Lost for a word? If it ends in -tion in English, try -syon in Kréyòl. For the verb, drop the -tion and end in -é. A king improvises!',
   'Proverbs were how old Louisiana taught. Find mine in the Vocab Booster tab.'
 ];
 let kingI = -1;
