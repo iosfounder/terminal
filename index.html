@@ -1238,7 +1238,7 @@ function tokenize(s) {
 
 /* ---------------------------------------------------------- lexicon */
 const OVR = {'mô':'mô (det.)','lê':'Le (det.)','gen':'gin (v.)','gìn':'gin (v.)','isi':'isit (prep.)','trwa':'trwò (n.)','kom':'konm (adj., conj.)','kòm':'konm (adj., conj.)','dòn':'donn (v.)','maryé':'mariyé, mari (v.)','jou':'jour (n.)'};
-const APO = {j:'je (pron.)',t:'to (pron.)',l:'li (pron.)',n:'nou, nouzòt (pron.)',p:'pa (conj., n.)',y:'yé (pron.)',k:'ki (conj.)',d:'d(e) (prep.)'};
+const APO = {j:'je (pron.)',t:'to (pron.)',l:'li (pron.)',n:'nou, nouzòt (pron.)',p:'pa (conj., n.)',y:'yé (pron.)',k:'ki (conj.)',d:'d(e) (prep.)',v:'vou (pron.)'};
 function Lexicon(E) {
   const ex = new Map(), fo = new Map(), lo = new Map(), byRaw = new Map();
   const add = (m, k, v) => { let a = m.get(k); if (!a) m.set(k, a = []); if (!a.includes(v)) a.push(v); };
@@ -1337,8 +1337,9 @@ function makeSentence(lex, s, t, owner, comp) {
 }
 function buildSentences(lex, E, composed) {
   const S = [];
-  E.forEach(e => e.ex.forEach(x => { if (x.s && x.t) S.push(makeSentence(lex, x.s, x.t, e.id, false)); }));
-  (composed || []).forEach(([s, t]) => S.push(makeSentence(lex, s, t, -1, true)));
+  const mk = (s, t, o, c) => { const r = makeSentence(lex, elide(s), t, o, c); r.o = s; return r; };
+  E.forEach(e => e.ex.forEach(x => { if (x.s && x.t) S.push(mk(x.s, x.t, e.id, false)); }));
+  (composed || []).forEach(([s, t]) => S.push(mk(s, t, -1, true)));
   // phrase occurrences
   const phr = E.filter(e => e.multi).map(e => ({ id: e.id, keys: e.forms.map(f => ' ' + fold(f).replace(/[^\p{L}\p{N}' -]/gu, ' ').replace(/\s+/g, ' ').trim() + ' ').filter(k => k.trim().length > 2) }));
   S.forEach((x, i) => {
@@ -1430,7 +1431,8 @@ const lev = (a, b) => {
   for (let i = 1; i <= a.length; i++) { const c = [i]; for (let j = 1; j <= b.length; j++) c[j] = Math.min(p[j] + 1, c[j - 1] + 1, p[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); p = c; }
   return p[b.length];
 };
-const normKL = s => low(s).replace(/[«»“”"¿?¡!.,;:()\[\]…]/g, ' ').replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
+const UNELI = { j: 'je', t: 'to', l: 'li', n: 'nou', v: 'vou', y: 'yé', m: 'mo' };
+const normKL = s => low(s).replace(/(^|[^\p{L}\p{M}])([jtlnvym])['’]\s*(?=\p{L})/gu, (m, a, c) => a + UNELI[c] + ' ').replace(/[«»“”"¿?¡!.,;:()\[\]…]/g, ' ').replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
 /* answers: array of acceptable Kréyòl strings */
 function gradeKL(input, answers) {
   const a = normKL(input);
@@ -1565,6 +1567,12 @@ const MATRIX = [
   [/s$/, 'sse', 'final s is said (sis)'],
   [new RegExp('([' + KV + '])([^' + KV + 'h]+)$'), (m, a, b) => b === 'n' ? m : a + b + 'e', 'final consonants are said (kat = kate, moun = moune)']
 ];
+/* je, to, li, nou, vou, yé, mo drop their vowel before a vowel: to olé becomes t'olé (Lord's rule) */
+const ELI = { je: 'j', to: 't', li: 'l', nou: 'n', vou: 'v', 'yé': 'y', mo: 'm' };
+const ELIRE = /(^|[^\p{L}\p{M}'’-])(je|to|li|nou|vou|yé|mo) +(?=[aeiouéèêòìæœôàâîïûüù])/giu;
+function elide(t) {
+  return String(t || '').normalize('NFC').replace(ELIRE, (m, pre, w) => { const r = ELI[w.toLowerCase()]; return pre + (w[0] === w[0].toUpperCase() ? r.toUpperCase() : r) + "'"; });
+}
 function frPart(p) {
   let s = p;
   if (!s) return s;
@@ -1573,7 +1581,7 @@ function frPart(p) {
   return s.replace(/[\uE001-\uE008]/g, c => NOUT[c]);
 }
 function toFr(text) {
-  return String(text || '').replace(/[‘’ʼ]/g, "'").replace(/[\p{L}\p{M}]+/gu, (w, at, all) => {
+  return elide(text).replace(/[‘’ʼ]/g, "'").replace(/[\p{L}\p{M}]+/gu, (w, at, all) => {
     const lw = w.toLowerCase();
     if (lw.length === 1 && all[at + 1] === "'" && !/[aeiouéèò]/.test(lw)) return lw;
     return frPart(lw.normalize('NFC'));
@@ -1939,7 +1947,7 @@ function Course(E, lex, S, course) {
   return { lesson, review, jump, unitTest, unitReview, listenTest, hearPool, blitzBoard, answersFor, words };
 }
 
-G.DK = { DIALECT, toFr, sndKey, speechScore, dec, fold, loose, low, uniq, parseTSV, tokenize, Lexicon, buildSentences, makeSentence, buildCourse, Course, gradeKL, gradeEN, enWords, normKL, lev, rng, shuffle, recNew, recall, schedule, strength, isWeak, DAY, CATS, START, LESSON, UNIT };
+G.DK = { DIALECT, toFr, elide, sndKey, speechScore, dec, fold, loose, low, uniq, parseTSV, tokenize, Lexicon, buildSentences, makeSentence, buildCourse, Course, gradeKL, gradeEN, enWords, normKL, lev, rng, shuffle, recNew, recall, schedule, strength, isWeak, DAY, CATS, START, LESSON, UNIT };
 })(typeof globalThis !== 'undefined' ? globalThis : window);
 
 </script>
@@ -2274,8 +2282,8 @@ function layoutPath() {
   /* three stops per unit: Learn (all the unit's words, part by part), Listening, Challenge */
   const W = box.clientWidth, H = box.clientHeight; if (!W || !H) return;
   const nd = u.ls.filter(lessonDone).length, nl = u.ls.length, learnDone = nd === nl;
-  const nextL = u.ls.find(L => !lessonDone(L)), canLearn = nextL != null && nextL === fo;
-  const hpOk = hpDone(viewU, 0), allDone = learnDone && hpOk, cpDone = !!(st.cp && st.cp[viewU]);
+  const nextL = u.ls.find(L => !lessonDone(L)), canLearn = nextL != null && (nextL === fo || UA());
+  const hpOk = hpDone(viewU, 0), allDone = (learnDone && hpOk) || UA(), cpDone = !!(st.cp && st.cp[viewU]);
   const ns = Math.max(64, Math.min(104, H * 0.15, W * 0.26));
   box.style.setProperty('--ns', ns + 'px');
   const ys = [0.2, 0.52, 0.84].map(f => H * f), xs = [W * 0.5, W * 0.5 + Math.min(W * 0.22, 100), W * 0.5];
@@ -2284,7 +2292,7 @@ function layoutPath() {
   const ring = f => '<svg class="lring" viewBox="0 0 ' + (2 * R + 8) + ' ' + (2 * R + 8) + '" style="width:' + (2 * R + 8) + 'px;height:' + (2 * R + 8) + 'px"><circle cx="' + (R + 4) + '" cy="' + (R + 4) + '" r="' + R + '" class="b"/><circle cx="' + (R + 4) + '" cy="' + (R + 4) + '" r="' + R + '" class="f" stroke-dasharray="' + CC.toFixed(1) + '" stroke-dashoffset="' + (CC * (1 - f)).toFixed(1) + '"/></svg>';
   const pos = (i, cls, inner) => '<button class="node big ' + cls + '" type="button" style="left:' + xs[i].toFixed(1) + 'px;top:' + ys[i].toFixed(1) + 'px"' + inner;
   h += pos(0, 'learn ' + (learnDone ? 'done' : canLearn ? 'open' : 'lock'), ' data-learn="1">' + (canLearn ? '<span class="go">' + (nd ? 'Continue' : 'Start') + '</span>' : '') + '<span class="c">' + (!learnDone && nd ? ring(nd / nl) : '') + ico(learnDone ? 'check' : canLearn ? 'spark' : 'lock') + '</span><span class="lb">Learn · ' + (learnDone ? u.ls.reduce((a, L) => a + C.lessons[L].ids.length, 0) + ' words' : 'part ' + Math.min(nl, nd + 1) + ' of ' + nl) + '</span></button>');
-  const hpOpen = learnDone && !hpOk;
+  const hpOpen = (learnDone || UA()) && !hpOk;
   h += pos(1, 'hp ' + (hpOk ? 'done' : hpOpen ? 'open' : 'lock'), ' data-h="0">' + (hpOpen ? '<span class="go">Listen</span>' : '') + '<span class="c">' + ico(hpOk ? 'check' : 'hp') + '</span><span class="lb">Listening</span></button>');
   h += pos(2, 'trophy ' + (cpDone ? 'done' : allDone ? 'open' : 'lock'), ' data-t="1">' + (allDone && !cpDone ? '<span class="go">Challenge</span>' : '') + '<span class="c">' + (allDone ? '<svg class="i fl"><use href="#i-fleur"/></svg>' : ico('lock')) + '</span><span class="lb">Unit challenge</span></button>');
   box.innerHTML = h;
@@ -2317,7 +2325,7 @@ function renderHeader() {
 let openSec = null;
 function openSections() {
   SFX.tap();
-  const fo = firstOpen(), cu = fo < C.lessons.length ? C.lessons[fo].u : C.units.length - 1;
+  const fo = firstOpen(), cu = UA() || fo >= C.lessons.length ? C.units.length - 1 : C.lessons[fo].u;
   const ns = Math.ceil(C.units.length / SEC);
   if (openSec == null) openSec = secOf(viewU);
   const draw = el => {
@@ -2381,7 +2389,7 @@ function renderLearn() {
 function drawMap(reveal) {
   const map = $('map'), inn = $('mapin'); if (!map || !inn) return;
   const W = map.clientWidth; if (!W) return;
-  const fo = firstOpen(), cu = fo < C.lessons.length ? C.lessons[fo].u : C.units.length - 1, last = Math.min(C.units.length - 1, cu + 1);
+  const fo = firstOpen(), cu = UA() || fo >= C.lessons.length ? C.units.length - 1 : C.lessons[fo].u, last = Math.min(C.units.length - 1, cu + 1);
   const STEP = 124, BAN = 190, amp = Math.min(W * 0.2, 140), cx = W / 2;
   let y = 30, h = '', nodes = [], bands = '';
   const dLast = secOf(last);
@@ -2417,7 +2425,7 @@ function drawMap(reveal) {
   nodes.forEach(n => {
     const k = n.u % SEC; if (k !== 4 && k !== 9) return;
     const s = secOf(n.u) * 2 + (k === 9 ? 1 : 0), g = dlgStop(s); if (!g.length) return;
-    const open = unitAll(n.u), done = !!(st.cp && st.cp['g' + s]);
+    const open = unitAll(n.u) || UA(), done = !!(st.cp && st.cp['g' + s]);
     const x = n.x + (n.x < cx ? 1 : -1) * Math.min(110, W * 0.27), yy = n.y + STEP * 0.5;
     h += '<button type="button" class="dlg ' + (done ? 'done' : open ? 'open' : 'lock') + '" data-g="' + s + '" style="left:' + x.toFixed(1) + 'px;top:' + yy.toFixed(1) + 'px"><span class="c">' + (open || done ? pimg('speech-balloon') : ico('lock')) + (done ? '<i class="ck">' + ico('check') + '</i>' : '') + '</span><span class="lb">Talk</span></button>';
   });
@@ -2449,7 +2457,7 @@ function openUnit(u) {
 }
 function drawUnit() {
   const el = $('unit'); if (!el) return;
-  const u = unitU, D = distOf(u), fo = firstOpen(), locked = C.units[u].ls[0] > fo;
+  const u = unitU, D = distOf(u), fo = firstOpen(), locked = !UA() && C.units[u].ls[0] > fo;
   el.querySelector('.card').className = 'card unitc d-' + D.id;
   $('uD').textContent = D.kr + ' · District ' + (secOf(u) + 1);
   $('uT').textContent = 'Unit ' + (u % SEC + 1);
@@ -2467,7 +2475,7 @@ const canMic = () => !!SRC && !P.noSR && window.__dkSR !== false;
 const STRIKES = { lesson: 1, unit: 1, jump: 1, xlearn: 1, plearn: 1, ltest: 1, dlg: 1 };
 function warmIds(L) { const r = recs(), t = now(), mine = new Set(C.lessons[L].ids); return Object.keys(r).map(Number).filter(i => !mine.has(i) && r[i][1] * 6e4 <= t && !E[i].multi).sort((a, b) => DK.recall(r[a], t) - DK.recall(r[b], t)).slice(0, 2); }
 const seed = () => (now() / 1000 | 0) % 997 + 1;
-function startLesson(L, again) { const hb = again ? null : hpBlock(L); if (hb) { toast('Pass the listening in Unit ' + (hb.u % SEC + 1) + ' first'); openListen(hb.u, hb.k); return; } const steps = K.lesson(L, { seed: seed(), audio: TTS.has(), mic: canMic(), warm: warmIds(L) });
+function startLesson(L, again) { const hb = again || UA() ? null : hpBlock(L); if (hb) { toast('Pass the listening in Unit ' + (hb.u % SEC + 1) + ' first'); openListen(hb.u, hb.k); return; } const steps = K.lesson(L, { seed: seed(), audio: TTS.has(), mic: canMic(), warm: warmIds(L) });
   tipSteps(C.lessons[L].ids).forEach(t => { const at = steps.findIndex(s => s.type === 'intro' && s.w === t.w); steps.splice(at >= 0 ? at + 1 : 1, 0, t); }); startSession('lesson', steps, { L }); }
 function startListenTest(U, k) { closeOv('listen', true); const ls = C.units[U].ls, upTo = k == null ? null : ls[Math.min(ls.length, hpPos(U)[k]) - 1]; startSession('ltest', K.listenTest(U, { seed: seed(), upTo }), { U, k }); }
 function startUnitReview(U) { startSession('unit', K.unitReview(U, { seed: seed(), audio: TTS.has() }), { U }); }
@@ -3155,9 +3163,9 @@ function entryBlocks(e) {
   e.senses.forEach((s, i) => {
     let h = '<div class="s">' + (e.senses.length > 1 ? '<span class="n">' + (s.n || i + 1) + '</span>' : '') + '<div style="flex:1;min-width:0"><div class="g">' + esc(s.g) + (s.pos ? ' <span style="color:var(--mid);font-style:italic;font-size:.85em">' + esc(s.pos) + '</span>' : '') + '</div>';
     blocks.push(h + '</div></div>');
-    s.ex.forEach(x => { const sx = S.find(y => y.owner === e.id && y.s === x.s); blocks.push('<div class="x"><div class="kl">' + (sx ? sentHTML(sx, { hl: e.id }) : esc(x.s)) + ' ' + spk(x.s, 'sm') + '</div><div class="tr">' + esc(x.t) + '</div></div>'); });
+    s.ex.forEach(x => { const sx = S.find(y => y.owner === e.id && y.s === x.s && (y.o || y.s) === x.s); blocks.push('<div class="x"><div class="kl">' + (sx ? sentHTML(sx, { hl: e.id }) : esc(x.s)) + ' ' + spk(x.s, 'sm') + '</div><div class="tr">' + esc(x.t) + '</div></div>'); });
   });
-  e.general.forEach(x => { const sx = S.find(y => y.owner === e.id && y.s === x.s); blocks.push('<div class="x"><div class="kl">' + (sx ? sentHTML(sx, { hl: e.id }) : esc(x.s)) + ' ' + spk(x.s, 'sm') + '</div><div class="tr">' + esc(x.t) + '</div></div>'); });
+  e.general.forEach(x => { const sx = S.find(y => y.owner === e.id && y.s === x.s && (y.o || y.s) === x.s); blocks.push('<div class="x"><div class="kl">' + (sx ? sentHTML(sx, { hl: e.id }) : esc(x.s)) + ' ' + spk(x.s, 'sm') + '</div><div class="tr">' + esc(x.t) + '</div></div>'); });
   const r = recOf(e.id);
   if (r) { const due = r[1] * 6e4, dd = Math.max(0, Math.round((due - now()) / 864e5)); blocks.push('<div class="lv">' + barsHTML(r) + '<span>' + (due <= endOfToday() ? 'Due today' : 'Next review in ' + dd + (dd === 1 ? ' day' : ' days')) + '</span></div>'); }
   return blocks;
@@ -3213,7 +3221,7 @@ function drawSheet() {
     (TTS.ok() && st.set.voice !== 0 ? (v ? '' : '<button type="button" class="srow pick" id="sVp"><span class="lb">No French voice: how to add one</span>' + ico('fwd') + '</button>') +
       '<div class="srow"><span class="lb">Speed</span><span class="seg"><button type="button" data-r="0" aria-pressed="' + (st.set.rate === 0) + '">Slower</button><button type="button" data-r="1" aria-pressed="' + (st.set.rate !== 0) + '">Normal</button></span></div>' : '') +
     '<div class="srow"><span class="lb">Sounds</span><button type="button" class="tg" id="sSnd" aria-pressed="' + (!!st.set.snd) + '" aria-label="Sounds"></button><span class="lb" style="text-align:right">Light theme</span><button type="button" class="tg" id="sLt" aria-pressed="' + (st.set.theme !== 'dark') + '" aria-label="Light theme"></button></div>' +
-    (ADMIN ? '<div class="srow"><span class="lb">Admin mode</span><button type="button" class="tg" id="sAd" aria-pressed="' + adminOn() + '" aria-label="Admin mode"></button></div>' + (adminOn() ? '<div class="admrow"><span>' + edCount() + (edCount() === 1 ? ' correction' : ' corrections') + '</span><button class="btn" type="button" id="sAx"' + (edCount() ? '' : ' disabled') + '>' + ico('share') + 'Export</button><button class="btn" type="button" id="sAc"' + (edCount() ? '' : ' disabled') + '>' + (clearArm ? 'Tap again' : 'Clear') + '</button></div>' : '') : '') +
+    (ADMIN ? '<div class="srow"><span class="lb">Admin mode</span><button type="button" class="tg" id="sAd" aria-pressed="' + adminOn() + '" aria-label="Admin mode"></button></div>' + (adminOn() ? '<div class="admrow"><span>' + edCount() + (edCount() === 1 ? ' correction' : ' corrections') + '</span><button class="btn" type="button" id="sAx"' + (edCount() ? '' : ' disabled') + '>' + ico('share') + 'Export</button><button class="btn" type="button" id="sAc"' + (edCount() ? '' : ' disabled') + '>' + (clearArm ? 'Tap again' : 'Clear') + '</button></div><div class="srow"><span class="lb">Unlock all</span><button type="button" class="tg" id="sAu" aria-pressed="' + UA() + '" aria-label="Unlock all"></button></div>' : '') : '') +
     '<div class="links"><button class="lnk" type="button" id="sBd">Badges ' + BADGES.earned().length + '/' + BADGES.L.length + '</button><button class="lnk" type="button" id="sPl">Placement test</button><button class="lnk" type="button" id="sExp">Export starred words</button><button class="lnk" type="button" id="sCr">Credits</button><button class="lnk red" type="button" id="sRst">' + (resetArm ? 'Tap again to erase all progress' : 'Reset progress') + '</button></div>';
   if ($('sIn')) $('sIn').onclick = signIn;
   if ($('sOut')) $('sOut').onclick = () => { try { firebase.auth().signOut(); } catch (e) {} };
@@ -3222,6 +3230,7 @@ function drawSheet() {
   $('sSnd').onclick = () => { st.set.snd = st.set.snd ? 0 : 1; st.set.t = now(); save(); SFX.tap(); drawSheet(); };
   $('sExp').onclick = exportStars;
   $('sCr').onclick = openCredits;
+  if ($('sAu')) $('sAu').onclick = () => { st.set.ua = UA() ? 0 : 1; st.set.t = now(); save(); _fo = null; SFX.tap(); drawSheet(); renderAll(); };
   if ($('sAd')) $('sAd').onclick = () => { st.set.admin = adminOn() ? 0 : 1; st.set.t = now(); save(); document.body.classList.toggle('admin', adminOn()); SFX.tap(); drawSheet(); };
   if ($('sAx')) $('sAx').onclick = exportEd;
   if ($('sAc')) $('sAc').onclick = () => { if (!clearArm) { clearArm = 1; drawSheet(); setTimeout(() => { clearArm = 0; if ($('sheet')) drawSheet(); }, 4000); return; } clearArm = 0; clearEd(); };
@@ -3597,6 +3606,7 @@ const ADMIN_HASH = '4cb8b22a15b084a55472d88d1f154663b7d744fc1543c500a77695a86c52
 let ADMIN = false;
 const RAW = { d: new Map(), x: new Map(), p: new Map() };
 const adminOn = () => ADMIN && !!st.set.admin;
+const UA = () => adminOn() && !!st.set.ua;
 async function checkAdmin(u) {
   let ok = false;
   try { if (u && u.email && u.emailVerified !== false && crypto.subtle) { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(u.email.trim().toLowerCase())); ok = [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('') === ADMIN_HASH; } } catch (e) {}
@@ -3651,15 +3661,15 @@ function openEditorNow(o) {
   SFX.tap();
   const f = o.f || 'd', e = o.e, raw = e ? (RAW[f].get(e.ok0 || e.key) || [e.key, '', '', '']) : null, ed = e ? (edOf(f, e.key) || {}) : {};
   const cur = i => ed[['a', 'b', 'c', 'd'][i]] != null ? ed[['a', 'b', 'c', 'd'][i]] : raw[i];
-  const x = o.x, sed = x ? (Object.values(st.ed || {}).find(r => r.f === 's' && r.s === x.s) || edOf('s', x.s) || {}) : null;
+  const x = o.x, xs = x ? (x.o || x.s) : null, sed = x ? (Object.values(st.ed || {}).find(r => r.f === 's' && r.s === xs) || edOf('s', xs) || {}) : null;
   const fld = (id, lab, val, big) => '<label class="ef"><span>' + lab + '</span>' + (big ? '<textarea id="' + id + '" rows="2">' : '<input id="' + id + '" value="') + esc(val || '') + (big ? '</textarea>' : '" autocomplete="off" autocapitalize="off" spellcheck="false">') + '</label>';
   const el = overlay('edit', '<div class="card" style="height:100%"><div class="ch"><span class="adm">Admin</span><h2>Correct</h2><button class="rb" type="button" data-x>' + ico('x') + '</button></div><div class="cb ed scr">' +
     (e && f === 'p' ? '<div class="eg"><small>Proverb</small>' + fld('eA', 'Kréyòl', cur(0), 1) + fld('eB', 'English', cur(1), 1) + fld('eC', 'Meaning', cur(2), 1) + '</div>' : e ? '<div class="eg"><small>' + (f === 'x' ? 'Vocab Booster word' : 'Dictionary word') + '</small>' + fld('eA', 'Word (part of speech)', cur(0)) + fld('eB', 'Meaning', cur(1), 1) + fld('eC', 'Example', cur(2), 1) + fld('eD', 'Translation', cur(3), 1) + fld('eK', 'Also accept (one per line)', (ed.acc || []).join('\n'), 1) + '</div>' : '') +
-    (x ? '<div class="eg"><small>Sentence on screen</small>' + fld('sS', 'Kréyòl', sed.s || x.s, 1) + fld('sT', 'English', sed.tr != null ? sed.tr : x.t, 1) + '</div>' : '') +
+    (x ? '<div class="eg"><small>Sentence on screen</small>' + fld('sS', 'Kréyòl', sed.s || xs, 1) + fld('sT', 'English', sed.tr != null ? sed.tr : x.t, 1) + '</div>' : '') +
     fld('eN', 'Note', ed.note || (sed && sed.note) || '', 1) + '</div><div class="ef2"><button class="btn" type="button" id="eU">' + ico('rev') + 'Undo</button><button class="btn pri" type="button" id="eV">Save</button></div></div>');
   el.querySelector('[data-x]').onclick = () => closeOv('edit');
   const v = id => { const n = el.querySelector('#' + id); return n ? n.value.replace(/\r/g, '') : null; };
-  el.querySelector('#eU').onclick = () => { const t = now(); if (e && st.ed[f + '|' + e.key]) st.ed[f + '|' + e.key] = { f, k: e.key, off: 1, t }; if (x) for (const k in st.ed) if (st.ed[k].f === 's' && (st.ed[k].k === x.s || st.ed[k].s === x.s)) st.ed[k] = { f: 's', k: st.ed[k].k, off: 1, t }; save(); push(); closeOv('edit'); toast('Correction removed'); if ($('sheet')) drawSheet(); };
+  el.querySelector('#eU').onclick = () => { const t = now(); if (e && st.ed[f + '|' + e.key]) st.ed[f + '|' + e.key] = { f, k: e.key, off: 1, t }; if (x) for (const k in st.ed) if (st.ed[k].f === 's' && (st.ed[k].k === xs || st.ed[k].s === xs)) st.ed[k] = { f: 's', k: st.ed[k].k, off: 1, t }; save(); push(); closeOv('edit'); toast('Correction removed'); if ($('sheet')) drawSheet(); };
   el.querySelector('#eV').onclick = () => {
     const note = v('eN').trim();
     if (e) {
@@ -3669,7 +3679,7 @@ function openEditorNow(o) {
       if (rec.acc.length) rec.en = rec.en != null ? rec.en : !!ed.en;
       saveEd(f + '|' + e.key, rec);
     }
-    if (x) { const ns = v('sS').trim(), nt = v('sT').trim(), k0 = sed.k || x.s; if (ns !== k0 || nt !== (sed.ot || x.t) || note) saveEd('s|' + k0, { f: 's', k: k0, ot: sed.ot || x.t, s: ns, tr: nt, note }); }
+    if (x) { const ns = v('sS').trim(), nt = v('sT').trim(), k0 = sed.k || xs; if (ns !== k0 || nt !== (sed.ot || x.t) || note) saveEd('s|' + k0, { f: 's', k: k0, ot: sed.ot || x.t, s: ns, tr: nt, note }); }
     closeOv('edit'); SFX.ok(); toast('Saved for export');
     if ($('sheet')) drawSheet();
   };
