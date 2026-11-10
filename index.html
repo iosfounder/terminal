@@ -1519,7 +1519,29 @@ function gradeEN(input, items, sentence) {
 /* ------------------------------------------- speech: Kréyòl spelling read by a French voice */
 // Kréyòl → French spelling matrix. Each row is [Kréyòl pattern, French spelling, what it does].
 // Rows run top to bottom on each word; a French voice then reads the result.
-const KV = 'aeiouyéèêôàâîïûü';
+const KV = 'aeiouyéèêôàâîïûü\uE001\uE002\uE003\uE004\uE008';
+/* nasal vowels, per the Ti Liv spelling guide (lesson 1), with ã and õ merged to õ as in Lord's dialect.
+   Placeholders: A nasal a (said õ), I nasal è, O nasal o, U nasal œ, N/M a sounded n/m, E8 the en of bien */
+const NV = '[aeiouyéèêòìæœôàâîïûü]';
+const NAS = [
+  ['ann', 'a\uE005'], ['amm', 'a\uE006'],
+  ['enn', '\uE001\uE005'], ['anm', '\uE001\uE006'], ['enm', '\uE001\uE006'], ['emm', '\uE001\uE006'],
+  ['inn', 'i\uE005'], ['imm', 'i\uE006'], ['ènn', '\uE002\uE005'], ['inm', '\uE002\uE006'],
+  ['onn', '\uE003\uE005'], ['onm', '\uE003\uE006'], ['unn', '\uE004\uE005'], ['unm', '\uE004\uE006'],
+  ['ounn', 'ou\uE005'], ['oun', 'ou\uE005'], ['oum', 'ou\uE006'],
+  ['ònn', 'o\uE005'], ['òn', 'o\uE005'], ['òm', 'o\uE006'], ['èn', 'è\uE005'], ['èm', 'è\uE006'],
+  ['ìnn', 'i\uE005'], ['ìn', 'i\uE005'], ['ìm', 'i\uE006'], ['æn', 'è\uE005'], ['æm', 'è\uE006'],
+  ['an', '\uE001'], ['am', '\uE001'], ['en', '\uE001'], ['em', '\uE001'],
+  ['in', '\uE002'], ['im', '\uE002'], ['on', '\uE003'], ['om', '\uE003'], ['un', '\uE004'], ['um', '\uE004']
+];
+const NASMAP = Object.fromEntries(NAS);
+/* single nasals only when no vowel or n/m follows; doubles always */
+const NASRE = new RegExp(NAS.map(([k]) => k.length === 2 ? k + '(?![nm]|' + NV + ')' : k).join('|'), 'g');
+const NOUT = { '\uE001': 'on', '\uE002': 'in', '\uE003': 'on', '\uE004': 'un', '\uE005': 'n', '\uE006': 'm', '\uE008': 'en' };
+function nasal(s) {
+  s = s.replace(NASRE, m => NASMAP[m]);
+  return s.replace(/([^aeiouéèòìæœ])y\uE002/g, '$1i\uE008');
+}
 const MATRIX = [
   [/æ/g, 'è', 'æ is open è (pær = père)'],
   [/œ/g, 'eu', 'œ is eu (plœré)'],
@@ -1531,25 +1553,24 @@ const MATRIX = [
   [/sh/g, 'ch', 'sh is French ch (dìmansh)'],
   [/ñ/g, 'gn', 'ñ is gn'],
   [/w/g, 'ou', 'w is ou (zwazo = zouazo)'],
-  [/([^i])yin$/, '$1ien', 'final yin is ien (byin = bien)'],
   [new RegExp('e(?=[^' + KV + 'nmh]+$)'), 'è', 'e in a closed last syllable is è (avek = avèque)'],
-  [/g(?=[eiéèêy])/g, 'gu', 'g stays hard before e, i, y'],
+  [/g(?=[eiéèêy\uE002\uE004\uE008])/g, 'gu', 'g stays hard before e, i, y (gin = guin)'],
   [new RegExp('ey(?![' + KV + '])', 'g'), 'èy', 'ey before a consonant'],
   [/e(?!u)(?![nm](?![aeiouyéèêô]))/g, 'eu', 'plain e is the short eu sound (jedi = jeudi)'],
   [new RegExp('([' + KV + '])s(?=[' + KV + '])', 'g'), '$1ss', 's between vowels stays s, not z (sosis)'],
   [/ay$/, 'aille', 'final ay (travay = travaille)'],
   [/èy$/, 'eille', 'final ey (zorey = zoreille)'],
   [/ouy$/, 'ouille', 'final ouy (fouy = fouille)'],
-  [/oun$/, 'oune', 'final oun is oral (moun = moune)'],
   [/k$/, 'que', 'final k is said (avek = avèque)'],
   [/s$/, 'sse', 'final s is said (sis)'],
-  [new RegExp('([' + KV + '])([^' + KV + 'h]+)$'), (m, a, b) => b === 'n' ? m : a + b + 'e', 'final consonants are said (kat = kate, nonm = nonme); a lone final n stays nasal (dan)']
+  [new RegExp('([' + KV + '])([^' + KV + 'h]+)$'), (m, a, b) => b === 'n' ? m : a + b + 'e', 'final consonants are said (kat = kate, moun = moune)']
 ];
 function frPart(p) {
   let s = p;
   if (!s) return s;
+  s = nasal(s);
   for (const [re, to] of MATRIX) s = s.replace(re, to);
-  return s;
+  return s.replace(/[\uE001-\uE008]/g, c => NOUT[c]);
 }
 function toFr(text) {
   return String(text || '').replace(/[‘’ʼ]/g, "'").replace(/[\p{L}\p{M}]+/gu, (w, at, all) => {
