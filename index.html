@@ -325,7 +325,7 @@ body.wide .lmain .acts{display:none}
 .intro .ex .tr{font-size:calc(1.02rem*var(--k));color:var(--mid);margin-top:.3rem}
 .ans-line{--lh:calc(3.55rem*var(--k));min-height:calc(var(--lh)*2);display:flex;flex-wrap:wrap;align-content:flex-start;align-items:center;column-gap:calc(.45rem*var(--k));row-gap:0;background:repeating-linear-gradient(to bottom,transparent 0,transparent calc(var(--lh) - 2px),var(--line2) calc(var(--lh) - 2px),var(--line2) var(--lh));transition:background .2s}
 .ans-line>*{margin:calc(.3rem*var(--k)) 0}
-.ans-line .fx{font-size:calc(1.3rem*var(--k));color:var(--mid);padding:0 .1rem;line-height:calc(2.95rem*var(--k))}
+.ans-line .fxw{font-size:calc(1.3rem*var(--k));color:var(--mid);padding:0 .1rem;line-height:calc(2.95rem*var(--k))}
 .bank{display:flex;flex-wrap:wrap;justify-content:center;align-content:flex-end;gap:calc(.55rem*var(--k));min-height:calc(3.2rem*var(--k));margin-top:auto;padding-bottom:calc(.4rem*var(--k))}
 .tile{height:calc(2.95rem*var(--k));padding:0 calc(1rem*var(--k));border-radius:13px;border:1px solid var(--line2);background:var(--raised);font-size:calc(1.28rem*var(--k));box-shadow:0 3px 0 var(--line2);transition:transform .1s,opacity .15s,background .15s,border-color .15s;white-space:nowrap;touch-action:none}
 .tile:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line2)}
@@ -971,6 +971,12 @@ img.pic.li,.pic.li.ph{width:2.1rem;height:2.1rem;flex:none}
 .map-say#kSay{border-radius:4px 14px 14px 14px}
 
 .nw{white-space:nowrap;font-weight:inherit}
+html.light .fb.ok{background:#e5f3ea;border-color:#b6dbc4}
+html.light .fb.bad{background:#fbeae7;border-color:#efc2bb}
+html.light .fb .hd .ic{color:#fff}
+.fb.bad .ans{color:var(--fg)}
+.fb.bad .ans .dk{color:var(--fg);font-weight:700;background:var(--ok-a);box-shadow:inset 0 -2px 0 var(--ok)}
+html.light .fb .row2 .btn.pri,html.light .fb .btn.pri{color:#fff}
 
 </style>
 </head>
@@ -2874,7 +2880,7 @@ function build(step, stg) {
   const tiles = DK.shuffle(expect.concat(step.extra || []), Math.random);
   const bp = step.phrase != null ? picHTML(E[step.phrase], 'mid') : pimg(sentPic(S[step.s]), 'mid');
   stg.innerHTML = (step.listen ? playHTML() : '<div class="pr">' + bp + '<div class="bubble"><div class="md">' + prompt + '</div></div></div>') +
-    '<div class="ans-line" id="aL">' + (before ? '<span class="fx">' + before.trim() + '</span>' : '') + '<span id="aS" style="display:contents"></span>' + (after ? '<span class="fx">' + after.trim() + '</span>' : '') + '</div>' +
+    '<div class="ans-line" id="aL">' + (before ? '<span class="fxw">' + before.trim() + '</span>' : '') + '<span id="aS" style="display:contents"></span>' + (after ? '<span class="fxw">' + after.trim() + '</span>' : '') + '</div>' +
     '<div class="bank" id="bK">' + tiles.map((t, i) => '<button type="button" class="tile" data-i="' + i + '">' + esc(t) + '</button>').join('') + '</div>';
   const aS = stg.querySelector('#aS'), bK = stg.querySelector('#bK'), aL = stg.querySelector('#aL');
   if (step.listen) { wirePlay(stg, S[step.s].s); setTimeout(() => TTS.say(S[step.s].s), 250); }
