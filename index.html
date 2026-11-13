@@ -2,99 +2,1414 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#000000">
-<title>0</title>
-<style>
-  html, body { margin: 0; height: 100%; background: #000; color: #e8f4f8; overflow: hidden; font-family: ui-monospace, Menlo, Consolas, monospace; }
-  #app { display: grid; grid-template-rows: auto 1fr auto; height: 100%; padding: 12px; box-sizing: border-box; gap: 10px; }
-  #top { display: flex; justify-content: space-between; font-size: 13px; color: #7fd6ff; }
-  #grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; align-content: center; }
-  .cell { aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; font-size: clamp(10px, 2.2vw, 16px); border: 1px solid #14323f; border-radius: 3px; cursor: pointer; user-select: none; transition: background .25s, color .25s, border-color .25s; }
-  .cell:hover { border-color: #7fd6ff; }
-  .cell.hit { background: #7fd6ff; color: #000; border-color: #7fd6ff; }
-  .cell.out { opacity: .15; }
-  .cell.sym { color: #ffb86b; }
-  #bins { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .bin { border: 1px solid #14323f; border-radius: 4px; min-height: 52px; padding: 6px; font-size: 12px; color: #7fd6ff; overflow: hidden; word-break: break-all; line-height: 1.5; }
-  #ctl { display: flex; justify-content: center; gap: 14px; }
-  button { background: #000; color: #7fd6ff; border: 1px solid #7fd6ff; border-radius: 4px; padding: 10px 22px; font: inherit; font-size: 18px; cursor: pointer; }
-  button:active { background: #7fd6ff; color: #000; }
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="theme-color" content="#faf7f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e0e10" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+<title>KV</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="dk-icon-48.png">
+<link rel="apple-touch-icon" href="dk-icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="KV">
+<style>:root{
+  --bg:#faf7f1;--card:#fff;--soft:#f1ece2;--line:#e6dfd2;--fg:#1d1a16;--mid:#6c6458;--dim:#857c6e;
+  --acc:#6b5ce7;--acc-a:rgba(107,92,231,.1);--ok:#1d8a50;--bad:#c43d33;--gold:#d39b14;
+  --sb:env(safe-area-inset-bottom,0px);--st:env(safe-area-inset-top,0px);
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0e0e10;--card:#18181b;--soft:#202024;--line:#2a2a2f;--fg:#f2f0ec;--mid:#a29d95;--dim:#85807a;
+  --acc:#a497ff;--acc-a:rgba(164,151,255,.13);--ok:#6fd49c;--bad:#ff8f86;--gold:#f3c969;
+}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+#app{position:fixed;inset:0 0 calc(58px + var(--sb)) 0;display:flex;flex-direction:column;padding-top:var(--st)}
+body.typing #app{bottom:0}
+body.typing #nav{display:none}
+.view{flex:1;min-height:0;display:flex;flex-direction:column;width:100%;max-width:680px;margin:0 auto;padding:.7rem 1rem 0}
+.view[hidden]{display:none}
+.top{display:flex;justify-content:center;flex:none;margin-bottom:.6rem}
+.dir{display:flex;align-items:center;gap:.7rem;padding:.45rem 1rem;border-radius:999px;background:var(--soft);font-weight:700;letter-spacing:.06em;font-size:.95rem}
+.dir .i{width:18px;height:18px;color:var(--acc);transition:transform .25s}
+.dir:active .i{transform:rotate(180deg)}
+.inp{position:relative;flex:none;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:.75rem 2.6rem .5rem .9rem}
+.inp textarea{display:block;width:100%;border:0;outline:0;resize:none;background:none;color:var(--fg);font:inherit;font-size:1.15rem;line-height:1.4;min-height:2.8em;max-height:9em}
+.ib{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;color:var(--mid)}
+.ib:active{background:var(--soft)}
+.clr{position:absolute;top:.4rem;right:.35rem}
+.clr[hidden]{display:none}
+.acc{display:flex;gap:.3rem;overflow-x:auto;scrollbar-width:none;margin-top:.35rem}
+.acc::-webkit-scrollbar{display:none}
+.acc:empty{display:none}
+.acc button{flex:none;min-width:32px;height:32px;border-radius:9px;background:var(--soft);font-size:1.02rem}
+.out{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:.9rem 0 1rem;display:flex;flex-direction:column;gap:1.1rem}
+.empty{margin:auto;color:var(--line);text-align:center}
+.empty .i{width:64px;height:64px;stroke-width:1.3}
+.sn{display:flex;flex-direction:column;gap:.45rem}
+.ch{display:flex;flex-wrap:wrap;gap:.35rem;align-items:flex-start}
+.w{display:inline-flex;flex-direction:column;align-items:flex-start;gap:.06rem;padding:.32rem .55rem .36rem;border-radius:11px;background:var(--card);border:1px solid var(--line);text-align:left;max-width:100%}
+.w b{font-weight:600;font-size:1.04rem}
+.w small{font-size:.76rem;color:var(--mid);line-height:1.2;max-width:12rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.w small.o{color:var(--dim);font-size:.7rem}
+.w.kv small:first-of-type{color:var(--acc);font-weight:600;font-size:.86rem}
+.w.ph{border-color:var(--acc);background:var(--acc-a)}
+.w.unk{border-style:dashed;border-color:var(--bad)}
+.w.unk small{color:var(--bad)}
+.w.nm{background:none;border-color:transparent}
+.w.st{box-shadow:inset 0 0 0 1.5px var(--gold)}
+.w:active{transform:scale(.97)}
+.sp{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--acc-a);color:var(--acc);align-self:center}
+.sp .i{width:18px;height:18px}
+.tl{display:flex;align-items:flex-start;gap:.5rem;margin:0;padding:.15rem 0 .15rem .7rem;border-left:3px solid var(--acc);font-size:1rem;line-height:1.35}
+.tl p{margin:0;flex:1}
+.tl.ap{border-left-color:var(--line);color:var(--mid)}
+.tl .sym{flex:none;color:var(--acc);font-weight:700}
+.tl.ap .sym{color:var(--dim)}
+.ft{display:flex;justify-content:flex-end;gap:.25rem;color:var(--dim);font-size:.8rem;align-items:center;border-top:1px solid var(--line);padding-top:.4rem}
+.ft span{margin-right:auto;display:flex;gap:.7rem;align-items:center}
+.ft span i{font-style:normal;display:inline-flex;align-items:center;gap:.2rem}
+.ft span .i{width:14px;height:14px}
+/* nav */
+#nav{position:fixed;left:0;right:0;bottom:0;height:calc(58px + var(--sb));padding-bottom:var(--sb);display:flex;justify-content:center;gap:2.6rem;border-top:1px solid var(--line);background:var(--bg)}
+#nav button{position:relative;display:grid;place-items:center;width:64px;color:var(--dim)}
+#nav button[aria-current=true]{color:var(--fg)}
+#nav button[aria-current=true]::after{content:'';position:absolute;top:-1px;left:18px;right:18px;height:2px;border-radius:2px;background:var(--acc)}
+#nav .i{width:25px;height:25px}
+.n{position:absolute;top:8px;left:38px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--soft);color:var(--mid);font-size:.68rem;font-weight:700;line-height:18px;text-align:center}
+.n.hot{background:var(--acc);color:#fff}
+.n:empty{display:none}
+/* sheet */
+.sh{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(0,0,0,.35);animation:fd .18s}
+.sh .pn{background:var(--bg);border-radius:22px 22px 0 0;max-height:86%;display:flex;flex-direction:column;padding:.4rem 1rem calc(1rem + var(--sb));animation:up .22s cubic-bezier(.2,.9,.3,1);width:100%;max-width:680px;margin:0 auto}
+.sh .gr{width:38px;height:4px;border-radius:2px;background:var(--line);margin:.2rem auto .5rem;flex:none}
+.sh .bd{overflow-y:auto;display:flex;flex-direction:column;gap:1rem}
+@keyframes fd{from{opacity:0}}
+@keyframes up{from{transform:translateY(40%)}}
+.en{display:flex;flex-direction:column;gap:.45rem}
+.en+.en{border-top:1px solid var(--line);padding-top:1rem}
+.eh{display:flex;align-items:center;gap:.35rem}
+.eh h2{margin:0;font-size:1.55rem;font-weight:700;flex:1;min-width:0;overflow-wrap:anywhere}
+.eh .alt{color:var(--mid);font-weight:400;font-size:1rem}
+.ps{font-size:.78rem;color:var(--dim);letter-spacing:.03em}
+.ss{margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:.4rem}
+.ss li{line-height:1.35}
+.ex{display:flex;gap:.45rem;align-items:flex-start;margin-top:.3rem;padding:.45rem .55rem;background:var(--card);border:1px solid var(--line);border-radius:12px;font-size:.92rem}
+.ex div{flex:1}
+.ex small{display:block;color:var(--mid);margin-top:.1rem}
+.ex .sp{width:30px;height:30px}
+.stb{color:var(--dim)}
+.stb.on{color:var(--gold)}
+.stb.on .i{fill:currentColor}
+/* saved list */
+.hd{display:flex;align-items:center;gap:.5rem;flex:none;margin-bottom:.5rem;min-height:40px}
+.hd .big{font-size:1.4rem;font-weight:700;display:flex;align-items:center;gap:.4rem}
+.hd .big .i{color:var(--gold);fill:var(--gold)}
+.lst{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;padding-bottom:1rem}
+.row{display:flex;align-items:center;gap:.6rem;padding:.6rem .1rem;border-bottom:1px solid var(--line);text-align:left;width:100%}
+.row .tx{flex:1;min-width:0}
+.row .tx b{display:block;font-weight:600;font-size:1.05rem}
+.row .tx small{display:block;color:var(--mid);font-size:.84rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dots{display:flex;gap:3px;flex:none}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--ok)}
+.dots.new i:first-child{background:var(--acc)}
+/* learn */
+.lrn{flex:1;min-height:0;display:flex;flex-direction:column;gap:.9rem;padding-bottom:1rem}
+.prog{height:4px;border-radius:2px;background:var(--soft);overflow:hidden;flex:none}
+.prog i{display:block;height:100%;background:var(--acc);transition:width .3s}
+.cd{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.7rem;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:1.2rem;text-align:center;position:relative;overflow-y:auto}
+.cd .fr{font-size:2rem;font-weight:700;line-height:1.2;overflow-wrap:anywhere}
+.cd .fr.en{font-size:1.5rem;font-weight:600}
+.cd .bk{display:flex;flex-direction:column;gap:.5rem;align-items:center;width:100%;border-top:1px solid var(--line);padding-top:.8rem}
+.cd .bk .m{font-size:1.15rem}
+.cd .bk .k{font-size:1.5rem;font-weight:700;color:var(--acc)}
+.cd .bk .ex{text-align:left;width:100%}
+.cd .side{position:absolute;top:.7rem;left:.9rem;font-size:.7rem;font-weight:700;letter-spacing:.08em;color:var(--dim)}
+.gb{display:flex;gap:.6rem;flex:none}
+.gb button{flex:1;height:56px;border-radius:16px;display:grid;place-items:center;background:var(--soft)}
+.gb button .i{width:26px;height:26px}
+.gb .g0{color:var(--bad)}
+.gb .g1{color:var(--gold)}
+.gb .g2{color:#fff;background:var(--ok)}
+.gb .rv{background:var(--acc);color:#fff}
+.big1{margin:auto;display:flex;flex-direction:column;align-items:center;gap:.8rem;color:var(--mid);font-size:1.05rem}
+.big1 .i{width:72px;height:72px;stroke-width:1.3;color:var(--line)}
+.big1 .i.ok{color:var(--ok)}
+.big1 .meta{display:flex;gap:1rem;align-items:center}
+.big1 .meta span{display:flex;align-items:center;gap:.3rem}
+.big1 .meta .i{width:18px;height:18px;stroke-width:1.8;color:var(--dim)}
+.go{height:52px;padding:0 2rem;border-radius:16px;background:var(--acc);color:#fff;display:flex;align-items:center;gap:.5rem}
+.go .i{width:24px;height:24px}
+#boot{position:fixed;inset:0;display:grid;place-items:center;background:var(--bg);z-index:50;color:var(--acc);transition:opacity .3s}
+#boot .i{width:56px;height:56px;stroke-width:1.4;animation:pl 1.2s ease-in-out infinite}
+#boot.off{opacity:0;pointer-events:none}
+@keyframes pl{50%{opacity:.4}}
+#toast{position:fixed;left:50%;bottom:calc(76px + var(--sb));transform:translateX(-50%);background:var(--fg);color:var(--bg);border-radius:999px;padding:.45rem .8rem;display:flex;opacity:0;transition:opacity .2s;pointer-events:none;z-index:30}
+#toast.on{opacity:1}
+#toast .i{width:20px;height:20px}
+@media (min-width:700px){.view{padding-top:1.4rem}.cd .fr{font-size:2.4rem}}
+.row .tx{text-align:left}
 </style>
 </head>
 <body>
-<div id="app">
-  <div id="top"><span id="n">0</span><span id="t">0</span></div>
-  <div id="grid"></div>
-  <div>
-    <div id="bins"><div class="bin" id="b0"></div><div class="bin" id="b1"></div></div>
-    <div id="ctl" style="margin-top:10px"><button id="go">▶</button><button id="rst">◌</button></div>
-  </div>
-</div>
-<script>
-(() => {
-  const SYM = ['∆','◊','∑','⌘','◦','▲','⊗','≈','∞','⊕','◐','◑'];
-  const DIG = '0123456789';
-  const N = 100;
-  const grid = document.getElementById('grid');
-  const bins = [document.getElementById('b0'), document.getElementById('b1')];
-  const nEl = document.getElementById('n');
-  const tEl = document.getElementById('t');
-  const cells = [];
-  let count = 0, tick = 0, timer = null;
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-swap" viewBox="0 0 24 24"><path d="M4 8h14"/><path d="M14 4l4 4-4 4"/><path d="M20 16H6"/><path d="M10 12l-4 4 4 4"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-snd" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6"/><path d="M18 6.5a8 8 0 0 1 0 11"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.6l2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></symbol>
+  <symbol id="i-tr" viewBox="0 0 24 24"><path d="M3 4.5h11v8.5H8.5L5 16v-3H3z"/><path d="M17 8.5h4V17h-2v3l-3.5-3H10v-2"/><path d="M6 8.5h5"/></symbol>
+  <symbol id="i-cards" viewBox="0 0 24 24"><rect x="3.5" y="7" width="13" height="13" rx="2.2"/><path d="M7.5 7V5.2A1.7 1.7 0 0 1 9.2 3.5H19a1.5 1.5 0 0 1 1.5 1.5v9.8a1.7 1.7 0 0 1-1.7 1.7h-2.3"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-ok" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-meh" viewBox="0 0 24 24"><path d="M6 12h12"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20l1-4.5L15.5 5a2.1 2.1 0 0 1 3 3L8 18.5z"/><path d="M13.5 7l3 3"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-done" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8 12.3l2.8 2.8L16.3 9.5"/></symbol>
+  <symbol id="i-q" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.4"/><circle cx="12" cy="16.8" r=".4"/></symbol>
+  <symbol id="i-fleur" viewBox="0 0 24 24"><path d="M12 2.5c-1.8 2-2.6 4-2.2 6.4.3 1.6 1.3 2.9 2.2 4.1.9-1.2 1.9-2.5 2.2-4.1.4-2.4-.4-4.4-2.2-6.4z"/><path d="M12 13c-2.2-1.6-5.7-2.3-7.3-.3-1.2 1.6-.2 3.9 1.8 3.9 1.4 0 2-1.3 1.5-2.2"/><path d="M12 13c2.2-1.6 5.7-2.3 7.3-.3 1.2 1.6.2 3.9-1.8 3.9-1.4 0-2-1.3-1.5-2.2"/><path d="M8.5 15.5h7"/><path d="M12 13v8.5"/></symbol>
+</svg>
+<main id="app">
+  <section id="vT" class="view">
+    <div class="top">
+      <button type="button" id="dir" class="dir" aria-label="Swap direction"><b id="dA">KV</b><svg class="i"><use href="#i-swap"/></svg><b id="dB">EN</b></button>
+    </div>
+    <div class="inp">
+      <textarea id="tx" rows="2" spellcheck="false" autocomplete="off" aria-label="Text"></textarea>
+      <button type="button" id="clr" class="ib clr" aria-label="Clear"><svg class="i"><use href="#i-x"/></svg></button>
+      <div class="acc" id="acc"></div>
+    </div>
+    <div id="out" class="out"></div>
+  </section>
+  <section id="vS" class="view" hidden></section>
+  <section id="vL" class="view" hidden></section>
+</main>
+<nav id="nav">
+  <button type="button" data-v="T" aria-label="Translate" aria-current="true"><svg class="i"><use href="#i-tr"/></svg></button>
+  <button type="button" data-v="S" aria-label="Saved"><svg class="i"><use href="#i-star"/></svg><span class="n" id="nS"></span></button>
+  <button type="button" data-v="L" aria-label="Learn"><svg class="i"><use href="#i-cards"/></svg><span class="n hot" id="nL"></span></button>
+</nav>
+<div id="boot"><svg class="i"><use href="#i-fleur"/></svg></div>
+<script>/* Diksyonær core: lexicon, lemmatizer, course, exercises, grading, scheduling. No DOM. */
+(function (G) {
+'use strict';
 
-  const rnd = a => a[Math.floor(Math.random() * a.length)];
-  const newVal = () => Math.random() < 0.18 ? rnd(SYM) : String(Math.floor(Math.random() * 100)).padStart(2, '0');
-  const isSym = v => SYM.includes(v);
+/* ------------------------------------------------------------------ text */
+const C1 = {'\x80':'€','\x8a':'Š','\x8c':'Œ','\x8e':'Ž','\x9a':'š','\x9c':'œ','\x9e':'ž','\x9f':'Ÿ','\x91':'‘','\x92':'’','\x93':'“','\x94':'”','\x96':'-','\x97':'-','\x85':'...'};
+const dec = s => String(s || '').replace(/[\x80-\x9f]/g, c => C1[c] || '').replace(/&nbsp;/gi, ' ').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&quot;/gi, '"').replace(/&#39;/g, "'").replace(/&amp;/gi, '&');
+const SP = {'æ':'ae','œ':'oe','ß':'ss','ø':'o','đ':'d','ð':'d','ł':'l','þ':'th','ı':'i'};
+const memo = f => { const m = new Map(); return s => { s = String(s); let v = m.get(s); if (v === undefined) { v = f(s); if (m.size > 60000) m.clear(); m.set(s, v); } return v; }; };
+const fold = memo(s => s.toLowerCase().replace(/[‘’ʼ`´]/g, "'").normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[æœßøđðłþı]/g, c => SP[c]));
+const loose = memo(s => fold(s).replace(/ae|oe/g, 'e').replace(/en/g, 'in'));
+const uniq = a => [...new Set(a)];
+const low = memo(s => s.toLowerCase().replace(/[‘’ʼ`´]/g, "'").normalize('NFC'));
 
-  for (let i = 0; i < N; i++) {
-    const c = document.createElement('div');
-    c.className = 'cell';
-    c.dataset.v = newVal();
-    c.textContent = c.dataset.v;
-    if (isSym(c.dataset.v)) c.classList.add('sym');
-    c.addEventListener('click', () => refine(c));
-    grid.appendChild(c);
-    cells.push(c);
-  }
-
-  function refine(c) {
-    if (c.classList.contains('out')) return;
-    const v = c.dataset.v;
-    const bin = isSym(v) ? 1 : 0;
-    bins[bin].textContent += (bins[bin].textContent ? ' ' : '') + v;
-    c.classList.add('out');
-    count++;
-    nEl.textContent = count;
-    tEl.textContent = tick;
-    if (count === N) reset(true);
-  }
-
-  function reset(fresh) {
-    cells.forEach(c => {
-      c.classList.remove('out', 'hit', 'sym');
-      c.dataset.v = newVal();
-      c.textContent = c.dataset.v;
-      if (isSym(c.dataset.v)) c.classList.add('sym');
-    });
-    bins.forEach(b => b.textContent = '');
-    count = 0;
-    nEl.textContent = 0;
-    if (fresh) tick++;
-    tEl.textContent = tick;
-  }
-
-  function step() {
-    const c = rnd(cells);
-    c.classList.add('hit');
-    setTimeout(() => c.classList.remove('hit'), 400);
-  }
-
-  document.getElementById('go').addEventListener('click', () => {
-    if (timer) { clearInterval(timer); timer = null; return; }
-    timer = setInterval(step, 180);
+/* ------------------------------------------------------- part of speech */
+const VOC = new Set('n v adj adv prep conj pron det int interj intj interr phr ohr phrn exp aux pvm mod indef ind quant rel prop pl sg m f tr intr imp imperfect past pat part pres fut future cond comp neg negative or noun verb num art sdv av pro place'.split(' '));
+const AB = {n:'noun',v:'verb',adj:'adjective',adv:'adverb',prep:'preposition',conj:'conjunction',pron:'pronoun',det:'determiner',int:'interjection',interj:'interjection',intj:'interjection',interr:'interrogative',phr:'phrase',ohr:'phrase',phrn:'phrase',sdv:'adverb',av:'adverb',pro:'pronoun',ind:'indefinite',pat:'past',place:'place name',future:'future',negative:'negative',or:'or',exp:'expression',aux:'auxiliary',pvm:'preverbal marker',mod:'modal',indef:'indefinite',quant:'quantifier',rel:'relative',prop:'proper',pl:'plural',sg:'singular',m:'masculine',f:'feminine',tr:'transitive',intr:'intransitive',imp:'imperfect',imperfect:'imperfect',past:'past',part:'participle',pres:'present',fut:'future',cond:'conditional',comp:'comparative',neg:'negative',num:'numeral',art:'article'};
+const CT = {n:'noun',noun:'noun',prop:'noun',v:'verb',verb:'verb',aux:'verb',pvm:'verb',mod:'verb',adj:'adj',adv:'adv',prep:'prep',conj:'conj',pron:'pron',det:'det',quant:'det',art:'det',indef:'det',int:'int',interj:'int',intj:'int',sdv:'adv',av:'adv',pro:'pron',place:'noun',num:'noun'};
+const VF = new Set('past pat pres part fut future cond imp imperfect tr intr'.split(' '));
+const CATS = [['noun','Noun'],['verb','Verb'],['adj','Adjective'],['adv','Adverb'],['prep','Preposition'],['conj','Conjunction'],['pron','Pronoun'],['det','Determiner'],['int','Interjection'],['phrase','Phrase'],['other','Other']];
+const ptoks = s => s.toLowerCase().split(/[^a-z]+/).filter(Boolean);
+const posLike = s => !/[^a-zA-Z0-9.,\s\-\/]/.test(s) && ptoks(s).length > 0 && ptoks(s).every(x => VOC.has(x));
+const expandPos = l => ptoks(l).map(t => AB[t] || t).join(' ');
+function parsePos(inner) {
+  const items = [], bySense = {}, cats = new Set();
+  inner.split(',').map(x => x.trim()).filter(Boolean).forEach(it => {
+    const m = it.match(/^(\d+)(?:\s*-\s*(\d+))?\.\s*(.*)$/);
+    const label = (m ? m[3] : it).replace(/^\.\s*/, '').trim();
+    if (!label) return;
+    const t = ptoks(label);
+    let c = t.some(x => x === 'phr' || x === 'ohr' || x === 'phrn' || x === 'exp') ? ['phrase'] : uniq(t.map(x => CT[x]).filter(Boolean));
+    if (!c.length && t.some(x => VF.has(x))) c = ['verb'];
+    c.forEach(x => cats.add(x));
+    if (m) { const a = +m[1], b = m[2] ? +m[2] : a; for (let i = a; i <= b; i++) bySense[i] = label; }
+    if (!items.includes(label)) items.push(label);
   });
-  document.getElementById('rst').addEventListener('click', () => reset(false));
+  return { items, bySense, cats };
+}
+
+/* -------------------------------------------------------------- forms */
+function splitTop(s) { const o = []; let d = 0, c = ''; for (const ch of s) { if (ch === '(') d++; else if (ch === ')') d = Math.max(0, d - 1); if ((ch === ',' || ch === ';') && !d) { o.push(c); c = ''; } else c += ch; } o.push(c); return o.map(x => x.trim()).filter(Boolean); }
+function expand(w, depth = 0) {
+  const i = w.indexOf('('), j = i < 0 ? -1 : w.indexOf(')', i);
+  if (i < 0 || j < 0 || depth > 6) return [w.replace(/\s+/g, ' ').trim()];
+  const b = w.slice(0, i), c = w.slice(i + 1, j).trim(), a = w.slice(j + 1);
+  if (/\./.test(c) || posLike(c)) return expand(b + a, depth + 1);
+  const alone = (!b || /\s$/.test(b)) && (!a || /^\s/.test(a));
+  if (alone && c.length >= 4 && !/[,\/]/.test(c)) return uniq([...expand(b + a, depth + 1), c]);
+  const opts = ['', ...c.split(/\s*[\/,]\s*/).filter(Boolean)], out = [];
+  opts.forEach(o => expand(b + o + a, depth + 1).forEach(x => out.push(x)));
+  return uniq(out).slice(0, 24);
+}
+const clean = s => s.replace(/\.\.\./g, ' ').replace(/[?!¿¡]+/g, '').replace(/\s+/g, ' ').replace(/-{2,}/g, '-').trim();
+
+/* ------------------------------------------------------ senses, examples */
+const segs = s => String(s || '').split(/<br\s*\/?>|\r?\n/i).map(x => dec(x).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()).filter(Boolean);
+const NUM = /^(\d+)\.\s*(.*)$/;
+function buildSenses(mean, ex, tr, pos) {
+  const ms = segs(mean), senses = [], numbered = ms.some(x => NUM.test(x));
+  ms.forEach(x => {
+    const m = x.match(NUM);
+    if (numbered && m) senses.push({ n: +m[1], g: m[2].trim(), ex: [] });
+    else if (numbered && senses.length) senses[senses.length - 1].g += ' ' + x;
+    else if (!senses.length) senses.push({ n: null, g: x, ex: [] });
+    else senses[0].g += '; ' + x;
+  });
+  senses.forEach(s => { if (s.n != null && pos.bySense[s.n]) s.pos = pos.bySense[s.n]; });
+  const xs = segs(ex), ts = segs(tr), general = [];
+  const pick = (arr, n, i) => { const hit = arr.find(y => { const m = y.match(NUM); return m && +m[1] === n; }); if (hit != null) return hit.replace(NUM, '$2').trim(); const y = arr[i]; return y == null ? '' : y.replace(NUM, '$2').trim(); };
+  xs.forEach((x, i) => {
+    const m = x.match(NUM), s = (m ? m[2] : x).trim();
+    if (!s) return;
+    const t = m ? pick(ts, +m[1], i) : (ts[i] || '').replace(NUM, '$2').trim();
+    let tgt = null;
+    if (m) tgt = senses.find(z => z.n === +m[1]);
+    else if (senses.length === 1) tgt = senses[0];
+    (tgt ? tgt.ex : general).push({ s, t });
+  });
+  return { senses, general };
+}
+
+/* --------------------------------------------------------- English glosses */
+const cutParen = s => s.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
+function glossItems(g) {
+  const out = [];
+  String(g).split(/[;,\/]| or /).forEach(p => {
+    const a = p.replace(/[“”"]/g, '').trim();
+    if (!a) return;
+    out.push(a);
+    const b = cutParen(a); if (b && b !== a) out.push(b);
+  });
+  return uniq(out.filter(x => x.length));
+}
+function shortGloss(e, max = 26) {
+  const g0 = (e.senses[0] && e.senses[0].g) || '';
+  const it = String(g0).split(/[;,]/).map(x => x.trim()).filter(Boolean);
+  let s = it[0] || g0;
+  if (s.length > max) s = cutParen(s);
+  if (s.length > max) s = s.slice(0, max - 1).replace(/\s+\S*$/, '') + '…';
+  return s;
+}
+function promptGloss(e, max = 64) {
+  const gs = e.senses.map(s => s.g).filter(Boolean);
+  let s = gs[0] || '';
+  if (gs.length > 1 && s.length < 26) { const t = gs[1]; if (t.toLowerCase().includes(s.toLowerCase())) s = t; else if (!s.toLowerCase().includes(t.toLowerCase())) s += '; ' + t; }
+  if (s.length > max) s = s.slice(0, max - 1).replace(/[\s;,]+\S*$/, '') + '…';
+  return s;
+}
+
+/* ----------------------------------------------------------- parse TSV */
+function parseTSV(text) {
+  const rows = String(text || '').replace(/^﻿/, '').split(/\r?\n/).filter(l => l.trim()).map(l => l.split('\t'));
+  const H = rows[0] && /^(word|headword|lemma|term|entry)\b/i.test((rows[0][0] || '').trim());
+  const E = [];
+  rows.slice(H ? 1 : 0).forEach(r => {
+    const g = i => (r[i] || '').trim().normalize('NFC');
+    const key = g(0);
+    let raw = dec(key).replace(/\s+/g, ' ').trim().replace(/\)\)+\s*$/, ')').replace(/\)\s*\.\s*$/, ')');
+    if (!raw || raw[0] === '#') return;
+    let word = raw, inner = '', note = '';
+    for (let k = 0; k < 2; k++) {
+      const m = word.match(/^(.*?)\s*\(([^()]*)\)\s*$/);
+      if (!m || !m[1]) break;
+      if (posLike(m[2])) { inner = m[2]; word = m[1]; break; }
+      const prev = m[1].match(/\(([^()]*)\)\s*$/);
+      if (/^=/.test(m[2]) || (/\s/.test(m[2]) && m[2].length > 12) || (prev && posLike(prev[1]))) { note = m[2].replace(/^=\s*/, 'same as '); word = m[1]; continue; }
+      break;
+    }
+    word = word.replace(/[,;]\s*$/, '').trim();
+    const pos = inner ? parsePos(inner) : { items: [], bySense: {}, cats: new Set() };
+    if (!pos.cats.size) pos.cats.add('other');
+    const { senses, general } = buildSenses(g(1), g(2), g(3), pos);
+    if (!senses.length) senses.push({ n: null, g: '', ex: [] });
+    const slash = f => { if (!f.includes('/')) return [f]; const ts = f.split(/\s+/); let out = ['']; ts.forEach(t => { const alts = t.split('/').filter(Boolean); const nx = []; out.forEach(o => alts.forEach(x => nx.push((o ? o + ' ' : '') + x))); out = nx.slice(0, 12); }); return out; };
+    let forms = uniq(splitTop(word).flatMap(p => expand(p)).flatMap(slash).map(clean).filter(Boolean));
+    if (!forms.length) forms = [clean(word) || word];
+    const e = { id: E.length, key, raw, word, note, inner, pos, cats: pos.cats, senses, general, forms };
+    e.ex = senses.flatMap(s => s.ex).concat(general);
+    e.single = forms.filter(f => !/\s/.test(f));
+    e.multi = !e.single.length;
+    const pl = (inner || '').toLowerCase();
+    e.phrase = e.multi || pos.cats.has('phrase');
+    e.func = /\b(pron|det|pvm|conj|prep|aux|mod|interr|quant|art|indef)\b/.test(pl) || ['pron', 'det', 'conj', 'prep'].some(c => pos.cats.has(c));
+    e.posLabel = pos.items.map(expandPos).join(', ');
+    e.items = uniq(senses.flatMap(s => glossItems(s.g)));
+    e.short = shortGloss(e);
+    e.prompt = promptGloss(e);
+    e.fk = new Set(e.single.flatMap(f => { const a = fold(f); return [a, a.replace(/^-+|-+$/g, '')]; }));
+    e.sk = fold(forms[0]).replace(/^[^\p{L}\p{N}]+/u, '') || fold(forms[0]);
+    E.push(e);
+  });
+  return applyDialect(E);
+}
+
+/* --------------------------------------------------------- dialect */
+/* Lord's Kréyòl Lalwizyan: no ap/apé progressive; "can / be able" is pe, never ka. */
+const DIALECT = {
+  exclude: ['ka (v. mod.)'],
+  forms: { 'pœ (v. mod)': ['pe', 'pè'] }
+};
+function applyDialect(E) {
+  const ex = new Set(DIALECT.exclude);
+  E.forEach(e => {
+    e.skip = ex.has(e.raw);
+    const add = DIALECT.forms[e.raw];
+    if (add) { e.forms = uniq([...add, ...e.forms]); e.single = e.forms.filter(f => !/\s/.test(f)); e.teach = add[0]; e.fk = new Set(e.single.flatMap(f => { const a = fold(f); return [a, a.replace(/^-+|-+$/g, '')]; })); }
+    if (!e.teach && /^-\S/.test(e.word) && !/\s/.test(e.word)) e.teach = e.word.replace(/^-+/, '');
+  });
+  return E;
+}
+
+/* ------------------------------------------------------------ tokens */
+const TOKRE = /[\p{L}\p{M}]+(?:['’][\p{L}\p{M}]*)*(?:-[\p{L}\p{M}]+(?:['’][\p{L}\p{M}]*)*)*|\p{N}+/gu;
+function tokenize(s) {
+  const parts = [], words = [];
+  let last = 0; TOKRE.lastIndex = 0; let m;
+  while ((m = TOKRE.exec(s))) {
+    if (m.index > last) parts.push({ x: s.slice(last, m.index), w: -1 });
+    parts.push({ x: m[0], w: words.length });
+    words.push({ x: m[0], at: m.index });
+    last = m.index + m[0].length;
+  }
+  if (last < s.length) parts.push({ x: s.slice(last), w: -1 });
+  return { parts, words };
+}
+
+/* ---------------------------------------------------------- lexicon */
+const OVR = {'mô':'mô (det.)','lê':'Le (det.)','gen':'gin (v.)','gìn':'gin (v.)','isi':'isit (prep.)','trwa':'trwò (n.)','kom':'konm (adj., conj.)','kòm':'konm (adj., conj.)','dòn':'donn (v.)','maryé':'mariyé, mari (v.)','jou':'jour (n.)'};
+const APO = {j:'je (pron.)',t:'to (pron.)',l:'li (pron.)',n:'nou, nouzòt (pron.)',p:'pa (conj., n.)',y:'yé (pron.)',k:'ki (conj.)',d:'d(e) (prep.)',v:'vou (pron.)'};
+function Lexicon(E) {
+  const ex = new Map(), fo = new Map(), lo = new Map(), byRaw = new Map();
+  const add = (m, k, v) => { let a = m.get(k); if (!a) m.set(k, a = []); if (!a.includes(v)) a.push(v); };
+  E.forEach(e => {
+    byRaw.set(e.raw, e.id);
+    e.single.forEach(f => { const k = low(f); add(ex, k, e.id); add(fo, fold(k), e.id); add(lo, loose(k), e.id); });
+  });
+  const dist = (a, b) => { if (a.length !== b.length) return 9 + Math.abs(a.length - b.length); let d = 0; for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) d++; return d; };
+  function pick(c, t) {
+    if (c.length === 1) return c[0];
+    let best = c[0], bs = 1e9;
+    for (const i of c) {
+      const e = E[i];
+      let d = 99; e.single.forEach(f => { d = Math.min(d, dist(low(f), t)); });
+      const sc = d * 100 + (e.func ? 0 : 20) + (e.ex.length ? 0 : 5) + (e.phrase ? 30 : 0) + i / 1e5;
+      if (sc < bs) { bs = sc; best = i; }
+    }
+    return best;
+  }
+  function one(t, owner) {
+    if (!t) return -1;
+    if (owner != null && owner >= 0) { const oe = E[owner]; if (!oe.multi) { const f = fold(t); if (oe.fk.has(f) || oe.fk.has(f.replace(/^-+/, ''))) return owner; } }
+    const o = OVR[t]; if (o && byRaw.has(o)) return byRaw.get(o);
+    let c = ex.get(t); if (c) return pick(c, t);
+    c = fo.get(fold(t)); if (c) return pick(c, t);
+    c = lo.get(loose(t)); if (c) return pick(c, t);
+    if (t.length > 3 && t.endsWith('é')) { c = ex.get(t.slice(0, -1)); if (c) return pick(c, t); }
+    if (t.length > 2) { c = ex.get(t + 'é'); if (c) return pick(c, t); }
+    return -1;
+  }
+  const alts = raw => { const t = low(raw); return ex.get(t) || fo.get(fold(t)) || []; };
+  function lem(raw, owner) {
+    const t = low(raw);
+    const r = one(t, owner);
+    if (r >= 0) return [r];
+    if (t.includes("'")) {
+      const i = t.indexOf("'"), a = t.slice(0, i), b = t.slice(i + 1), out = [];
+      if (APO[a] && byRaw.has(APO[a])) out.push(byRaw.get(APO[a])); else out.push(one(a, owner));
+      if (b) out.push(...lem(b, owner));
+      return out;
+    }
+    if (t.includes('-')) {
+      const ps = t.split('-').filter(Boolean), out = [one(ps[0], owner)];
+      ps.slice(1).forEach(p => { let x = one('-' + p, owner); if (x < 0) x = one(p, owner); out.push(x); });
+      return out;
+    }
+    return [-1];
+  }
+  return { E, byRaw, one, lem, alts };
+}
+
+/* -------------------------------------------------------- sentences */
+function makeSentence(lex, s, t, owner, comp) {
+  const tk = tokenize(s), parts = [], words = [];
+  tk.parts.forEach(p => {
+    if (p.w < 0) { parts.push({ x: p.x, w: -1 }); return; }
+    const x = p.x;
+    if (x.includes('-') && !/['’]/.test(x) && lex.one(low(x), owner) < 0) {
+      x.split('-').forEach((q, i) => {
+        if (i > 0) parts.push({ x: '-', w: -1 });
+        if (!q) return;
+        parts.push({ x: q, w: words.length }); words.push({ x: q, sub: i > 0 });
+      });
+    } else { parts.push({ x, w: words.length }); words.push({ x }); }
+  });
+  const req = new Set(); let oov = 0;
+  words.forEach((w, k) => {
+    w.low = low(w.x);
+    let ids;
+    if (w.sub) { let r = lex.one('-' + w.low, owner); if (r < 0) r = lex.one(w.low, owner); ids = [r]; }
+    else ids = lex.lem(w.x, owner);
+    w.ids = ids.filter(x => x >= 0);
+    w.oov = ids.some(x => x < 0);
+    w.free = false;
+    if (w.oov && (/^\p{N}+$/u.test(w.x) || (k > 0 && /^\p{Lu}/u.test(w.x) && !w.ids.length))) { w.free = true; w.oov = false; }
+  });
+  // homographs: prefer the entry whose English meaning shows up in the translation
+  let tw = null;
+  words.forEach(w => {
+    if (w.ids.length !== 1 || w.ids[0] === owner) return;
+    const al = lex.alts(w.x); if (al.length < 2 || al.includes(owner)) return;
+    if (!tw) tw = new Set(enWords(t || ''));
+    let best = -1, bs = 0, tie = false;
+    const pref = i => !!DIALECT.forms[lex.E[i].raw];
+    al.forEach(i => { const g = new Set(lex.E[i].items.flatMap(x => enWords(x)).filter(x => x !== 'not' && x !== 'no')); let sc = 0; g.forEach(x => { if (tw.has(x)) sc++; }); if (sc > bs || (sc === bs && sc > 0 && pref(i) && !pref(best))) { if (sc > bs) tie = false; bs = sc; best = i; } else if (sc === bs && sc > 0 && !pref(best)) tie = true; });
+    if (best >= 0 && (!tie || pref(best))) w.ids = [best];
+  });
+  if (owner != null && owner >= 0 && !lex.E[owner].multi && !words.some(w => w.ids.includes(owner))) {
+    const oe = lex.E[owner];
+    let bk = -1, bd = 9;
+    words.forEach((w, k) => { const f = loose(w.x); oe.single.forEach(x => { const g = loose(x).replace(/^-+/, ''); if (g.length < 3) return; const d = lev(f, g); const lim = g.length >= 7 ? 2 : 1; if (d <= lim && d < bd) { bd = d; bk = k; } }); });
+    if (bk >= 0) { const w = words[bk]; w.ids = [owner]; w.oov = false; w.free = false; }
+  }
+  words.forEach(w => { if (w.oov) oov++; w.ids.forEach(i => req.add(i)); });
+  return { s, t, parts, words, n: words.length, req, has: new Set(req), oov, owner, comp: !!comp };
+}
+function buildSentences(lex, E, composed) {
+  const S = [];
+  const mk = (s, t, o, c) => { const r = makeSentence(lex, elide(s), t, o, c); r.o = s; return r; };
+  E.forEach(e => e.ex.forEach(x => { if (x.s && x.t) S.push(mk(x.s, x.t, e.id, false)); }));
+  (composed || []).forEach(([s, t]) => S.push(mk(s, t, -1, true)));
+  // phrase occurrences
+  const phr = E.filter(e => e.multi).map(e => ({ id: e.id, keys: e.forms.map(f => ' ' + fold(f).replace(/[^\p{L}\p{N}' -]/gu, ' ').replace(/\s+/g, ' ').trim() + ' ').filter(k => k.trim().length > 2) }));
+  S.forEach((x, i) => {
+    x.id = i;
+    x.fk = ' ' + x.words.map(w => fold(w.x)).join(' ') + ' ';
+    if (x.owner >= 0) x.has.add(x.owner);
+  });
+  const byWord = new Map();
+  S.forEach(x => { new Set(x.fk.trim().split(' ')).forEach(w => { let a = byWord.get(w); if (!a) byWord.set(w, a = []); a.push(x); }); });
+  phr.forEach(p => p.keys.forEach(k => {
+    const ws = k.trim().split(' ');
+    let best = null; ws.forEach(w => { const a = byWord.get(w) || []; if (!best || a.length < best.length) best = a; });
+    (best || []).forEach(x => { if (x.fk.includes(k)) x.has.add(p.id); });
+  }));
+  return S;
+}
+
+/* ------------------------------------------------------------ course */
+const START = ['je (pron.)','to (pron.)','li (pron.)','koné (1. v., 2. aux)','pa (conj., n.)',
+  'yé (pron.)','olé (voulé) (v.)','ça (pron.)','alé (v.)','té (pvm.)',
+  'kwa (conj.)','ki (conj.)','kan (adv. interr., conj., n.)','kòfær (conj.)','komen (conj., adj.)',
+  'kèl (conj.)','moun (n.)','wa (v.)','gin (v.)','ki lè li yé? (exp.)',
+  'fé (v.)','di (v.)','çé (v.)','bon (adj.)','pœ (v. mod)',
+  'mò, mwa (pron.)','twa (1. n., 2. pron.)','mô (det.)','tô (det.)','(la)mézon (n.)',
+  'va, a (pvm., v.)','vini, vyin (v.)','isit (prep.)','avèk (conj.)','sô (det.)'];
+const LESSON = 5, UNIT = 5;
+function buildCourse(E, lex, S, coreKeys) {
+  S.forEach(x => { x.bad = x.words.some(w => w.ids.some(i => E[i].skip)); });
+  const f = new Float64Array(E.length);
+  S.forEach(x => { if (x.comp) return; x.words.forEach(w => w.ids.forEach(i => { f[i] += 1; })); });
+  E.forEach(e => { e.f = f[e.id]; });
+  const pre = START.map(r => lex.byRaw.get(r)).filter(x => x != null);
+  const ess = new Map(); (coreKeys || []).forEach((k, r) => { const i = lex.byRaw.get(dec(k).replace(/\s+/g, ' ').trim()); if (i != null && !ess.has(i)) ess.set(i, r); });
+  const byF = E.filter(e => !e.phrase).sort((a, b) => b.f - a.f).slice(0, 160).map(e => e.id);
+  const core = new Set([...byF, ...ess.keys(), ...pre]);
+  const u = new Float64Array(E.length), req = E.map(() => []);
+  E.forEach(e => {
+    let v = Math.log2(1 + e.f) + (e.func ? 2.5 : 0) - (e.phrase ? 3 : 0) - (!e.ex.length && e.f < 2 ? 1.5 : 0);
+    if (ess.has(e.id)) v += 2 - ess.get(e.id) / 400;
+    u[e.id] = v + (core.has(e.id) ? 100 : 0);
+    if (e.phrase) {
+      const r = new Set();
+      tokenize(e.forms[0]).words.forEach(w => lex.lem(w.x, -1).forEach(x => { if (x >= 0 && x !== e.id) r.add(x); }));
+      req[e.id] = [...r];
+    }
+  });
+  const usable = S.filter(x => x.oov === 0 && x.n <= 9 && !x.comp && !x.bad);
+  const unk = usable.map(x => new Set(x.req)), inv = E.map(() => []);
+  usable.forEach((x, k) => x.req.forEach(i => inv[i].push(k)));
+  const r = new Int32Array(E.length);
+  unk.forEach(st => { if (st.size === 1) r[[...st][0]]++; });
+  const known = new Uint8Array(E.length), order = [], left = new Set(E.filter(e => !e.skip).map(e => e.id));
+  const take = b => {
+    left.delete(b); known[b] = 1; order.push(b);
+    inv[b].forEach(k => { const st = unk[k]; if (!st.has(b)) return; if (st.size === 1) r[b]--; st.delete(b); if (st.size === 1) r[[...st][0]]++; });
+  };
+  pre.forEach(take);
+  while (left.size) {
+    let best = -1, bs = -1e18;
+    for (const i of left) {
+      if (req[i].length && req[i].some(x => !known[x])) continue;
+      const sc = u[i] + 3 * Math.min(r[i], 3);
+      if (sc > bs || (sc === bs && i < best)) { bs = sc; best = i; }
+    }
+    if (best < 0) { for (const i of left) { if (u[i] > bs) { bs = u[i]; best = i; } } }
+    take(best);
+  }
+  const lessons = [], lessonOf = new Int32Array(E.length).fill(-1);
+  for (let i = 0; i < order.length; i += LESSON) { const ids = order.slice(i, i + LESSON); ids.forEach(x => { lessonOf[x] = lessons.length; }); lessons.push({ i: lessons.length, ids }); }
+  const units = [];
+  for (let i = 0; i < lessons.length; i += UNIT) { const ls = lessons.slice(i, i + UNIT); ls.forEach(l => { l.u = units.length; }); units.push({ i: units.length, ls: ls.map(l => l.i), core: ls.some(l => l.ids.some(x => core.has(x))) }); }
+  // sentence readiness: lesson at which every required word has been taught
+  S.forEach(x => { let m = -1; if (x.oov || x.bad) m = 1e9; else x.req.forEach(i => { m = Math.max(m, lessonOf[i] < 0 ? 1e9 : lessonOf[i]); }); x.ready = m; });
+  const hasIdx = E.map(() => []);
+  S.forEach(x => { if (!x.bad) x.has.forEach(i => hasIdx[i].push(x.id)); });
+  const readyAt = lessons.map(() => []);
+  S.forEach(x => { if (x.ready >= 0 && x.ready < lessons.length) readyAt[x.ready].push(x.id); });
+  return { order, lessons, units, lessonOf, core, hasIdx, readyAt, coreCount: [...core].length };
+}
+
+/* ----------------------------------------------------------- random */
+function rng(seed) { let s = (seed >>> 0) || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; }
+const shuffle = (a, R) => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(R() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+
+/* --------------------------------------------------------- grading */
+const lev = (a, b) => {
+  if (a === b) return 0; if (!a.length) return b.length; if (!b.length) return a.length;
+  let p = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) { const c = [i]; for (let j = 1; j <= b.length; j++) c[j] = Math.min(p[j] + 1, c[j - 1] + 1, p[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); p = c; }
+  return p[b.length];
+};
+const UNELI = { j: 'je', t: 'to', l: 'li', n: 'nou', v: 'vou', y: 'yé', m: 'mo' };
+const normKL = s => low(s).replace(/(^|[^\p{L}\p{M}])([jtlnvym])['’]\s*(?=\p{L})/gu, (m, a, c) => a + UNELI[c] + ' ').replace(/[«»“”"¿?¡!.,;:()\[\]…]/g, ' ').replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
+/* answers: array of acceptable Kréyòl strings */
+function gradeKL(input, answers) {
+  const a = normKL(input);
+  if (!a) return { ok: false, near: false, best: answers[0] };
+  let best = answers[0], bd = 1e9, kind = 'wrong';
+  for (const ans of answers) {
+    const b = normKL(ans);
+    if (a === b) return { ok: true, near: false, best: ans };
+    if (fold(a) === fold(b)) { if (kind !== 'accent') { kind = 'accent'; best = ans; bd = 0; } continue; }
+    const d = lev(fold(a), fold(b));
+    const lim = b.length >= 10 ? 2 : b.length >= 4 ? 1 : 0;
+    if (kind === 'wrong' && d <= lim && d < bd) { bd = d; best = ans; kind = 'typo'; }
+    else if (kind === 'wrong' && d < bd) { bd = d; best = ans; }
+  }
+  if (kind === 'accent') return { ok: true, near: true, accent: true, best };
+  if (kind === 'typo') return { ok: true, near: true, best };
+  return { ok: false, near: false, best };
+}
+const CONTR = [[/\b(do|does|did|is|are|was|were|has|have|had|could|would|should|must|need)nt\b/g,'$1 not'],[/\bdont\b/g,'do not'],[/\bcant\b/g,'can not'],[/\bwont\b/g,'will not'],[/\bim\b/g,'i am'],[/\bi'm\b/g,'i am'],[/\bcan't\b/g,'can not'],[/\bcannot\b/g,'can not'],[/\bwon't\b/g,'will not'],[/\bshan't\b/g,'shall not'],[/n't\b/g,' not'],[/'re\b/g,' are'],[/'ve\b/g,' have'],[/'ll\b/g,' will'],[/'d\b/g,' would'],[/\b(he|she|it|that|what|there|who|where|here|how)'s\b/g,'$1 is'],[/'s\b/g,'']];
+const AUX = new Set('a an the is am are was were be been being do does did will would shall should to of s ll gonna going'.split(' '));
+function stem(w) {
+  if (w.length > 5 && w.endsWith('ing')) w = w.slice(0, -3);
+  else if (w.length > 4 && w.endsWith('ied')) w = w.slice(0, -3) + 'y';
+  else if (w.length > 4 && w.endsWith('ed')) w = w.slice(0, -2);
+  else if (w.length > 4 && w.endsWith('es')) w = w.slice(0, -2);
+  else if (w.length > 3 && w.endsWith('s') && !w.endsWith('ss')) w = w.slice(0, -1);
+  if (w.length > 3 && /([b-df-hj-np-tv-z])\1$/.test(w)) w = w.slice(0, -1);
+  if (w.length > 3 && w.endsWith('e')) w = w.slice(0, -1);
+  return w;
+}
+const IRR = {went:'go',gone:'go',goes:'go',saw:'see',seen:'see',had:'have',has:'have',said:'say',says:'say',made:'make',did:'do',done:'do',knew:'know',known:'know',came:'come',ate:'eat',eaten:'eat',took:'take',taken:'take',got:'get',gotten:'get',gave:'give',given:'give',told:'tell',thought:'think',bought:'buy',brought:'bring',ran:'run',left:'leave',felt:'feel',found:'find',kept:'keep',slept:'sleep',sat:'sit',stood:'stand',spoke:'speak',spoken:'speak',wrote:'write',written:'write',drank:'drink',fell:'fall',fallen:'fall',lost:'lose',met:'meet',paid:'pay',put:'put',sold:'sell',sent:'send',spent:'spend',taught:'teach',understood:'understand',woke:'wake',won:'win',wore:'wear',caught:'catch',built:'build',children:'child',men:'man',women:'woman',people:'person',feet:'foot',teeth:'tooth',mice:'mouse',me:'i',him:'he',her:'he',she:'he',it:'he',hers:'he',its:'he',that:'he',us:'we',them:'they',my:'i',your:'you',his:'he',our:'we',their:'they',yours:'you',mine:'i',going:'go',doing:'do',being:'be',saying:'say',seeing:'see',eating:'eat',dying:'die',lying:'lie',ok:'okay',alright:'okay'};
+const PASTW = new Set('went gone saw seen had said made did done knew known came ate eaten took taken got gotten gave given told thought bought brought ran left felt found kept slept sat stood spoke spoken wrote written drank fell fallen lost met paid sold sent spent taught understood woke won wore caught built was were'.split(' '));
+function enWords(s, marks) {
+  let t = String(s).toLowerCase().replace(/[‘’ʼ`´]/g, "'");
+  CONTR.forEach(([a, b]) => { t = t.replace(a, b); });
+  t = t.replace(/\([^)]*\)/g, ' ').replace(/[^a-z0-9' ]+/g, ' ').replace(/'/g, '');
+  const out = [];
+  t.split(/\s+/).filter(Boolean).forEach(w => {
+    if (marks) {
+      if (PASTW.has(w) || (w.length > 4 && w.endsWith('ed') && w !== 'need')) out.push('~past');
+      if (w === 'will' || w === 'shall' || w === 'gonna') out.push('~fut');
+      if (w === 'would') out.push('~cond');
+    }
+    const v = IRR[w] || w;
+    if (AUX.has(v)) return;
+    out.push(stem(v));
+  });
+  return out;
+}
+const rawEN = s => String(s).toLowerCase().replace(/\([^)]*\)/g, ' ').replace(/[^a-z0-9 ]+/g, '').replace(/\s+/g, ' ').trim();
+/* items: acceptable English glosses (word level) or one sentence */
+function gradeEN(input, items, sentence) {
+  const ra = rawEN(input);
+  if (!ra) return { ok: false };
+  if (!sentence) {
+    const a = enWords(input), aj = a.join(' ');
+    for (const it of items) {
+      const rb = rawEN(it).replace(/^(to|a|an|the) /, ''), rc = ra.replace(/^(to|a|an|the) /, '');
+      if (rb && (rc === rb)) return { ok: true };
+      if (rb.length >= 4) { const d = lev(rc, rb); if (d && (d <= (rb.length >= 9 ? 2 : 1)) && (rb.length >= 6 || rc.length !== rb.length)) return { ok: true, near: true }; }
+      const b = enWords(it); if (!b.length || !a.length) continue;
+      const bj = b.join(' ');
+      if (aj === bj) return { ok: true };
+      if (b.length > 1 && a.every(w => b.includes(w)) && a.length >= Math.ceil(b.length / 2)) return { ok: true, near: true };
+      if (a.length > 1 && b.every(w => a.includes(w)) && a.length <= b.length + 1) return { ok: true, near: true };
+    }
+    return { ok: false };
+  }
+  const a = enWords(input, true), b = enWords(items[0], true);
+  if (!a.length || !b.length) return { ok: false };
+  const aj = a.join(' '), bj = b.join(' ');
+  if (aj === bj) return { ok: true };
+  const A = new Map(), B = new Map();
+  a.forEach(w => A.set(w, (A.get(w) || 0) + 1)); b.forEach(w => B.set(w, (B.get(w) || 0) + 1));
+  let inter = 0; A.forEach((v, k) => { inter += Math.min(v, B.get(k) || 0); });
+  const P = inter / a.length, Rc = inter / b.length;
+  const neg = x => x.includes('not') || x.includes('no') || x.includes('never') || x.includes('nothing') || x.includes('nobody');
+  if (neg(a) !== neg(b)) return { ok: false };
+  for (const m of ['~past', '~fut', '~cond']) if (a.includes(m) !== b.includes(m)) return { ok: false };
+  const ratio = lev(aj, bj) / Math.max(aj.length, bj.length, 1);
+  if ((P >= .8 && Rc >= .8) || ratio <= .12) return { ok: true, near: P < 1 || Rc < 1 };
+  return { ok: false };
+}
+
+
+/* ------------------------------------------- speech: Kréyòl spelling read by a French voice */
+// Kréyòl → French spelling matrix. Each row is [Kréyòl pattern, French spelling, what it does].
+// Rows run top to bottom on each word; a French voice then reads the result.
+const KV = 'aeiouyéèêôàâîïûü\uE001\uE002\uE003\uE004\uE008';
+/* nasal vowels, per the Ti Liv spelling guide (lesson 1), with ã and õ merged to õ as in Lord's dialect.
+   Placeholders: A nasal a (said õ), I nasal è, O nasal o, U nasal œ, N/M a sounded n/m, E8 the en of bien */
+const NV = '[aeiouyéèêòìæœôàâîïûü]';
+const NAS = [
+  ['ann', 'a\uE005'], ['amm', 'a\uE006'],
+  ['enn', '\uE001\uE005'], ['anm', '\uE001\uE006'], ['enm', '\uE001\uE006'], ['emm', '\uE001\uE006'],
+  ['inn', 'i\uE005'], ['imm', 'i\uE006'], ['ènn', '\uE002\uE005'], ['inm', '\uE002\uE006'],
+  ['onn', '\uE003\uE005'], ['onm', '\uE003\uE006'], ['unn', '\uE004\uE005'], ['unm', '\uE004\uE006'],
+  ['ounn', 'ou\uE005'], ['oun', 'ou\uE005'], ['oum', 'ou\uE006'],
+  ['ònn', 'o\uE005'], ['òn', 'o\uE005'], ['òm', 'o\uE006'], ['èn', 'è\uE005'], ['èm', 'è\uE006'],
+  ['ìnn', 'i\uE005'], ['ìn', 'i\uE005'], ['ìm', 'i\uE006'], ['æn', 'è\uE005'], ['æm', 'è\uE006'],
+  ['an', '\uE001'], ['am', '\uE001'], ['en', '\uE001'], ['em', '\uE001'],
+  ['in', '\uE002'], ['im', '\uE002'], ['on', '\uE003'], ['om', '\uE003'], ['un', '\uE004'], ['um', '\uE004']
+];
+const NASMAP = Object.fromEntries(NAS);
+/* single nasals only when no vowel or n/m follows; doubles always */
+const NASRE = new RegExp(NAS.map(([k]) => k.length === 2 ? k + '(?![nm]|' + NV + ')' : k).join('|'), 'g');
+const NOUT = { '\uE001': 'on', '\uE002': 'in', '\uE003': 'on', '\uE004': 'un', '\uE005': 'n', '\uE006': 'm', '\uE008': 'en' };
+function nasal(s) {
+  s = s.replace(NASRE, m => NASMAP[m]);
+  return s.replace(/([^aeiouéèòìæœ])y\uE002/g, '$1i\uE008');
+}
+const MATRIX = [
+  [/æ/g, 'è', 'æ is open è (pær = père)'],
+  [/œ/g, 'eu', 'œ is eu (plœré)'],
+  [/ò/g, 'o', 'ò is open o'],
+  [/ì/g, 'i', 'ì is a plain i'],
+  [/ù/g, 'ou', 'ù is ou'],
+  [/ç/g, 's', 'ç is s (ça)'],
+  [/(?<!t)ch/g, 'tch', 'ch is tch (charogn)'],
+  [/sh/g, 'ch', 'sh is French ch (dìmansh)'],
+  [/ñ/g, 'gn', 'ñ is gn'],
+  [/w/g, 'ou', 'w is ou (zwazo = zouazo)'],
+  [new RegExp('e(?=[^' + KV + 'nmh]+$)'), 'è', 'e in a closed last syllable is è (avek = avèque)'],
+  [/g(?=[eiéèêy\uE002\uE004\uE008])/g, 'gu', 'g stays hard before e, i, y (gin = guin)'],
+  [new RegExp('ey(?![' + KV + '])', 'g'), 'èy', 'ey before a consonant'],
+  [/e(?!u)(?![nm](?![aeiouyéèêô]))/g, 'eu', 'plain e is the short eu sound (jedi = jeudi)'],
+  [new RegExp('([' + KV + '])s(?=[' + KV + '])', 'g'), '$1ss', 's between vowels stays s, not z (sosis)'],
+  [/ay$/, 'aille', 'final ay (travay = travaille)'],
+  [/èy$/, 'eille', 'final ey (zorey = zoreille)'],
+  [/ouy$/, 'ouille', 'final ouy (fouy = fouille)'],
+  [/k$/, 'que', 'final k is said (avek = avèque)'],
+  [/s$/, 'sse', 'final s is said (sis)'],
+  [new RegExp('([' + KV + '])([^' + KV + 'h]+)$'), (m, a, b) => b === 'n' ? m : a + b + 'e', 'final consonants are said (kat = kate, moun = moune)']
+];
+/* je, to, li, nou, vou, yé, mo drop their vowel before a vowel: to olé becomes t'olé (Lord's rule) */
+const ELI = { je: 'j', to: 't', li: 'l', nou: 'n', vou: 'v', 'yé': 'y', mo: 'm' };
+const ELIRE = /(^|[^\p{L}\p{M}'’-])(je|to|li|nou|vou|yé|mo) +(?=[aeiouéèêòìæœôàâîïûüù])/giu;
+function elide(t) {
+  return String(t || '').normalize('NFC').replace(ELIRE, (m, pre, w) => { const r = ELI[w.toLowerCase()]; return pre + (w[0] === w[0].toUpperCase() ? r.toUpperCase() : r) + "'"; });
+}
+function frPart(p) {
+  let s = p;
+  if (!s) return s;
+  s = nasal(s);
+  for (const [re, to] of MATRIX) s = s.replace(re, to);
+  return s.replace(/[\uE001-\uE008]/g, c => NOUT[c]);
+}
+function toFr(text) {
+  return elide(text).replace(/[‘’ʼ]/g, "'").replace(/[\p{L}\p{M}]+/gu, (w, at, all) => {
+    const lw = w.toLowerCase();
+    if (lw.length === 1 && all[at + 1] === "'" && !/[aeiouéèò]/.test(lw)) return lw;
+    return frPart(lw.normalize('NFC'));
+  });
+}
+/* rough sound key so a French transcript can be compared with the Kréyòl target */
+function sndKey(t) {
+  let s = String(t || '').toLowerCase().replace(/ç/g, 's').replace(/œ/g, 'e').replace(/\bc['’]/g, 's').replace(/\bqu['’]/g, 'k');
+  s = s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/['’\-]/g, ' ').replace(/[^a-z ]+/g, ' ');
+  return s.split(/\s+/).filter(Boolean).map(w => {
+    w = w.replace(/tch/g, 'S').replace(/ch/g, 'S').replace(/sh/g, 'S').replace(/ph/g, 'f').replace(/gn/g, 'N').replace(/qu/g, 'k').replace(/gu(?=[eiy])/g, 'g')
+      .replace(/c(?=[eiy])/g, 's').replace(/c/g, 'k').replace(/x/g, 'ks').replace(/h/g, '')
+      .replace(/eaux?|aux?/g, 'o').replace(/oi/g, 'wa').replace(/ou/g, 'U').replace(/U(?=[aeioy])/g, 'w')
+      .replace(/(ain|ein)(?![aeiouyU])/g, 'I')
+      .replace(/aient$|ais$|ait$|ai|ei|ey/g, 'e').replace(/(er|ez|et)$/g, 'e')
+      .replace(/(ain|ein|in|im|yn|un)(?![aeiouyU])/g, 'I').replace(/(an|am|en|em)(?![aeiouyU])/g, 'A').replace(/(on|om)(?![aeiouyU])/g, 'O')
+      .replace(/y/g, 'i').replace(/([a-zA-Z])\1+/g, '$1');
+    w = w.replace(/eu/g, 'e').replace(/([aeiouIAOU])(s|t|d|z|p)$/, '$1');
+    if (w.length > 2) w = w.replace(/([^aeiouIAOU])e$/, '$1');
+    return w;
+  }).join(' ');
+}
+function speechScore(heard, kl) {
+  const b = sndKey(toFr(kl)), a = sndKey(heard);
+  if (!a || !b) return 0;
+  const whole = 1 - lev(a, b) / Math.max(a.length, b.length);
+  const A = a.replace(/ /g, ''), B = b.replace(/ /g, '');
+  const tight = 1 - lev(A, B) / Math.max(A.length, B.length);
+  return Math.max(whole, tight);
+}
+
+/* ------------------------------------------------------- scheduling */
+const DAY = 864e5;
+/* record: [s stability days, due minute, ease*100, reps, lapses, last minute, added minute, last grade 0 again 1 hard 2 good] */
+const recNew = (now, s) => [s, Math.round((now + s * DAY) / 6e4), 250, 1, 0, Math.round(now / 6e4), Math.round(now / 6e4), 2];
+function recall(rec, now) { const t = Math.max(0, now / 6e4 - rec[5]) / 1440; return Math.exp(Math.log(0.9) * t / Math.max(rec[0], 0.1)); }
+function schedule(rec, grade, now, fuzz) {
+  const r = rec.slice(), el = Math.max(0, now / 6e4 - r[5]) / 1440;
+  let s = r[0], e = r[2] / 100;
+  if (grade === 0) { r[4]++; e = Math.max(1.3, e - 0.2); s = Math.max(0.5, Math.min(s * 0.3, 2)); }
+  else {
+    const R = Math.exp(Math.log(0.9) * el / Math.max(s, 0.1));
+    let m = grade === 1 ? 1.25 : e;
+    m = 1 + (m - 1) * Math.min(2.2, 1 + 1.5 * (1 - R));
+    if (el < s * 0.5) m = 1 + (m - 1) * Math.max(0.15, el / Math.max(s, 0.1));
+    s = Math.min(1100, Math.max(s, s * m));
+    e = grade === 1 ? Math.max(1.3, e - 0.1) : Math.min(3.0, e + 0.02);
+  }
+  const fz = 1 + ((fuzz == null ? Math.random() : fuzz) - 0.5) * 0.1;
+  r[0] = Math.round(s * 100) / 100; r[1] = Math.round((now + s * fz * DAY) / 6e4); r[2] = Math.round(e * 100); r[3]++; r[5] = Math.round(now / 6e4); r[7] = grade;
+  return r;
+}
+function strength(rec, now) {
+  if (!rec) return 0;
+  const s = rec[0], R = recall(rec, now);
+  let b = s < 1.5 ? 1 : s < 4 ? 2 : s < 10 ? 3 : s < 30 ? 4 : 5;
+  if (R < 0.8) b--; if (R < 0.6) b--;
+  return Math.max(1, b);
+}
+const isWeak = (rec, now) => !!rec && (recall(rec, now) < 0.75 || rec[7] === 0 || (rec[4] >= 2 && rec[0] < 7));
+
+/* -------------------------------------------------- exercise building */
+function Course(E, lex, S, course) {
+  const C = course;
+  const words = id => E[id];
+  const answersFor = id => E[id].forms;
+  const sentKnownBy = (x, knownFn) => x.oov === 0 && [...x.req].every(knownFn);
+  function distractors(x, pool, R, n) {
+    const inS = new Set(x.words.map(w => fold(w.x)));
+    const cand = shuffle(pool, R).map(i => E[i]).filter(e => !e.multi && e.single[0] && !inS.has(fold(e.single[0])) && e.single[0].length <= 12);
+    const out = [];
+    for (const e of cand) { const f = e.single[0]; if (!out.some(o => fold(o) === fold(f))) out.push(f); if (out.length >= n) break; }
+    return out;
+  }
+  function tileText(w, k) { return (k === 0 && !/^\p{Lu}{2,}/u.test(w.x)) ? w.x.charAt(0).toLowerCase() + w.x.slice(1) : w.x; }
+  function buildEx(x, target, pool, R, win) {
+    const ws = x.words;
+    let a = 0, b = ws.length;
+    if (win) { a = win[0]; b = win[1]; }
+    const tiles = ws.slice(a, b).map((w, k) => tileText(w, a + k));
+    const nd = tiles.length <= 3 ? 2 : tiles.length <= 7 ? 2 : 1;
+    return { type: 'build', s: x.id, w: target, a, b, tiles, extra: distractors(x, pool, R, nd), targets: target != null ? [target] : [] };
+  }
+  function windowFor(x, target, knownFn) {
+    const ws = x.words;
+    const ti = ws.findIndex(w => w.ids.includes(target) || x.owner === target && w.ids.length === 0);
+    if (ti < 0) return null;
+    const ok = k => ws[k] && !ws[k].oov && ws[k].ids.every(knownFn);
+    let a = ti, b = ti + 1;
+    while (b - a < 6) { const l = a > 0 && ok(a - 1), rr = b < ws.length && ok(b); if (!l && !rr) break; if (rr && (b - ti <= ti - a || !l)) b++; else if (l) a--; }
+    if (b - a < 3) return null;
+    return [a, b];
+  }
+  function blankIndex(x, target) {
+    let k = x.words.findIndex(w => w.ids.length === 1 && w.ids[0] === target && !/['’]/.test(w.x));
+    if (k < 0) k = x.words.findIndex(w => w.ids.includes(target));
+    if (k < 0 && E[target]) { const fk = E[target].fk; k = x.words.findIndex(w => fk.has(fold(w.x))); }
+    return k;
+  }
+  const sentOf = id => S[id];
+  const hasW = (x, id) => x.words.some(w => w.ids.includes(id));
+  /* sentences that contain word id, ordered for teaching at lesson L */
+  function poolFor(id, L, knownFn) {
+    const list = C.hasIdx[id].map(sentOf).filter(x => x.n >= 2 && x.n <= 26 && x.t);
+    const unknown = x => x.oov + [...x.req].filter(i => !knownFn(i) && i !== id).length;
+    return list.map(x => ({ x, u: unknown(x), own: x.owner === id ? 0 : 1 })).sort((p, q) => (p.u - q.u) || (p.x.comp - q.x.comp) || (p.own - q.own) || (Math.abs(p.x.n - 6) - Math.abs(q.x.n - 6)) || (p.x.id - q.x.id)).map(p => ({ x: p.x, u: p.u }));
+  }
+  function sentenceStep(id, L, knownFn, used, R, kind, pool) {
+    const P = poolFor(id, L, knownFn).filter(p => !used.has(p.x.id));
+    const full = P.filter(p => p.u === 0 && p.x.n <= 9 && hasW(p.x, id));
+    if (kind !== 'fill' && full.length) {
+      const x = full[0].x; used.add(x.id);
+      return buildEx(x, id, pool, R);
+    }
+    const anyp = P.filter(p => blankIndex(p.x, id) >= 0);
+    if (anyp.length) {
+      const x = anyp[0].x;
+      if (kind !== 'fill' && anyp[0].u > 0) { const win = windowFor(x, id, knownFn); if (win) { used.add(x.id); return buildEx(x, id, pool, R, win); } }
+      used.add(x.id);
+      return { type: 'fill', s: x.id, w: id, k: blankIndex(x, id), targets: [id] };
+    }
+    if (E[id].multi && !used.has('p' + id)) {
+      const f = E[id].forms[0], tk = tokenize(f).words;
+      if (tk.length >= 2 && tk.length <= 7) {
+        used.add('p' + id);
+        const fake = { words: tk };
+        return { type: 'build', phrase: id, w: id, tiles: tk.map(w => w.x), extra: distractors(fake, pool, R, tk.length <= 3 ? 2 : 1), targets: [id] };
+      }
+    }
+    return null;
+  }
+  function matchStep(ids, R) {
+    const seen = new Set(), out = [];
+    for (const i of ids) { const a = fold(E[i].single[0] || E[i].forms[0]), b = E[i].short.toLowerCase(); if (seen.has('k' + a) || seen.has('e' + b) || !b) continue; seen.add('k' + a); seen.add('e' + b); out.push(i); }
+    return out.length >= 3 ? { type: 'match', ids: out.slice(0, 5), targets: out.slice(0, 5) } : null;
+  }
+  const typeStep = (id, dir) => ({ type: 'type', dir, w: id, targets: [id] });
+  /* sentence fully known by knownFn, short, containing one of ids, for listening */
+  function listenStep(ids, knownFn, used, R, pool, maxN = 8) {
+    for (const id of ids) {
+      const x = C.hasIdx[id].map(sentOf).filter(x => !used.has(x.id) && x.n >= 2 && x.n <= maxN && hasW(x, id) && sentKnownBy(x, knownFn)).sort((a, b) => a.n - b.n)[0];
+      if (x) { used.add(x.id); return Object.assign(buildEx(x, id, pool, R), { listen: true }); }
+    }
+    return null;
+  }
+  const repeatStep = id => ({ type: 'speak', repeat: true, w: id, targets: [] });
+  const dictStep = id => ({ type: 'type', dir: 'dict', w: id, targets: [id] });
+  /* A lesson: meet each word, hear it, say it, use it in sentences straight away,
+     then pull it back from memory in mixed formats. opts.warm = older words due for review. */
+  function lesson(L, opts = {}) {
+    const R = rng((opts.seed || 7) * 7919 + L * 104729);
+    const audio = opts.audio !== false, mic = !!opts.mic;
+    const ids = C.lessons[L].ids.slice();
+    const before = new Set(); for (let i = 0; i < L; i++) C.lessons[i].ids.forEach(x => before.add(x));
+    const lessonSet = new Set(ids);
+    const knownFn = i => before.has(i) || lessonSet.has(i);
+    const prior = shuffle([...before], R).slice(0, 60);
+    const pool = prior.concat(ids);
+    const used = new Set(), steps = [];
+    const push = s => { if (s) steps.push(s); };
+    const sent = (id, kind) => sentenceStep(id, L, knownFn, used, R, kind, pool);
+    const intro = id => {
+      const P = poolFor(id, L, knownFn).filter(p => hasW(p.x, id) || p.x.owner === id);
+      const free = p => !used.has(p.x.id);
+      const best = P.find(p => free(p) && p.u === 0 && p.x.n <= 12 && (p.x.owner === id || p.x.comp)) || P.find(p => free(p) && p.x.owner === id && p.x.n <= 14 && p.u <= 3)
+        || P.find(p => free(p) && p.u === 0 && p.x.n <= 12) || P.find(p => free(p) && p.x.n <= 14) || P[0];
+      return { type: 'intro', w: id, s: best ? best.x.id : null, targets: [] };
+    };
+    const known3 = shuffle(prior.filter(i => !E[i].multi), R);
+    // warm-up: older words that are due, pulled from memory before anything new
+    (opts.warm || []).slice(0, 2).forEach((id, k) => { if (E[id] && !lessonSet.has(id)) push(Object.assign(k ? typeStep(id, 'en2kl') : typeStep(id, 'kl2en'), { warm: true })); });
+    const [w0, w1, w2, w3, w4] = ids;
+    push(intro(w0)); if (mic && !E[w0].multi) push(repeatStep(w0));
+    if (w1 != null) { push(intro(w1)); push(matchStep([w0, w1, ...known3.slice(0, 3)], R)); }
+    push(sent(w0, 'build') || typeStep(w0, 'en2kl'));
+    if (w2 != null) { push(intro(w2)); if (mic && !E[w2].multi) push(repeatStep(w2)); if (!steps.some(s => s.type === 'match')) push(matchStep([w0, w1, w2, ...known3.slice(0, 2)].filter(x => x != null), R)); }
+    push(typeStep(w0, 'en2kl'));
+    if (w1 != null) push(sent(w1, 'fill') || typeStep(w1, 'kl2en'));
+    if (w3 != null) push(intro(w3));
+    push((audio && listenStep([w2, w3, w1, w0].filter(x => x != null), knownFn, used, R, pool)) || (w2 != null ? sent(w2, 'build') : null));
+    if (w1 != null) push(typeStep(w1, 'kl2en'));
+    if (w4 != null) push(intro(w4));
+    if (w3 != null) push(sent(w3, 'fill') || typeStep(w3, 'en2kl'));
+    push(matchStep(shuffle(ids, R).concat(known3.slice(3, 6)), R));
+    const last = ids[ids.length - 1];
+    push(audio && !E[last].multi ? dictStep(last) : typeStep(last, 'en2kl'));
+    // a sentence that joins two or more of this lesson's words
+    const joint = C.readyAt[L].map(sentOf).filter(x => !used.has(x.id) && x.n <= 9 && x.n >= 2 && [...lessonSet].filter(i => hasW(x, i)).length >= 2).sort((a, b) => a.n - b.n)[0];
+    if (joint) { used.add(joint.id); push(buildEx(joint, ids.find(i => hasW(joint, i)), pool, R)); }
+    else push(sent(last, 'build') || sent(ids[R() * ids.length | 0], 'fill'));
+    const sp = C.readyAt[L].map(sentOf).filter(x => x.n <= 9 && x.n >= 2 && [...lessonSet].some(i => hasW(x, i)))[0];
+    push(sp ? { type: 'speak', s: sp.id, targets: ids.filter(i => hasW(sp, i)) } : { type: 'speak', w: w0, targets: [w0] });
+    return steps;
+  }
+  /* end-of-unit review: read and hear the unit in context, then mixed recall of every word */
+  function unitReview(U, opts = {}) {
+    const R = rng((opts.seed || 11) * 977 + U * 31);
+    const audio = opts.audio !== false;
+    const lastL = C.units[U].ls[C.units[U].ls.length - 1];
+    const ids = []; C.units[U].ls.forEach(l => ids.push(...C.lessons[l].ids));
+    const knownFn = i => C.lessonOf[i] >= 0 && C.lessonOf[i] <= lastL;
+    const pool = ids.slice();
+    const used = new Set(), steps = [];
+    const story = shuffle(C.hasIdx.length ? ids.flatMap(id => C.hasIdx[id]) : [], R).map(sentOf).filter((x, k, a) => a.indexOf(x) === k && x.n >= 3 && x.n <= 11 && sentKnownBy(x, knownFn)).slice(0, 4);
+    story.forEach(x => used.add(x.id));
+    const W = shuffle(ids.filter(i => !E[i].multi), R), Ph = ids.filter(i => E[i].multi);
+    const mix = [];
+    for (let i = 0; i + 3 <= W.length && mix.filter(s => s.type === 'match').length < 2; i += 5) { const m = matchStep(W.slice(i, i + 5), R); if (m) mix.push(m); }
+    const plan = ['listen', 'build', 'fill', 'en2kl', 'dict', 'listen', 'kl2en', 'fill', 'build', 'en2kl', 'speak', 'speak'];
+    plan.forEach((t, k) => {
+      const id = W[(k + 2) % Math.max(1, W.length)] ?? ids[k % ids.length];
+      let st = null;
+      if (t === 'listen') st = audio ? listenStep(shuffle(ids, R), knownFn, used, R, pool, 9) : null;
+      else if (t === 'dict') st = audio ? dictStep(id) : null;
+      else if (t === 'en2kl' || t === 'kl2en') st = typeStep(id, t);
+      else if (t === 'speak') { const x = C.hasIdx[id].map(sentOf).find(x => !used.has(x.id) && x.n >= 2 && x.n <= 9 && sentKnownBy(x, knownFn)); if (x) { used.add(x.id); st = { type: 'speak', s: x.id, targets: [id] }; } }
+      else st = sentenceStep(id, lastL, knownFn, used, R, t, pool);
+      if (st) mix.push(st);
+    });
+    Ph.slice(0, 2).forEach(id => { const st = sentenceStep(id, lastL, knownFn, used, R, 'build', pool); if (st) mix.push(st); });
+    const out = story.length >= 2 ? [{ type: 'read', ss: story.map(x => x.id), targets: [] }] : [];
+    const bag = shuffle(mix, R);
+    while (bag.length) { const prev = out.length ? out[out.length - 1].type + (out[out.length - 1].dir || '') + (out[out.length - 1].listen ? 'l' : '') : ''; let j = bag.findIndex(s => s.type + (s.dir || '') + (s.listen ? 'l' : '') !== prev); if (j < 0) j = 0; out.push(bag.splice(j, 1)[0]); }
+    return out;
+  }
+  /* speed round board: five learned words to pair at speed */
+  function blitzBoard(learned, R) { return matchStep(shuffle(learned.filter(i => E[i] && !E[i].multi), R).slice(0, 12), R); }
+  /* review: recs maps entry id -> record */
+  function review(recs, now, mode, opts = {}) {
+    const R = rng(opts.seed || (now / 6e4 | 0));
+    const ids = Object.keys(recs).map(Number).filter(i => E[i]);
+    let pick;
+    if (mode === 'weak') pick = ids.filter(i => isWeak(recs[i], now)).sort((a, b) => recall(recs[a], now) - recall(recs[b], now)).slice(0, 10);
+    else if (mode === 'practice') pick = shuffle(ids, R).sort((a, b) => strength(recs[a], now) - strength(recs[b], now)).slice(0, opts.max || 10);
+    else pick = ids.filter(i => recs[i][1] * 6e4 <= (opts.until || now)).sort((a, b) => recall(recs[a], now) - recall(recs[b], now)).slice(0, opts.max || 12);
+    if (!pick.length) return [];
+    const knownFn = i => !!recs[i];
+    const pool = ids;
+    const used = new Set(), steps = [];
+    const young = pick.filter(i => recs[i][0] < 3);
+    const rest = pick.filter(i => recs[i][0] >= 3);
+    for (let i = 0; i + 3 <= young.length && steps.length < 2; i += 4) { const m = matchStep(young.slice(i, i + 5), R); if (m) steps.push(m); }
+    const inMatch = new Set(steps.flatMap(s => s.ids || []));
+    const types = ['kl2en', 'fill', 'en2kl', 'build', 'speak'];
+    pick.filter(i => !inMatch.has(i)).forEach((id, k) => {
+      const s = recs[id][0], L = C.lessonOf[id];
+      let st = null;
+      let want = s < 3 ? ['kl2en', 'fill', 'build', 'dict'][k % 4] : s < 12 ? ['fill', 'en2kl', 'listen', 'build'][k % 4] : ['speak', 'en2kl', 'listen', 'build'][k % 4];
+      if (opts.audio === false) want = want === 'dict' ? 'en2kl' : want === 'listen' ? 'build' : want;
+      if (want === 'dict') st = E[id].multi ? typeStep(id, 'en2kl') : dictStep(id);
+      else if (want === 'listen') st = listenStep([id], knownFn, used, R, pool, 9) || sentenceStep(id, L, knownFn, used, R, 'build', pool);
+      else if (want === 'kl2en' || want === 'en2kl') st = typeStep(id, want);
+      else if (want === 'speak') {
+        const x = C.hasIdx[id].map(sentOf).filter(x => !used.has(x.id) && x.n >= 2 && x.n <= 9 && hasW(x, id) && sentKnownBy(x, knownFn))[0];
+        if (x) { used.add(x.id); st = { type: 'speak', s: x.id, targets: [id] }; }
+      } else st = sentenceStep(id, L, knownFn, used, R, want, pool);
+      steps.push(st || typeStep(id, k % 2 ? 'en2kl' : 'kl2en'));
+    });
+    // interleave: spread exercise types so the same kind rarely runs twice in a row
+    const out = [], bag = shuffle(steps, R);
+    while (bag.length) { const prev = out.length ? out[out.length - 1].type + (out[out.length - 1].dir || '') : ''; let j = bag.findIndex(s => s.type + (s.dir || '') !== prev); if (j < 0) j = 0; out.push(bag.splice(j, 1)[0]); }
+    return out;
+  }
+  /* placement test for starting at unit U: words from earlier units */
+  function jump(U, opts = {}) {
+    const R = rng((opts.seed || 3) * 31 + U * 977);
+    const first = C.units[U].ls[0];
+    const ids = []; for (let i = 0; i < first; i++) ids.push(...C.lessons[i].ids);
+    const pool = ids.filter(i => !E[i].multi || E[i].forms[0].length < 18);
+    if (!pool.length) return [];
+    const weight = i => 1 + C.lessonOf[i] / Math.max(1, first);
+    const pick = [], seen = new Set();
+    let guard = 0;
+    while (pick.length < 12 && guard++ < 4000) { const i = pool[R() * pool.length | 0]; if (seen.has(i)) continue; if (R() * 2 > weight(i)) continue; seen.add(i); pick.push(i); }
+    const knownFn = i => C.lessonOf[i] < first;
+    const used = new Set(), steps = [];
+    /* with sound, half the jump test is heard only */
+    const hp = opts.audio ? hearPool(U, ids.slice(-150), knownFn, R) : null;
+    let hi = 0;
+    pick.forEach((id, k) => {
+      const want = opts.audio ? ['hear', 'fill', 'listen', 'en2kl'][k % 4] : ['en2kl', 'fill', 'kl2en', 'build'][k % 4];
+      let st = null;
+      if (want === 'hear' && hp) { const it = hp.sentItems[hi] || hp.wordItems[hi]; hi++; if (it) st = hearStep(it, hp.sentEn.concat(hp.wordEn), 'mc', R); }
+      else if (want === 'listen') st = listenStep([id].concat(shuffle(ids, R).slice(0, 30)), knownFn, used, R, ids, 9);
+      else if (want === 'fill' || want === 'build') st = sentenceStep(id, first - 1, knownFn, used, R, want, ids);
+      steps.push(st || typeStep(id, k % 2 ? 'kl2en' : 'en2kl'));
+    });
+    return steps;
+  }
+  /* three questions on one unit, for the placement test */
+  function unitTest(U, opts = {}) {
+    const R = rng((opts.seed || 5) * 131 + U * 7);
+    const ids = []; C.units[U].ls.forEach(l => ids.push(...C.lessons[l].ids));
+    const pool = shuffle(ids.filter(i => !E[i].multi), R).concat(shuffle(ids.filter(i => E[i].multi), R));
+    const knownFn = i => C.lessonOf[i] <= C.units[U].ls[C.units[U].ls.length - 1];
+    const used = new Set(), steps = [];
+    /* with sound: four questions, three of them heard only (listening is the surest sign of fluency) */
+    if (opts.audio) {
+      const hp = hearPool(U, ids, knownFn, R);
+      const mc = hp.sentItems.length ? hearStep(hp.sentItems[0], hp.sentEn.concat(hp.wordEn), 'mc', R) : hp.wordItems.length ? hearStep(hp.wordItems[0], hp.wordEn, 'mc', R) : null;
+      const lb = listenStep(shuffle(ids, R), knownFn, used, R, ids, 10) || (pool[0] != null ? dictStep(pool[0]) : null);
+      const mc2 = hp.wordItems.length > 1 ? hearStep(hp.wordItems[1], hp.wordEn, 'mc', R) : null;
+      const rd = pool[1] != null ? typeStep(pool[1], 'en2kl') : null;
+      [mc, lb, mc2, rd].forEach(st => { if (st) steps.push(Object.assign(st, { u: U })); });
+      if (steps.length >= 3) return steps;
+      steps.length = 0;
+    }
+    pool.slice(0, 3).forEach((id, k) => {
+      const want = ['en2kl', 'fill', 'kl2en'][k];
+      const st = want === 'fill' ? sentenceStep(id, C.units[U].ls[0], knownFn, used, R, k % 2 ? 'fill' : 'build', ids) : null;
+      steps.push(Object.assign(st || typeStep(id, want === 'fill' ? 'en2kl' : want), { u: U }));
+    });
+    return steps;
+  }
+  /* words and short known sentences of a unit, with wrong-answer pools, for hearing cards */
+  function hearPool(U, ids, knownFn, R) {
+    const prior = []; for (let l = Math.max(0, C.units[U].ls[0] - 12); l < C.units[U].ls[0]; l++) prior.push(...C.lessons[l].ids);
+    const wordItems = shuffle(ids.filter(i => E[i].short), R).map(i => ({ k: E[i].forms[0], en: E[i].short, w: i, targets: [i] }));
+    const wordEn = ids.concat(prior).map(i => E[i].short).filter(Boolean);
+    const sents = [...new Map(ids.flatMap(i => C.hasIdx[i].map(sentOf)).filter(x => x && x.t && x.n >= 2 && x.n <= 8 && sentKnownBy(x, knownFn)).map(x => [x.id, x])).values()];
+    const sentItems = shuffle(sents, R).map(x => ({ k: x.s, en: x.t, s: x.id, targets: x.words.flatMap(w => (w.ids || []).filter(knownFn)).slice(0, 4) }));
+    const sentEn = sents.map(x => x.t);
+    return { wordItems, wordEn, sentItems, sentEn };
+  }
+  /* Hearing cards: the Kréyòl is only heard. tf = an English meaning is shown, green if it matches, red if not.
+     mc = pick the English meaning from three. Items are words or whole sentences. */
+  function hearStep(item, wrongs, kind, R) {
+    const others = uniq(wrongs.filter(w => w && w.toLowerCase() !== item.en.toLowerCase()));
+    if (!others.length) return null;
+    if (kind === 'tf') {
+      const truth = R() < 0.5;
+      return { type: 'hear', kind, k: item.k, en: item.en, claim: truth ? item.en : others[Math.floor(R() * others.length)], truth, w: item.w, s: item.s, targets: item.targets };
+    }
+    if (others.length < 2) return null;
+    const opts = shuffle([item.en].concat(shuffle(others, R).slice(0, 2)), R);
+    return { type: 'hear', kind, k: item.k, en: item.en, opts, w: item.w, s: item.s, targets: item.targets };
+  }
+  /* Listening test: every prompt is sound only. Hear and judge (green or red), hear and pick the meaning,
+     hear a sentence and build it, hear a word and write it. */
+  function listenTest(U, opts = {}) {
+    const R = rng((opts.seed || 13) * 613 + U * 53);
+    const ls = C.units[U].ls.filter(l => opts.upTo == null || l <= opts.upTo), lastL = ls[ls.length - 1];
+    const ids = []; ls.forEach(l => ids.push(...C.lessons[l].ids));
+    /* a short unit borrows the words just before it, so the test still has twelve questions */
+    for (let l = ls[0] - 1; l >= 0 && ids.length < 25; l--) ids.push(...C.lessons[l].ids);
+    const knownFn = i => C.lessonOf[i] >= 0 && C.lessonOf[i] <= lastL;
+    const { wordItems, wordEn, sentItems, sentEn } = hearPool(U, ids, knownFn, R);
+    const pool = ids.slice(), used = new Set(), steps = [];
+    const W = shuffle(ids.filter(i => !E[i].multi), R);
+    let wi = 0, si = 0, di = 0;
+    const take = kind => {
+      const useS = si < sentItems.length && (kind === 'mc' ? R() < 0.6 : R() < 0.5);
+      return useS ? hearStep(sentItems[si++], sentEn, kind, R) : wi < wordItems.length ? hearStep(wordItems[wi++], wordEn, kind, R) : null;
+    };
+    const plan = ['tf', 'mc', 'build', 'tf', 'mc', 'dict', 'tf', 'mc', 'build', 'tf', 'mc', 'dict'];
+    for (const p of plan) {
+      let st = null;
+      if (p === 'tf' || p === 'mc') st = take(p);
+      else if (p === 'build') st = listenStep(shuffle(ids, R), knownFn, used, R, pool, 10);
+      else if (W.length) st = dictStep(W[di++ % W.length]);
+      if (!st) st = take('tf');
+      if (st) steps.push(st);
+    }
+    return steps;
+  }
+  return { lesson, review, jump, unitTest, unitReview, listenTest, hearPool, blitzBoard, answersFor, words };
+}
+
+G.DK = { DIALECT, toFr, elide, sndKey, speechScore, dec, fold, loose, low, uniq, parseTSV, tokenize, Lexicon, buildSentences, makeSentence, buildCourse, Course, gradeKL, gradeEN, enWords, normKL, lev, rng, shuffle, recNew, recall, schedule, strength, isWeak, DAY, CATS, START, LESSON, UNIT };
+})(typeof globalThis !== 'undefined' ? globalThis : window);
+</script>
+<script>/* KV: two-way word lookup, saved words, spaced repetition. Uses the Diksyonær dictionary. */
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ico = n => '<svg class="i"><use href="#i-' + n + '"/></svg>';
+const now = () => Date.now();
+const SRC = 'https://7stages.net/diksyonaer/';
+const KEY = 'kv-state';
+let ST = { s: {}, d: 'kv', t: '' };
+try { Object.assign(ST, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(ST)); } catch (e) {} };
+let E = [], lex = null, BYKEY = new Map();
+
+/* ------------------------------------------------ speech (French voice reading KV spelt the French way) */
+const TTS = (() => {
+  const ok = () => 'speechSynthesis' in window;
+  const BAD = /eloquence|\b(eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley|albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|fred|junior|kathy|ralph)\b|novelty/i;
+  const score = v => { const n = v.name + ' ' + (v.voiceURI || ''); return (BAD.test(n) ? -40 : 0) + (/premium/i.test(n) ? 12 : /enhanced|améliorée/i.test(n) ? 10 : 0) + (/natural|neural|online/i.test(n) ? 11 : 0) + (/siri/i.test(n) ? 8 : 0) + (/google/i.test(n) ? 6 : 0) + (/\b(thomas|amélie|amelie|audrey|marie|daniel|denise|henri)\b/i.test(n) ? 4 : 0) + (/fr[-_]FR/i.test(v.lang) ? 2 : 0); };
+  const best = re => ok() ? speechSynthesis.getVoices().filter(v => re.test(v.lang)).sort((a, b) => score(b) - score(a))[0] || null : null;
+  let fr = null, en = null;
+  const pick = () => { fr = best(/^fr([-_]|$)/i); en = best(/^en[-_](GB|US)/i) || best(/^en/i); };
+  if (ok()) { pick(); speechSynthesis.addEventListener ? speechSynthesis.addEventListener('voiceschanged', pick) : (speechSynthesis.onvoiceschanged = pick); }
+  let last = '', lastT = 0;
+  function say(text, lang) {
+    if (!ok() || !text) return;
+    if (!fr && !en) pick();
+    try { if (speechSynthesis.paused) speechSynthesis.resume(); speechSynthesis.cancel(); } catch (e) {}
+    const isEn = lang === 'en', t = now(), slow = text === last && t - lastT < 2500;
+    last = text; lastT = slow ? 0 : t;
+    const u = new SpeechSynthesisUtterance(isEn ? text : DK.toFr(text)), v = isEn ? en : fr;
+    if (v) { u.voice = v; u.lang = v.lang; } else u.lang = isEn ? 'en-GB' : 'fr-FR';
+    u.rate = slow ? 0.62 : 0.9;
+    try { speechSynthesis.speak(u); } catch (e) {}
+  }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') pick(); });
+  return { say };
+})();
+const sp = (text, lang) => '<button type="button" class="sp" data-say="' + esc(text) + '"' + (lang ? ' data-lang="' + lang + '"' : '') + ' aria-label="Listen">' + ico('snd') + '</button>';
+document.addEventListener('click', ev => { const b = ev.target.closest('[data-say]'); if (b) { ev.stopPropagation(); TTS.say(b.dataset.say, b.dataset.lang); } }, true);
+let tT = 0; const toast = n => { const t = $('toast') || document.body.appendChild(Object.assign(document.createElement('div'), { id: 'toast' })); t.innerHTML = ico(n); t.classList.add('on'); clearTimeout(tT); tT = setTimeout(() => t.classList.remove('on'), 1100); };
+const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+
+/* ------------------------------------------------ indexes */
+const I = { kvS: new Map(), enS: new Map(), phr: new Map(), one: [], enP: new Map(), enW: new Map() };
+const normEN = s => String(s || '').toLowerCase().replace(/[’‘]/g, "'").replace(/\([^)]*\)/g, ' ').replace(/[^a-z0-9' ]+/g, ' ').replace(/\s+/g, ' ').trim();
+const normKV = s => DK.normKL(s || '').replace(/[^\p{L}\p{M}\s']/gu, '').replace(/\s+/g, ' ').trim();
+const STOP = new Set('a an the to of be is are was were it its this that and or for in on at by with as from into than then'.split(' '));
+function build(tsv, pv, dlg) {
+  E = DK.parseTSV(tsv); E.forEach((e, i) => { e.id = i; BYKEY.set(e.key, i); });
+  lex = DK.Lexicon(E);
+  /* how often each word turns up in the example sentences, to put the common meaning first */
+  const fq = new Map(); E.forEach(e => (e.ex || []).forEach(x => (DK.elide(x.s).match(/[\p{L}\p{M}'’-]+/gu) || []).forEach(t => { DK.fold(t).split(/['’-]/).forEach(k => { if (k) fq.set(k, (fq.get(k) || 0) + 1); }); })));
+  E.forEach(e => { e.f = Math.max(0, ...e.forms.map(f => fq.get(DK.fold(f)) || 0)); });
+  const addS = (kv, en, src) => { if (!kv || !en) return; const a = normKV(kv), b = normEN(en); if (a && !I.kvS.has(a)) I.kvS.set(a, { t: en, src }); if (b && !I.enS.has(b)) I.enS.set(b, { t: kv, src }); };
+  E.forEach(e => (e.ex || []).forEach(x => addS(x.s, x.t, 'd')));
+  pv.forEach(p => addS(p[0], p[1], 'p'));
+  dlg.forEach(d => (d.lines || []).forEach(l => addS(l.kr, l.en, 'g')));
+  E.forEach(e => e.forms.forEach(f => { const k = DK.fold(f); if (!k) return; if (/\s/.test(f.trim())) { if (!I.phr.has(k)) I.phr.set(k, e.id); } else I.one.push([k, e.id]); }));
+  /* English side: every meaning, with and without its leading "to" / "a" / "the" */
+  E.forEach(e => (e.items && e.items.length ? e.items : [e.short]).forEach((g, gi) => {
+    const n = normEN(g); if (!n) return;
+    const vs = new Set([n, n.replace(/^(to|a|an|the) /, ''), n.replace(/^to be /, ''), n.replace(/ (something|someone|somebody|sth|sb)$/, '')]);
+    vs.forEach(v => { if (!v) return; const L = I.enP.get(v) || []; L.push({ id: e.id, r: gi * 10 + (v === n ? 0 : 1) }); I.enP.set(v, L); });
+    n.split(' ').forEach(w => { if (w.length < 2 || STOP.has(w)) return; const L = I.enW.get(w) || []; L.push({ id: e.id, r: n.split(' ').length * 3 + gi }); I.enW.set(w, L); });
+  }));
+  const rank = L => { const seen = new Set(); return L.sort((a, b) => a.r - b.r || (E[b.id].f || 0) - (E[a.id].f || 0)).filter(x => !seen.has(x.id) && seen.add(x.id)).map(x => x.id); };
+  for (const [k, L] of I.enP) I.enP.set(k, rank(L));
+  for (const [k, L] of I.enW) I.enW.set(k, rank(L));
+}
+
+/* ------------------------------------------------ KV → EN */
+function guess(w) {
+  const k = DK.fold(w); if (k.length < 3) return -1;
+  const col = x => x.replace(/(.)\1+/g, '$1'), kc = col(k);
+  for (const [f, id] of I.one) if (f !== k && col(f) === kc) return id;
+  let best = -1, bd = 9; const lim = k.length >= 6 ? 2 : 1;
+  for (const [f, id] of I.one) { if (Math.abs(f.length - k.length) > lim || f[0] !== k[0]) continue; const d = DK.lev(f, k); if (d < bd || (d === bd && best >= 0 && (E[id].f || 0) > (E[best].f || 0))) { bd = d; best = id; } if (!bd) break; }
+  return bd <= lim ? best : -1;
+}
+function alts(id, x) { const k = DK.fold(x).replace(/^[a-z]['’]/, ''), out = []; for (const [f, j] of I.one) if (f === k && j !== id && !out.includes(j) && E[j].short !== E[id].short) out.push(j); return out; }
+function kvLine(raw) {
+  const m = DK.makeSentence(lex, DK.elide(raw), '', -1, false), W = m.words, out = [];
+  for (let k = 0; k < W.length; k++) {
+    let hit = null;
+    for (let n = Math.min(4, W.length - k); n >= 2 && !hit; n--) { const key = DK.fold(W.slice(k, k + n).map(w => w.x).join(' ')); if (I.phr.has(key)) hit = { n, id: I.phr.get(key) }; }
+    if (hit) { out.push({ x: W.slice(k, k + hit.n).map(w => w.x).join(' '), ids: [hit.id], ph: 1 }); k += hit.n - 1; continue; }
+    const w = W[k];
+    if (w.free) { out.push({ x: w.x, nm: 1 }); continue; }
+    if (!w.ids.length || w.oov) { out.push({ x: w.x, unk: 1, g: w.ids.length ? -1 : guess(w.x) }); continue; }
+    let ids = w.ids.slice(), alt = [];
+    if (ids.length === 1 && !w.sub) { const fw = e => /pronoun|determiner|article|preposition|conjunction|particle|marker/i.test(e.posLabel || '') || e.func ? 1 : 0; const all = [ids[0], ...alts(ids[0], w.x)].sort((a, b) => fw(E[b]) - fw(E[a]) || (E[b].f || 0) - (E[a].f || 0)); ids = [all[0]]; const seen = new Set([E[all[0]].short]); alt = all.slice(1).filter(j => !seen.has(E[j].short) && seen.add(E[j].short)).slice(0, 2); }
+    out.push({ x: w.x, ids, alt });
+  }
+  return { words: out, match: I.kvS.get(normKV(raw)) || null };
+}
+
+/* ------------------------------------------------ EN → KV */
+const IRR = { was: 'be', were: 'be', is: 'be', am: 'be', are: 'be', been: 'be', went: 'go', gone: 'go', ate: 'eat', eaten: 'eat', saw: 'see', seen: 'see', came: 'come', made: 'make', took: 'take', taken: 'take', gave: 'give', given: 'give', got: 'get', had: 'have', has: 'have', did: 'do', does: 'do', said: 'say', knew: 'know', known: 'know', thought: 'think', told: 'tell', found: 'find', left: 'leave', felt: 'feel', brought: 'bring', bought: 'buy', ran: 'run', sat: 'sit', stood: 'stand', slept: 'sleep', spoke: 'speak', wrote: 'write', drank: 'drink', fell: 'fall', kept: 'keep', lost: 'lose', met: 'meet', paid: 'pay', sold: 'sell', sent: 'send', taught: 'teach', caught: 'catch', children: 'child', men: 'man', women: 'woman', feet: 'foot', teeth: 'tooth', mice: 'mouse', people: 'person', better: 'good', best: 'good', worse: 'bad', worst: 'bad', him: 'he', her: 'she', them: 'they', us: 'we', me: 'i', my: 'my', your: 'your' };
+function lemmas(w) {
+  const o = [w]; if (IRR[w]) o.push(IRR[w]);
+  const add = x => { if (x && x.length > 1 && !o.includes(x)) o.push(x); };
+  if (/ies$/.test(w)) add(w.slice(0, -3) + 'y');
+  if (/ied$/.test(w)) add(w.slice(0, -3) + 'y');
+  if (/(s|x|z|ch|sh)es$/.test(w)) add(w.slice(0, -2));
+  if (/s$/.test(w) && !/ss$/.test(w)) add(w.slice(0, -1));
+  if (/ing$/.test(w)) { const b = w.slice(0, -3); add(b); add(b + 'e'); if (/(.)\1$/.test(b)) add(b.slice(0, -1)); }
+  if (/ed$/.test(w)) { const b = w.slice(0, -2); add(b); add(w.slice(0, -1)); if (/(.)\1$/.test(b)) add(b.slice(0, -1)); }
+  if (/ly$/.test(w)) add(w.slice(0, -2));
+  if (/er$/.test(w)) { add(w.slice(0, -2)); add(w.slice(0, -1)); }
+  if (/est$/.test(w)) { add(w.slice(0, -3)); add(w.slice(0, -2)); }
+  return o;
+}
+const CONTR = [[/\bcan't\b/g, 'can not'], [/\bwon't\b/g, 'will not'], [/n't\b/g, ' not'], [/'m\b/g, ' am'], [/'re\b/g, ' are'], [/'ve\b/g, ' have'], [/'ll\b/g, ' will'], [/'d\b/g, ' would'], [/\b(it|that|what|there|he|she|who)'s\b/g, '$1 is']];
+function enLine(raw) {
+  let s = raw.toLowerCase().replace(/[’‘]/g, "'"); CONTR.forEach(([a, b]) => { s = s.replace(a, b); });
+  const W0 = (s.match(/[a-z]+(?:'[a-z]+)?|\d+/g) || []), W = [], PRON = /^(i|you|he|she|it|we|they|there)$/;
+  /* his dialect has no progressive: "is eating" is just "eats"; question "do" drops out */
+  for (let k = 0; k < W0.length; k++) { const a = W0[k], b = W0[k + 1] || '';
+    if (/^(am|is|are)$/.test(a) && /ing$/.test(b)) continue;
+    if (/^(was|were)$/.test(a) && /ing$/.test(b)) { W.push('té'); continue; }
+    if (/^(do|does)$/.test(a) && (PRON.test(b) || b === 'not')) continue;
+    W.push(a); }
+  const out = [];
+  for (let k = 0; k < W.length; k++) {
+    let hit = null;
+    for (let n = Math.min(4, W.length - k); n >= 1 && !hit; n--) {
+      const ws = W.slice(k, k + n), forms = n === 1 ? lemmas(ws[0]) : [ws.join(' '), ...lemmas(ws[n - 1]).slice(1).map(l => ws.slice(0, -1).join(' ') + ' ' + l), ...(ws[0] === 'to' ? [ws.slice(1).join(' ')] : [])];
+      for (const f of forms) { const L = I.enP.get(f); if (L && L.length) { hit = { n, ids: L }; break; } }
+      if (!hit && n === 1 && !STOP.has(ws[0])) for (const f of lemmas(ws[0])) { const L = I.enW.get(f); if (L && L.length) { hit = { n, ids: L, loose: 1 }; break; } }
+    }
+    if (!hit && W[k] === 'té') { const id = E.findIndex(e => e.forms.includes('té')); if (id >= 0) hit = { n: 1, ids: [id] }; }
+    if (hit && W[k] === 'the' && hit.n === 1) hit.ids = [...hit.ids].sort((a, b) => (E[b].forms.includes('-la') ? 1 : 0) - (E[a].forms.includes('-la') ? 1 : 0));
+    if (hit) { out.push({ x: W.slice(k, k + hit.n).join(' '), ids: hit.ids.slice(0, 6), loose: hit.loose }); k += hit.n - 1; }
+    else if (/^\d+$/.test(W[k])) out.push({ x: W[k], nm: 1 });
+    else if (STOP.has(W[k])) continue;
+    else out.push({ x: W[k], unk: 1 });
+  }
+  return { words: out, match: I.enS.get(normEN(raw)) || null };
+}
+
+/* ------------------------------------------------ translate view */
+const ACC = ['é', 'è', 'ò', 'ì', 'æ', 'œ', 'ô', 'ê', 'ç', 'ñ', '’'];
+const splitS = t => String(t || '').replace(/\r/g, '').split(/\n+/).flatMap(p => p.match(/[^.!?…]+[.!?…]*["»”)]*\s*/g) || []).map(x => x.trim()).filter(x => /\p{L}/u.test(x));
+const starred = id => ST.s[E[id].key] !== undefined;
+function drawDir() {
+  const kv = ST.d === 'kv';
+  $('dA').textContent = kv ? 'KV' : 'EN'; $('dB').textContent = kv ? 'EN' : 'KV';
+  $('acc').innerHTML = kv ? ACC.map(c => '<button type="button" data-c="' + c + '">' + c + '</button>').join('') : '';
+  $('tx').setAttribute('lang', kv ? 'fr' : 'en'); $('tx').setAttribute('autocapitalize', 'sentences');
+}
+function drawT() {
+  const o = $('out'), t = $('tx').value, ss = splitS(t);
+  $('clr').hidden = !t;
+  if (!ss.length) { o.innerHTML = '<div class="empty">' + ico(ST.d === 'kv' ? 'pen' : 'pen') + '</div>'; return; }
+  const kv = ST.d === 'kv';
+  let nw = 0, nf = 0, nu = 0;
+  o.innerHTML = ss.map(raw => {
+    const r = kv ? kvLine(raw) : enLine(raw);
+    const chips = r.words.map(w => {
+      nw++;
+      if (w.nm) return '<span class="w nm"><b>' + esc(w.x) + '</b><small>#</small></span>';
+      if (w.unk) { nu++; const g = w.g >= 0 && w.g != null ? E[w.g] : null; return '<button type="button" class="w unk"' + (g ? ' data-ids="' + w.g + '"' : '') + '><b>' + esc(w.x) + '</b><small>' + (g ? '? ' + esc(g.forms[0]) + ' · ' + esc(g.short) : '?') + '</small></button>'; }
+      nf++;
+      const st = w.ids.some(starred) ? ' st' : '';
+      if (kv) return '<button type="button" class="w' + (w.ph ? ' ph' : '') + st + '" data-ids="' + [w.ids[w.ids.length - 1], ...(w.alt || [])].join(',') + '"><b>' + esc(w.x) + '</b><small>' + w.ids.map(id => esc(E[id].short)).join(' + ') + '</small>' + (w.alt && w.alt.length ? '<small class="o">' + w.alt.map(j => esc(E[j].short)).join(' · ') + '</small>' : '') + '</button>';
+      const b = E[w.ids[0]], more = w.ids.slice(1, 3).map(j => E[j].forms[0]);
+      return '<button type="button" class="w kv' + st + '" data-ids="' + w.ids.join(',') + '"><b>' + esc(w.x) + '</b><small>' + esc(b.forms[0]) + '</small>' + (more.length ? '<small class="o">' + more.map(esc).join(' · ') + '</small>' : '') + '</button>';
+    }).join('');
+    let line = '';
+    if (r.match) line = '<div class="tl"><span class="sym">=</span><p>' + esc(r.match.t) + '</p>' + (kv ? sp(r.match.t, 'en') : sp(r.match.t)) + '</div>';
+    else if (!kv) { const parts = []; let art = false; const ws = r.words.filter(w => w.ids); ws.forEach((w, i) => { const e = E[w.ids[0]], f = e.forms[0]; if (w.x === 'the') { art = true; return; } const noun = /noun/i.test(e.posLabel || ''), nx = ws[i + 1]; if (art && !noun && nx && /noun/i.test(E[nx.ids[0]].posLabel || '')) { parts.push(f); return; } parts.push(art && !/^-/.test(f) ? f + '-la' : f); art = false; }); const g = parts.join(' ').replace(/^./, c => c.toUpperCase()); if (g) line = '<div class="tl ap"><span class="sym">≈</span><p>' + esc(g) + '</p>' + sp(g) + '</div>'; }
+    return '<div class="sn"><div class="ch">' + chips + (kv ? sp(raw) : sp(raw, 'en')) + '</div>' + line + '</div>';
+  }).join('') + '<div class="ft"><span><i>' + ico('tr') + nw + '</i><i>' + ico('ok') + nf + '</i>' + (nu ? '<i>' + ico('q') + nu + '</i>' : '') + '</span><button type="button" class="ib" id="cp" aria-label="Copy">' + ico('copy') + '</button></div>';
+  o.querySelectorAll('[data-ids]').forEach(b => b.onclick = () => openWords(b.dataset.ids.split(',').map(Number), b));
+  $('cp').onclick = () => { const txt = ss.map(raw => { const r = kv ? kvLine(raw) : enLine(raw); return raw + '\n' + r.words.map(w => w.x + ' = ' + (w.nm ? w.x : w.unk ? '?' : kv ? w.ids.map(i => E[i].short).join(' + ') : w.ids.slice(0, 3).map(i => E[i].forms[0]).join(', '))).join('\n') + (r.match ? '\n= ' + r.match.t : ''); }).join('\n\n'); try { navigator.clipboard.writeText(txt); toast('ok'); } catch (e) {} };
+}
+
+/* ------------------------------------------------ word sheet */
+function entryHTML(e) {
+  const on = starred(e.id);
+  const senses = (e.senses && e.senses.length ? e.senses : [{ g: e.short, ex: e.ex || [] }]);
+  return '<div class="en" data-id="' + e.id + '"><div class="eh"><h2>' + esc(e.forms[0]) + (e.forms.length > 1 ? ' <span class="alt">' + e.forms.slice(1).map(esc).join(', ') + '</span>' : '') + '</h2>' + sp(e.forms[0]) +
+    '<button type="button" class="ib stb' + (on ? ' on' : '') + '" data-star="' + e.id + '" aria-label="Save">' + ico('star') + '</button></div>' +
+    (e.posLabel ? '<div class="ps">' + esc(e.posLabel) + '</div>' : '') +
+    '<ol class="ss">' + senses.map(s => '<li>' + esc(s.g || '') + (s.ex || []).map(x => '<div class="ex"><div>' + esc(x.s) + (x.t ? '<small>' + esc(x.t) + '</small>' : '') + '</div>' + sp(x.s) + '</div>').join('') + '</li>').join('') + '</ol></div>';
+}
+function sheet(html, onClose) {
+  const el = document.createElement('div'); el.className = 'sh';
+  el.innerHTML = '<div class="pn"><div class="gr"></div><div class="bd">' + html + '</div></div>';
+  document.body.appendChild(el);
+  const close = () => { el.remove(); if (onClose) onClose(); };
+  el.onclick = ev => { if (ev.target === el) close(); };
+  let y0 = null; const pn = el.querySelector('.pn');
+  pn.addEventListener('touchstart', ev => { if (el.querySelector('.bd').scrollTop <= 0) y0 = ev.touches[0].clientY; }, { passive: true });
+  pn.addEventListener('touchmove', ev => { if (y0 != null && ev.touches[0].clientY - y0 > 70) { y0 = null; close(); } }, { passive: true });
+  return el;
+}
+function openWords(ids, chip) {
+  const el = sheet(ids.map(i => entryHTML(E[i])).join(''), () => { if (chip) drawT(); if (VIEW === 'S') drawS(); });
+  el.querySelectorAll('[data-star]').forEach(b => b.onclick = () => { const on = toggleStar(+b.dataset.star); b.classList.toggle('on', on); buzz(12); });
+  const first = E[ids[0]]; if (first && ST.d === 'kv' || !chip) TTS.say(first.forms[0]);
+}
+function toggleStar(id) {
+  const k = E[id].key;
+  if (ST.s[k] !== undefined) delete ST.s[k]; else ST.s[k] = 0;
+  save(); badges(); return ST.s[k] !== undefined;
+}
+
+/* ------------------------------------------------ saved */
+const nowM = () => now() / 6e4;
+const savedIds = () => Object.keys(ST.s).map(k => BYKEY.get(k)).filter(i => i != null);
+const isDue = k => { const r = ST.s[k]; return r === 0 || (Array.isArray(r) && r[1] <= nowM()); };
+function badges() { const ids = savedIds(); $('nS').textContent = ids.length || ''; const d = ids.filter(i => isDue(E[i].key)).length; $('nL').textContent = d || ''; }
+function dotsHTML(r) { if (!Array.isArray(r)) return '<span class="dots new"><i></i><i></i><i></i><i></i><i></i></span>'; const s = DK.strength(r, now()); return '<span class="dots">' + [1, 2, 3, 4, 5].map(n => '<i' + (n <= s ? ' class="on"' : '') + '></i>').join('') + '</span>'; }
+function drawS() {
+  const v = $('vS'), ids = savedIds().sort((a, b) => { const ra = ST.s[E[a].key], rb = ST.s[E[b].key]; return (Array.isArray(ra) ? ra[6] : 1e12) - (Array.isArray(rb) ? rb[6] : 1e12) || a - b; }).reverse();
+  if (!ids.length) { v.innerHTML = '<div class="big1">' + ico('star') + '</div>'; return; }
+  v.innerHTML = '<div class="hd"><span class="big">' + ico('star') + ids.length + '</span></div><div class="lst">' + ids.map(i => { const e = E[i]; return '<div class="row" data-id="' + i + '"><button type="button" class="tx" data-open="' + i + '"><b>' + esc(e.forms[0]) + '</b><small>' + esc(e.short) + '</small></button>' + dotsHTML(ST.s[e.key]) + sp(e.forms[0]) + '<button type="button" class="ib stb on" data-un="' + i + '" aria-label="Remove">' + ico('star') + '</button></div>'; }).join('') + '</div>';
+  v.querySelectorAll('[data-open]').forEach(b => b.onclick = () => openWords([+b.dataset.open]));
+  v.querySelectorAll('[data-un]').forEach(b => b.onclick = () => { toggleStar(+b.dataset.un); buzz(12); drawS(); });
+}
+
+/* ------------------------------------------------ learn (spaced repetition) */
+let Q = null;
+function newSession() {
+  const ids = savedIds(), due = ids.filter(i => Array.isArray(ST.s[E[i].key]) && ST.s[E[i].key][1] <= nowM()).sort((a, b) => ST.s[E[a].key][1] - ST.s[E[b].key][1]);
+  const fresh = ids.filter(i => ST.s[E[i].key] === 0).slice(0, 15);
+  const list = [...due, ...fresh].map(id => ({ id, side: Array.isArray(ST.s[E[id].key]) && ST.s[E[id].key][3] >= 2 && Math.random() < 0.5 ? 'en' : 'kv' }));
+  Q = { list, i: 0, total: list.length, got: 0, show: false };
+}
+function drawL() {
+  const v = $('vL');
+  if (!Q || Q.i >= Q.list.length) {
+    if (Q && Q.total && Q.i >= Q.list.length) { v.innerHTML = '<div class="big1">' + ico('done').replace('class="i"', 'class="i ok"') + '<div class="meta"><span>' + ico('cards') + Q.total + '</span><span>' + ico('ok') + Q.got + '</span></div></div>'; Q = null; badges(); return; }
+    newSession();
+    if (!Q.list.length) {
+      const ids = savedIds(); let next = Infinity; ids.forEach(i => { const r = ST.s[E[i].key]; if (Array.isArray(r)) next = Math.min(next, r[1]); });
+      const left = isFinite(next) ? Math.max(0, next - nowM()) : null;
+      const fmt = m => m < 60 ? Math.ceil(m) + 'm' : m < 1440 ? Math.round(m / 60) + 'h' : Math.round(m / 1440) + 'd';
+      v.innerHTML = '<div class="big1">' + ico(ids.length ? 'done' : 'cards') + (left != null ? '<div class="meta"><span>' + ico('clock') + fmt(left) + '</span></div>' : '<div class="meta"><span>' + ico('star') + '0</span></div>') + '</div>';
+      Q = null; return;
+    }
+    v.innerHTML = '<div class="big1">' + ico('cards') + '<button type="button" class="go" id="go">' + ico('ok') + '<b>' + Q.list.length + '</b></button></div>';
+    $('go').onclick = () => { Q.started = 1; card(); };
+    return;
+  }
+  card();
+}
+function card() {
+  const v = $('vL'), c = Q.list[Q.i], e = E[c.id], ex = (e.ex || [])[0];
+  const front = c.side === 'kv' ? '<div class="fr">' + esc(e.forms[0]) + '</div>' + sp(e.forms[0]) : '<div class="fr en">' + esc(e.short) + '</div>';
+  const back = '<div class="bk">' + (c.side === 'kv' ? '<div class="m">' + esc(e.short) + '</div>' : '<div class="k">' + esc(e.forms[0]) + '</div>' + sp(e.forms[0])) + (ex ? '<div class="ex"><div>' + esc(ex.s) + '<small>' + esc(ex.t || '') + '</small></div>' + sp(ex.s) + '</div>' : '') + '</div>';
+  v.innerHTML = '<div class="lrn"><div class="prog"><i style="width:' + Math.round(100 * Q.i / Math.max(1, Q.list.length)) + '%"></i></div><div class="cd" id="cd"><span class="side">' + (c.side === 'kv' ? 'KV' : 'EN') + '</span>' + front + (Q.show ? back : '') + '</div>' +
+    '<div class="gb">' + (Q.show ? '<button type="button" class="g0" data-g="0" aria-label="Again">' + ico('x') + '</button><button type="button" class="g1" data-g="1" aria-label="Hard">' + ico('meh') + '</button><button type="button" class="g2" data-g="2" aria-label="Good">' + ico('ok') + '</button>' : '<button type="button" class="rv" id="rv" aria-label="Show">' + ico('eye') + '</button>') + '</div></div>';
+  if (!Q.show && c.side === 'kv') TTS.say(e.forms[0]);
+  if (Q.show && c.side === 'en') TTS.say(e.forms[0]);
+  const reveal = () => { if (!Q.show) { Q.show = true; card(); } };
+  $('cd').onclick = ev => { if (!ev.target.closest('[data-say]')) reveal(); };
+  if ($('rv')) $('rv').onclick = reveal;
+  v.querySelectorAll('[data-g]').forEach(b => b.onclick = () => grade(+b.dataset.g));
+}
+function grade(g) {
+  const c = Q.list[Q.i], k = E[c.id].key, r = ST.s[k], t = now();
+  if (r === undefined) { Q.i++; Q.show = false; drawL(); return; }
+  if (g === 0) { Q.list.splice(Math.min(Q.list.length, Q.i + 4), 0, Object.assign({}, c, { again: 1 })); if (Array.isArray(r)) ST.s[k] = DK.schedule(r, 0, t); buzz([20, 30, 20]); }
+  else { ST.s[k] = Array.isArray(r) ? DK.schedule(r, c.again ? 1 : g, t) : DK.recNew(t, g === 2 && !c.again ? 1 : 0.4); if (!c.again) Q.got++; buzz(10); }
+  save(); Q.i++; Q.show = false; badges(); drawL();
+}
+
+/* ------------------------------------------------ views */
+let VIEW = 'T';
+function setView(v) {
+  VIEW = v;
+  ['T', 'S', 'L'].forEach(k => { $('v' + k).hidden = k !== v; });
+  document.querySelectorAll('#nav button').forEach(b => b.setAttribute('aria-current', String(b.dataset.v === v)));
+  if (v === 'S') drawS(); else if (v === 'L') { if (!Q || !Q.started) Q = null; drawL(); } else drawT();
+}
+document.querySelectorAll('#nav button').forEach(b => b.onclick = () => setView(b.dataset.v));
+
+function wire() {
+  const tx = $('tx');
+  tx.value = ST.t || '';
+  const grow = () => { tx.style.height = 'auto'; tx.style.height = Math.min(tx.scrollHeight, 220) + 'px'; };
+  let tm = 0;
+  tx.oninput = () => { grow(); clearTimeout(tm); tm = setTimeout(() => { ST.t = tx.value; save(); drawT(); }, 200); };
+  tx.onfocus = () => document.body.classList.add('typing');
+  tx.onblur = () => setTimeout(() => { if (document.activeElement !== tx) document.body.classList.remove('typing'); }, 120);
+  $('clr').onclick = () => { tx.value = ''; ST.t = ''; save(); grow(); drawT(); tx.focus(); };
+  $('acc').addEventListener('pointerdown', ev => { if (ev.target.closest('[data-c]')) ev.preventDefault(); });
+  $('acc').addEventListener('click', ev => { const b = ev.target.closest('[data-c]'); if (!b) return; const a = tx.selectionStart || 0, z = tx.selectionEnd || 0, c = b.dataset.c; tx.value = tx.value.slice(0, a) + c + tx.value.slice(z); tx.selectionStart = tx.selectionEnd = a + c.length; tx.focus(); tx.oninput(); });
+  $('dir').onclick = () => {
+    const cur = splitS(tx.value);
+    /* swapping carries a known translation across when there is one */
+    if (cur.length) { const m = cur.map(s => (ST.d === 'kv' ? kvLine(s) : enLine(s)).match).filter(Boolean); if (m.length === cur.length) tx.value = m.map(x => x.t).join(' '); }
+    ST.d = ST.d === 'kv' ? 'en' : 'kv'; ST.t = tx.value; save(); drawDir(); grow(); drawT();
+  };
+  drawDir(); grow();
+}
+
+async function getText(name) {
+  try { const r = await fetch(SRC + name, { cache: 'no-cache', mode: 'cors' }); if (r.ok) return await r.text(); } catch (e) {}
+  const r = await fetch(name); return r.ok ? r.text() : '';
+}
+(async () => {
+  const [tsv, pv, dl] = await Promise.all([getText('diksyonaer.tsv'), getText('proverbs.tsv').catch(() => ''), getText('dialogues.json').catch(() => '[]')]);
+  let dlg = []; try { dlg = JSON.parse(dl || '[]'); } catch (e) {}
+  const pvr = String(pv || '').split(/\r?\n/).map(l => l.split('\t').map(x => (x || '').trim().normalize('NFC'))).filter(c => c[0] && c[1]);
+  build(tsv, pvr, dlg);
+  wire(); badges(); setView('T');
+  $('boot').classList.add('off'); setTimeout(() => $('boot').remove(), 400);
+  window.__kv = { E, I, kvLine, enLine, ST, setView, openWords, toggleStar, grade: g => grade(g) };
+})();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 })();
 </script>
 </body>
